@@ -5,6 +5,12 @@
 
 ## 主要機能
 
+### コアビジネス機能
+- **ユーザープロファイル管理**: アカウント情報の編集・更新
+- **カテゴリカスタマイズ**: 独自カテゴリの作成・管理
+- **細かな通知制御**: ユーザーニーズに合わせた通知設定
+- **包括的データ管理**: エクスポート・インポート・削除機能
+
 ### 1. プロファイル管理
 - **表示項目**:
   - プロフィール画像（アバター）
@@ -71,56 +77,67 @@
   - APIキー発行・管理
   - Webhook設定
 
-## データ取得要件
+## 対応API・テーブル・ドメイン情報
 
-### 必要なAPI
-1. **ユーザー情報取得API**
-   - エンドポイント: `/api/users/profile`
-   - レスポンス: ユーザー詳細情報
+### 関連API
+1. **GET /users/me**
+   - ユーザー基本情報取得（プロフィール表示用）
+   - レスポンス: 名前、メール、登録日、プラン情報
 
-2. **ユーザー情報更新API**
-   - エンドポイント: `/api/users/profile`
-   - メソッド: PUT
-   - リクエスト:
-     ```json
-     {
-       "name": "新しいユーザー名",
-       "email": "new@example.com"
-     }
-     ```
+2. **PUT /users/me**
+   - ユーザー情報更新（名前、メール変更）
+   - Auth0連動でユーザー情報同期
+   - リクエスト: name, email
 
-3. **カテゴリ管理API**
-   - 一覧取得: `GET /api/categories`
-   - 作成: `POST /api/categories`
-   - 更新: `PUT /api/categories/{id}`
-   - 削除: `DELETE /api/categories/{id}`
-   - 並び順更新: `PUT /api/categories/order`
+3. **DELETE /users/me**
+   - アカウント削除（システム全体のデータ消去）
+   - 確認ダイアログ経由での最終確認必須
 
-4. **通知設定API**
-   - 取得: `GET /api/settings/notifications`
-   - 更新: `PUT /api/settings/notifications`
-   - リクエスト:
-     ```json
-     {
-       "weekly_report": true,
-       "monthly_report": true,
-       "budget_alert": true,
-       "budget_alert_threshold": 80
-     }
-     ```
+4. **GET /categories**
+   - カテゴリ一覧取得（デフォルト、カスタム含む）
+   - レスポンス: カテゴリ情報、アイコン、色、有効状態
 
-5. **データエクスポートAPI**
-   - エンドポイント: `/api/data/export`
-   - パラメータ:
-     - format: csv/json
-     - from: 開始日
-     - to: 終了日
-   - レスポンス: ダウンロードURL
+5. **POST /categories**
+   - カスタムカテゴリ作成
+   - リクエスト: name, icon, color, parent_id
+   - バリデーション: 重複チェック、階層制限
 
-### データベース参照
-- `users`テーブル: ユーザー情報
-- `categories`テーブル: カテゴリ設定
-- `category_master`テーブル: デフォルトカテゴリ
+6. **PUT /categories/{id}**
+   - カスタムカテゴリ更新（デフォルトは編集不可）
+   - 使用中カテゴリの制限付き更新
+
+7. **DELETE /categories/{id}**
+   - カスタムカテゴリ削除
+   - 使用中カテゴリの場合は置換カテゴリ指定必須
+
+8. **GET /settings/notifications**
+   - 通知設定取得
+   - レスポンス: メール通知設定、闾値設定
+
+9. **PUT /settings/notifications**
+   - 通知設定更新
+   - リクエスト: weekly_report, monthly_report, budget_alert, thresholds
+
+10. **POST /data/export**
+    - データエクスポートリクエスト
+    - パラメータ: format, date_range, categories
+    - 非同期処理でダウンロードURL等返却
+
+### 対応テーブル
+- **users**: ユーザープロフィール情報（名前、メール、登録日）
+- **categories**: ユーザー固有カテゴリ設定（カスタムカテゴリ含む）
+- **category_master**: システムデフォルトカテゴリマスタ
+- **notification_settings**: ユーザー別通知設定（メール通知、闾値）
+
+### 関連ドメインエンティティ
+- **User集約**: ユーザーアカウントのライフサイクル管理
+  - Userエンティティ: 基本ユーザー情報
+  - UserProfile値オブジェクト: プロフィール管理ロジック
+- **Category集約**: カテゴリマスタ管理とカスタマイズ機能
+  - CategoryMasterエンティティ: システムデフォルトカテゴリ
+  - UserCategoryエンティティ: ユーザーカスタムカテゴリ
+- **NotificationSetting集約**: 通知設定管理
+- **DataExport集約**: データエクスポート処理ロジック
 
 ## UI/UX要件
 

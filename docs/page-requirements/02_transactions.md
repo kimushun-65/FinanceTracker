@@ -5,6 +5,12 @@
 
 ## 主要機能
 
+### コアビジネス機能
+- **取引記録管理**: 日々の収入・支出の網羅的記録
+- **リアルタイム集計**: 取引追加・編集時の即座反映
+- **柔軟なフィルタリング**: 多層的な検索・絞り込み機能
+- **バッチ操作**: 複数取引の一括処理
+
 ### 1. 取引サマリー
 - **月間収入**: 当月の収入合計額
 - **月間支出**: 当月の支出合計額
@@ -41,45 +47,47 @@
 - **削除**: 確認ダイアログ表示後に削除
 - **一括操作**: 複数選択して一括削除
 
-## データ取得要件
+## 対応API・テーブル・ドメイン情報
 
-### 必要なAPI
-1. **取引一覧取得API**
-   - エンドポイント: `/api/transactions`
-   - パラメータ: 
-     - page: ページ番号
-     - limit: 表示件数
-     - from: 開始日
-     - to: 終了日
-     - category_id: カテゴリID
-     - type: income/expense
+### 関連API
+1. **GET /transactions**
+   - 取引一覧取得（フィルタ・ページング対応）
+   - パラメータ: page, limit, from, to, category_id, type
    - レスポンス: 取引リスト、ページング情報
 
-2. **取引追加API**
-   - エンドポイント: `/api/transactions`
-   - メソッド: POST
-   - リクエスト:
-     ```json
-     {
-       "type": "expense",
-       "amount": 1000,
-       "category_id": "uuid",
-       "transaction_date": "2025-01-01",
-       "description": "コンビニ"
-     }
-     ```
+2. **POST /transactions**
+   - 取引新規作成
+   - リクエスト: type, amount, category_id, transaction_date, description
+   - バリデーション、事業ロジック処理を含む
 
-3. **取引更新API**
-   - エンドポイント: `/api/transactions/{id}`
-   - メソッド: PUT
+3. **PUT /transactions/{id}**
+   - 取引情報更新
+   - 排他制御で同時編集防止
 
-4. **取引削除API**
-   - エンドポイント: `/api/transactions/{id}`
-   - メソッド: DELETE
+4. **DELETE /transactions/{id}**
+   - 取引削除（論理削除）
+   - 関連予算・集計情報の更新を伴う
 
-### データベース参照
-- `transactions`テーブル: 取引データ
-- `categories`テーブル: カテゴリ情報
+5. **GET /transactions/summary/monthly**
+   - 月間サマリー取得（上部カード表示用）
+   - 収入・支出・純収入の計算
+
+6. **GET /categories**
+   - カテゴリ一覧取得（選択リスト用）
+
+### 対応テーブル
+- **transactions**: 取引メインテーブル（ID, ユーザー, カテゴリ, 金額, 日付, 説明）
+- **categories**: カテゴリマスタ（名前、色、アイコン情報）
+- **recurring_transactions**: 定期取引テンプレート（月次自動生成用）
+
+### 関連ドメインエンティティ
+- **Transaction集約**: 取引のライフサイクル管理（作成・更新・削除）
+  - Transactionエンティティ: 基本取引情報
+  - Money値オブジェクト: 金額のビジネスルール
+  - TransactionType列挙: income/expenseの管理
+- **Category集約**: カテゴリ管理・分類ロジック
+- **RecurringTransaction集約**: 定期取引のテンプレート管理
+- **User集約**: ユーザー固有の取引データアクセス制御
 
 ## UI/UX要件
 
