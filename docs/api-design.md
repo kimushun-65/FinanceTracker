@@ -604,6 +604,8 @@ GET /categories
       "master_id": "550e8400-e29b-41d4-a716-446655440020",
       "parent_id": null,
       "name": "食費",
+      "icon": "🍎",
+      "color": "#4CAF50",
       "is_custom": false,
       "sort_order": 1,
       "is_active": true
@@ -613,6 +615,8 @@ GET /categories
       "master_id": null,
       "parent_id": null,
       "name": "趣味",
+      "icon": "🎮",
+      "color": "#9C27B0",
       "is_custom": true,
       "sort_order": 10,
       "is_active": true
@@ -1979,34 +1983,33 @@ GET /summary/monthly
 **説明:** ダッシュボード表示用の月別収支サマリーを取得します。
 
 **クエリパラメータ:**
-- months: 表示月数（デフォルト: 6）
+- period: "1m" | "6m" | "1y" | "all"（表示期間）
+- granularity: "daily" | "monthly"（集計単位）
 
 **レスポンス:**
 
 ```json
 {
+  "period": "6m",
+  "granularity": "monthly",
+  "date_range": {
+    "from": "2023-09-01",
+    "to": "2024-02-29"
+  },
   "summary_data": [
     {
-      "month": "2024-01",
+      "date": "2023-09",
       "income": 250000,
       "expenses": 180000,
       "net_income": 70000
     },
     {
-      "month": "2024-02",
+      "date": "2023-10",
       "income": 250000,
       "expenses": 175000,
       "net_income": 75000
     }
-  ],
-  "current_month": {
-    "month": "2024-02",
-    "income": 250000,
-    "expenses": 175000,
-    "net_income": 75000,
-    "days_elapsed": 15,
-    "days_remaining": 13
-  }
+  ]
 }
 ```
 
@@ -2056,6 +2059,56 @@ GET /transactions/current-month
     "expenses": 175000,
     "net_income": 75000
   }
+}
+```
+
+### 取引サマリー取得
+
+```
+GET /transactions/summary
+```
+
+**説明:** 指定期間の取引サマリーをカテゴリ別集計と併せて取得します。
+
+**クエリパラメータ:**
+- period: "1m" | "6m" | "1y" | "all"（表示期間）
+- include_category_breakdown: true | false（カテゴリ別集計を含むか）
+
+**レスポンス:**
+
+```json
+{
+  "period": "6m",
+  "date_range": {
+    "from": "2024-08-01",
+    "to": "2024-02-29"
+  },
+  "summary": {
+    "total_income": 1500000,
+    "total_expenses": 1050000,
+    "net_income": 450000,
+    "transaction_count": 285
+  },
+  "category_breakdown": [
+    {
+      "category_id": "550e8400-e29b-41d4-a716-446655440001",
+      "category_name": "食費",
+      "category_icon": "🍎",
+      "category_color": "#4CAF50",
+      "amount": 270000,
+      "percentage": 25.7,
+      "transaction_count": 89
+    },
+    {
+      "category_id": "550e8400-e29b-41d4-a716-446655440002",
+      "category_name": "交通費",
+      "category_icon": "🚃",
+      "category_color": "#2196F3",
+      "amount": 180000,
+      "percentage": 17.1,
+      "transaction_count": 45
+    }
+  ]
 }
 ```
 
