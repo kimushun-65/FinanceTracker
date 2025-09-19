@@ -921,18 +921,35 @@ GET /recurring-transactions
   "data": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440050",
+      "name": "家賃",
       "category": {
         "id": "550e8400-e29b-41d4-a716-446655440033",
         "name": "住居費"
       },
       "amount": 90000,
-      "frequency": "monthly",
-      "start_date": "2024-01-01",
-      "next_date": "2024-02-01",
-      "end_date": null,
+      "execution_day": 25,
+      "last_executed_date": "2024-01-25",
+      "next_execution_date": "2024-02-25",
       "is_active": true,
-      "description": "家賃",
-      "created_at": "2024-01-01T09:00:00Z"
+      "description": "毎月25日に家賃支払い",
+      "created_at": "2024-01-01T09:00:00Z",
+      "updated_at": "2024-01-25T10:00:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440051",
+      "name": "光熱費",
+      "category": {
+        "id": "550e8400-e29b-41d4-a716-446655440034",
+        "name": "光熱費"
+      },
+      "amount": 15000,
+      "execution_day": 31,
+      "last_executed_date": null,
+      "next_execution_date": "2024-02-29",
+      "is_active": true,
+      "description": "毎月末に光熱費支払い",
+      "created_at": "2024-01-21T10:00:00Z",
+      "updated_at": "2024-01-21T10:00:00Z"
     }
   ],
   "pagination": {
@@ -954,11 +971,11 @@ POST /recurring-transactions
 
 ```json
 {
+  "name": "電話代",
   "category_id": "550e8400-e29b-41d4-a716-446655440034",
-  "amount": 15000,
-  "frequency": "monthly",
-  "start_date": "2024-02-01",
-  "description": "光熱費"
+  "amount": 8000,
+  "execution_day": 15,
+  "description": "毎月15日に携帯電話料金支払い"
 }
 ```
 
@@ -966,19 +983,20 @@ POST /recurring-transactions
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440051",
+  "id": "550e8400-e29b-41d4-a716-446655440052",
+  "name": "電話代",
   "category": {
     "id": "550e8400-e29b-41d4-a716-446655440034",
     "name": "光熱費"
   },
-  "amount": 15000,
-  "frequency": "monthly",
-  "start_date": "2024-02-01",
-  "next_date": "2024-02-01",
-  "end_date": null,
+  "amount": 8000,
+  "execution_day": 15,
+  "last_executed_date": null,
+  "next_execution_date": "2024-02-15",
   "is_active": true,
-  "description": "光熱費",
-  "created_at": "2024-01-21T10:00:00Z"
+  "description": "毎月15日に携帯電話料金支払い",
+  "created_at": "2024-01-21T10:00:00Z",
+  "updated_at": "2024-01-21T10:00:00Z"
 }
 ```
 
@@ -992,8 +1010,30 @@ PUT /recurring-transactions/{recurringTransactionId}
 
 ```json
 {
-  "amount": 16000,
-  "description": "光熱費（電気・ガス・水道）"
+  "name": "家賃（更新）",
+  "amount": 95000,
+  "execution_day": 27,
+  "description": "毎月27日に家賃支払い（値上げ後）"
+}
+```
+
+**レスポンス:**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440050",
+  "name": "家賃（更新）",
+  "category": {
+    "id": "550e8400-e29b-41d4-a716-446655440033",
+    "name": "住居費"
+  },
+  "amount": 95000,
+  "execution_day": 27,
+  "last_executed_date": "2024-01-25",
+  "next_execution_date": "2024-02-27",
+  "is_active": true,
+  "description": "毎月27日に家賃支払い（値上げ後）",
+  "updated_at": "2024-01-21T11:00:00Z"
 }
 ```
 
@@ -1013,17 +1053,22 @@ DELETE /recurring-transactions/{recurringTransactionId}
 }
 ```
 
-### 定期取引の実行
+
+### 月次定期取引の一括実行
 
 ```
-POST /recurring-transactions/execute
+POST /recurring-transactions/execute-monthly
 ```
+
+**説明:** 指定した月の全ての定期取引を一括実行します。バッチ処理での使用を想定。
 
 **リクエスト:**
 
 ```json
 {
-  "execute_date": "2024-02-01"
+  "target_year": 2024,
+  "target_month": 2,
+  "dry_run": false
 }
 ```
 
@@ -1031,20 +1076,113 @@ POST /recurring-transactions/execute
 
 ```json
 {
-  "executed": 3,
-  "transactions": [
+  "execution_summary": {
+    "target_month": "2024-02",
+    "total_recurring_transactions": 5,
+    "executed": 3,
+    "skipped": 2,
+    "failed": 0
+  },
+  "executed_transactions": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440060",
-      "type": "expense",
-      "amount": 90000,
-      "transaction_date": "2024-02-01",
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440033",
-        "name": "住居費"
-      },
-      "description": "家賃"
+      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440050",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440062",
+      "name": "家賃",
+      "execution_date": "2024-02-25",
+      "amount": 90000
+    },
+    {
+      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440052",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440063",
+      "name": "電話代",
+      "execution_date": "2024-02-15",
+      "amount": 8000
+    },
+    {
+      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440051",
+      "transaction_id": "550e8400-e29b-41d4-a716-446655440064",
+      "name": "光熱費",
+      "execution_date": "2024-02-29",
+      "amount": 15000
+    }
+  ],
+  "skipped_transactions": [
+    {
+      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440053",
+      "name": "保険料",
+      "reason": "already_executed_this_month"
+    },
+    {
+      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440054",
+      "name": "ジム会費",
+      "reason": "inactive"
     }
   ]
+}
+```
+
+### 今月の定期取引予定取得
+
+```
+GET /recurring-transactions/schedule
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型      | 必須 | 説明 |
+| ---------- | ------- | ---- | ---- |
+| year       | integer | No   | 年   |
+| month      | integer | No   | 月   |
+
+**レスポンス:**
+
+```json
+{
+  "month": "2024-02",
+  "schedule": [
+    {
+      "date": "2024-02-15",
+      "transactions": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440052",
+          "name": "電話代",
+          "amount": 8000,
+          "category": "光熱費",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "date": "2024-02-25",
+      "transactions": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440050",
+          "name": "家賃",
+          "amount": 90000,
+          "category": "住居費",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "date": "2024-02-29",
+      "transactions": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440051",
+          "name": "光熱費",
+          "amount": 15000,
+          "category": "光熱費",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_amount": 113000,
+    "total_transactions": 3,
+    "pending": 3,
+    "executed": 0
+  }
 }
 ```
 
@@ -1185,56 +1323,117 @@ DELETE /budgets/{budgetId}
 204 No Content
 ```
 
-### 予算実績取得
+### 今月の予算取得
 
 ```
-GET /budgets/performance
+GET /budgets/current
 ```
 
-**クエリパラメータ:**
-
-| パラメータ | 型      | 必須 | 説明 |
-| ---------- | ------- | ---- | ---- |
-| year       | integer | Yes  | 年   |
-| month      | integer | Yes  | 月   |
+**説明:** 現在の月の予算情報を取得します。月とカテゴリの設定がない場合は空の予算情報を返します。
 
 **レスポンス:**
 
 ```json
 {
-  "month": "2024-01",
-  "categories": [
+  "month": "2024-02",
+  "current_date": "2024-02-15",
+  "days_in_month": 29,
+  "days_elapsed": 15,
+  "days_remaining": 14,
+  "data": [
     {
+      "id": "550e8400-e29b-41d4-a716-446655440072",
       "category": {
         "id": "550e8400-e29b-41d4-a716-446655440030",
         "name": "食費"
       },
-      "budget": 50000,
-      "actual": 33368,
-      "variance": 16632,
-      "percentage": 66.7,
-      "status": "under"
+      "amount": 50000,
+      "spent": 22150,
+      "remaining": 27850,
+      "percentage": 44.3,
+      "daily_average_budget": 1724,
+      "daily_average_spent": 1477,
+      "projected_month_end": 42630,
+      "status": "on_track",
+      "created_at": "2024-02-01T09:00:00Z"
     },
     {
+      "id": "550e8400-e29b-41d4-a716-446655440073",
+      "category": {
+        "id": "550e8400-e29b-41d4-a716-446655440033",
+        "name": "住居費"
+      },
+      "amount": 90000,
+      "spent": 90000,
+      "remaining": 0,
+      "percentage": 100.0,
+      "daily_average_budget": 3103,
+      "daily_average_spent": 6000,
+      "projected_month_end": 90000,
+      "status": "completed",
+      "created_at": "2024-02-01T09:00:00Z"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440074",
       "category": {
         "id": "550e8400-e29b-41d4-a716-446655440031",
         "name": "交通費"
       },
-      "budget": 10000,
-      "actual": 10301,
-      "variance": -301,
-      "percentage": 103.0,
-      "status": "over"
+      "amount": 10000,
+      "spent": 12500,
+      "remaining": -2500,
+      "percentage": 125.0,
+      "daily_average_budget": 345,
+      "daily_average_spent": 833,
+      "projected_month_end": 24150,
+      "status": "over_budget",
+      "created_at": "2024-02-01T09:00:00Z"
     }
   ],
-  "total": {
-    "budget": 200000,
-    "actual": 106672,
-    "variance": 93328,
-    "percentage": 53.3
-  }
+  "summary": {
+    "total_budget": 200000,
+    "total_spent": 139850,
+    "total_remaining": 60150,
+    "percentage": 69.9,
+    "daily_average_budget": 6897,
+    "daily_average_spent": 9323,
+    "projected_month_end": 270367,
+    "status": "over_projected"
+  },
+  "alerts": [
+    {
+      "type": "over_budget",
+      "category": "交通費",
+      "message": "交通費が予算を25%超過しています"
+    },
+    {
+      "type": "projection_warning",
+      "message": "現在のペースでは月末に予算を35%超過する見込みです"
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "spending_adjustment",
+      "category": "食費",
+      "message": "食費は順調です。このペースを維持してください"
+    },
+    {
+      "type": "budget_review",
+      "category": "交通費",
+      "message": "交通費の予算見直しを検討してください"
+    }
+  ]
 }
 ```
+
+**ステータスの説明:**
+- `on_track`: 予算内で順調
+- `completed`: 定期支払いなどで予算消化完了
+- `over_budget`: 予算超過
+- `under_spent`: 支出が少なすぎる（予算の30%以下）
+- `at_risk`: 月末超過の可能性あり（現在のペースで110%以上）
+- `over_projected`: 全体として月末予算超過の見込み
+
 
 ---
 
@@ -1659,20 +1858,15 @@ GET /notifications/settings
 
 ```json
 {
-  "email_notifications": {
-    "weekly_report": true,
-    "monthly_report": true,
-    "budget_alert": true,
-    "budget_alert_threshold": 80
+  "monthly_report": {
+    "enabled": true,
+    "send_day": 1,
+    "send_time": "09:00",
+    "email": "user@gmail.com"
   },
-  "push_notifications": {
-    "transaction_reminder": true,
-    "budget_exceeded": true
-  },
-  "report_schedule": {
-    "weekly_day": 1,
-    "monthly_day": 1,
-    "time": "09:00"
+  "budget_exceeded_alert": {
+    "enabled": true,
+    "email": "user@gmail.com"
   }
 }
 ```
@@ -1687,11 +1881,13 @@ PUT /notifications/settings
 
 ```json
 {
-  "email_notifications": {
-    "weekly_report": false,
-    "monthly_report": true,
-    "budget_alert": true,
-    "budget_alert_threshold": 90
+  "monthly_report": {
+    "enabled": true,
+    "send_day": 5,
+    "send_time": "08:00"
+  },
+  "budget_exceeded_alert": {
+    "enabled": false
   }
 }
 ```
@@ -1705,24 +1901,20 @@ PUT /notifications/settings
 }
 ```
 
----
-
-## 12. データエクスポート/インポート API
-
-### データエクスポート
+### 月次レポートメール送信（手動）
 
 ```
-POST /data/export
+POST /notifications/send-monthly-report
 ```
+
+**説明:** 指定した月の月次レポートを即座にメール送信します。
 
 **リクエスト:**
 
 ```json
 {
-  "format": "csv",
-  "include": ["transactions", "budgets", "categories"],
-  "from": "2024-01-01",
-  "to": "2024-12-31"
+  "year": 2024,
+  "month": 1
 }
 ```
 
@@ -1730,79 +1922,47 @@ POST /data/export
 
 ```json
 {
-  "job_id": "550e8400-e29b-41d4-a716-446655440120",
-  "status": "processing",
-  "message": "エクスポートを開始しました"
+  "message": "月次レポートを送信しました",
+  "sent_to": "user@gmail.com",
+  "report_period": "2024-01",
+  "sent_at": "2024-01-21T10:00:00Z"
 }
 ```
 
-### エクスポートステータス確認
+### 予算超過通知送信（システム用）
 
 ```
-GET /data/export/{jobId}/status
+POST /notifications/send-budget-alert
 ```
 
-**レスポンス:**
-
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440120",
-  "status": "completed",
-  "download_url": "https://api.finsight.com/downloads/exports/550e8400-e29b-41d4-a716-446655440120.zip",
-  "expires_at": "2024-01-22T10:00:00Z"
-}
-```
-
-### データインポート
-
-```
-POST /data/import
-```
+**説明:** 予算超過が検出された際にシステムが自動的に呼び出すエンドポイント。
 
 **リクエスト:**
 
-- Content-Type: multipart/form-data
-- file: CSV ファイル
-- type: "transactions" | "categories"
-
-**レスポンス:**
-
 ```json
 {
-  "job_id": "550e8400-e29b-41d4-a716-446655440121",
-  "status": "processing",
-  "message": "インポートを開始しました"
-}
-```
-
-### インポートステータス確認
-
-```
-GET /data/import/{jobId}/status
-```
-
-**レスポンス:**
-
-```json
-{
-  "job_id": "550e8400-e29b-41d4-a716-446655440121",
-  "status": "completed",
-  "summary": {
-    "total_rows": 100,
-    "imported": 95,
-    "skipped": 3,
-    "errors": 2
-  },
-  "errors": [
+  "categories": [
     {
-      "row": 45,
-      "message": "カテゴリが見つかりません"
-    },
-    {
-      "row": 67,
-      "message": "金額が不正です"
+      "category_id": "550e8400-e29b-41d4-a716-446655440031",
+      "category_name": "交通費",
+      "budget_amount": 10000,
+      "spent_amount": 12500,
+      "exceeded_amount": 2500,
+      "exceeded_date": "2024-02-15"
     }
-  ]
+  ],
+  "month": "2024-02"
+}
+```
+
+**レスポンス:**
+
+```json
+{
+  "message": "予算超過通知を送信しました",
+  "sent_to": "user@gmail.com",
+  "categories_alerted": 1,
+  "sent_at": "2024-02-16T09:00:00Z"
 }
 ```
 

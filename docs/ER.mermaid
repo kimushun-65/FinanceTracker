@@ -48,6 +48,9 @@ erDiagram
         VARCHAR type
         INTEGER amount
         DATE transaction_date
+        TEXT description
+        BOOLEAN is_recurring
+        UUID recurring_transaction_id FK
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -74,10 +77,12 @@ erDiagram
         UUID id PK
         UUID user_id FK
         UUID category_id FK
+        VARCHAR name
         INTEGER amount
-        VARCHAR frequency
-        DATE start_date
-        DATE next_date
+        INTEGER execution_day
+        DATE last_executed_date
+        BOOLEAN is_active
+        VARCHAR description
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -133,3 +138,5 @@ erDiagram
     categories ||--o{ budgets : "budget for"
     categories ||--o{ recurring_transactions : "for"
     categories ||--o{ budget_suggestions : "target"
+    
+    recurring_transactions ||--o{ transactions : "generates"

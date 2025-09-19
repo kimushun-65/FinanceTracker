@@ -246,50 +246,68 @@
 #### 集約ルート: RecurringTransaction
 ```
 エンティティ: RecurringTransaction (recurring_transactions)
-責務: 定期的に発生する取引のテンプレート管理
+責務: 月次定期取引のテンプレート管理
 
 属性:
 - id: UUID - 定期取引一意識別子
 - userId: UUID - ユーザーID（FK）
 - categoryId: UUID - カテゴリID（FK）
+- name: string - 定期取引名称
 - amount: Money - 金額（値オブジェクト）
-- frequency: Frequency - 頻度（値オブジェクト）
-- startDate: date - 開始日
-- nextDate: date - 次回実行日
-- endDate: date - 終了日（オプション）
+- executionDay: ExecutionDay - 実行日（値オブジェクト）
+- lastExecutedDate: date - 最終実行日
 - isActive: boolean - 有効フラグ
+- description: string - 説明・メモ
 - createdAt: timestamp - 作成日時
 - updatedAt: timestamp - 更新日時
 
 値オブジェクト:
-- Frequency: 繰り返し頻度
+- ExecutionDay: 月内実行日
+- Money: 金額
 
 ビジネスルール:
-- 次回実行日は自動計算
-- 終了日が設定されている場合、その日以降は実行されない
+- 月に1回のみ実行
+- 指定した日付で自動実行
 - 無効化された定期取引は実行されない
+- 同じ月に複数回実行されない
 ```
 
-#### 値オブジェクト: Frequency
+#### 値オブジェクト: ExecutionDay
 ```
-値オブジェクト: Frequency
-責務: 取引の繰り返し頻度を表現
+値オブジェクト: ExecutionDay
+責務: 月内の実行日を表現
 
 属性:
-- type: enum (daily, weekly, monthly, yearly)
-- interval: integer - 間隔（例：2週間ごと）
-- dayOfWeek: integer - 曜日（週次の場合）
-- dayOfMonth: integer - 日（月次の場合）
+- day: integer - 実行日（1-31）
 
 振る舞い:
-- calculateNextDate(fromDate: date): date - 次回日付を計算
-- getDescription(): string - 頻度の説明文
-- equals(other: Frequency): boolean - 頻度の同一性判定
+- getExecutionDateForMonth(year: integer, month: integer): date - 指定月の実行日を取得
+- isValidForMonth(year: integer, month: integer): boolean - 指定月で有効な日付か判定
+- adjustForShortMonth(year: integer, month: integer): date - 短い月の場合の調整
+- toString(): string - 日付の文字列表現
 
 ビジネスルール:
-- intervalは1以上
-- dayOfWeekは1-7（月-日）
-- dayOfMonthは1-31（月末は特別処理）
+- dayは1-31の範囲
+- 31日を指定した場合、30日以下の月は月末日に調整
+- 2月29日を指定した場合、平年は28日に調整
+- 無効な日付は月末日にフォールバック
+```
+
+#### ドメインサービス: RecurringTransactionExecutor
+```
+ドメインサービス: RecurringTransactionExecutor
+責務: 定期取引の実行判定と実行処理
+
+振る舞い:
+- findExecutableTransactions(targetDate: date): RecurringTransaction[] - 実行対象の定期取引を取得
+- shouldExecute(transaction: RecurringTransaction, targetDate: date): boolean - 実行すべきか判定
+- execute(transaction: RecurringTransaction, executionDate: date): Transaction - 定期取引を実行して通常取引を作成
+- markAsExecuted(transaction: RecurringTransaction, executionDate: date): void - 実行済みとしてマーク
+
+ビジネスルール:
+- 同じ月に既に実行済みの場合は実行しない
+- 実行日が指定日以降の場合のみ実行
+- 非アクティブな定期取引は実行しない
 ```
 
 ---
