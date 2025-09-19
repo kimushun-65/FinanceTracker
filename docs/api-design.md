@@ -847,6 +847,46 @@ DELETE /transactions/{transactionId}
 204 No Content
 ```
 
+### 月次サマリー取得
+
+```
+GET /transactions/summary/monthly
+```
+
+**説明:** 月間サマリー取得（上部カード表示用）。収入・支出・純収入の計算結果を返します。
+
+**クエリパラメータ:**
+
+| パラメータ | 型      | 必須 | 説明                         |
+| ---------- | ------- | ---- | ---------------------------- |
+| year       | integer | No   | 年（指定なしの場合は現在年） |
+| month      | integer | No   | 月（指定なしの場合は現在月） |
+
+**レスポンス:**
+
+```json
+{
+  "year": 2024,
+  "month": 2,
+  "summary": {
+    "total_income": 250000,
+    "total_expense": 175000,
+    "net_income": 75000
+  },
+  "daily_average": {
+    "income": 8929,
+    "expense": 6250
+  },
+  "comparison": {
+    "previous_month": {
+      "income_change": 0,
+      "expense_change": -5000,
+      "expense_change_percentage": -2.8
+    }
+  }
+}
+```
+
 ### 取引一括作成
 
 ```

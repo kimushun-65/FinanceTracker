@@ -538,6 +538,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransactionSummaryResponse'
 
+  /transactions/summary/monthly:
+    get:
+      tags:
+        - Transactions
+      summary: 月次サマリー取得
+      description: 月間サマリー取得（上部カード表示用）。収入・支出・純収入の計算結果を返します
+      parameters:
+        - name: year
+          in: query
+          description: 年（指定なしの場合は現在年）
+          schema:
+            type: integer
+            example: 2024
+        - name: month
+          in: query
+          description: 月（指定なしの場合は現在月）
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 2
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionMonthlySummaryResponse'
+
   # 定期取引API
   /recurring-transactions:
     get:
@@ -2993,6 +3022,63 @@ components:
                   category_name:
                     type: string
                     nullable: true
+
+    TransactionMonthlySummaryResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+          description: 対象年
+          example: 2024
+        month:
+          type: integer
+          description: 対象月
+          example: 2
+        summary:
+          type: object
+          properties:
+            total_income:
+              type: integer
+              description: 収入合計
+              example: 250000
+            total_expense:
+              type: integer
+              description: 支出合計
+              example: 175000
+            net_income:
+              type: integer
+              description: 純収入（収入-支出）
+              example: 75000
+        daily_average:
+          type: object
+          properties:
+            income:
+              type: integer
+              description: 日次平均収入
+              example: 8929
+            expense:
+              type: integer
+              description: 日次平均支出
+              example: 6250
+        comparison:
+          type: object
+          properties:
+            previous_month:
+              type: object
+              properties:
+                income_change:
+                  type: integer
+                  description: 前月からの収入変化額
+                  example: 0
+                expense_change:
+                  type: integer
+                  description: 前月からの支出変化額
+                  example: -5000
+                expense_change_percentage:
+                  type: number
+                  format: float
+                  description: 前月からの支出変化率（%）
+                  example: -2.8
                   icon:
                     type: string
                     nullable: true
