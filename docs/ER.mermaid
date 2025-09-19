@@ -1,0 +1,135 @@
+erDiagram
+    users {
+        UUID id PK
+        VARCHAR email
+        VARCHAR hashed_password
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    accounts {
+        UUID id PK
+        UUID user_id FK
+        VARCHAR name
+        VARCHAR type
+        INTEGER initial_balance
+        INTEGER current_balance
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    category_master {
+        UUID id PK
+        UUID parent_id FK
+        VARCHAR name
+        INTEGER sort_order
+        BOOLEAN is_active
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    categories {
+        UUID id PK
+        UUID user_id FK
+        UUID master_id FK
+        UUID parent_id FK
+        VARCHAR name
+        BOOLEAN is_custom
+        INTEGER sort_order
+        BOOLEAN is_active
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    transactions {
+        UUID id PK
+        UUID user_id FK
+        UUID category_id FK
+        VARCHAR type
+        INTEGER amount
+        DATE transaction_date
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    budgets {
+        UUID id PK
+        UUID user_id FK
+        UUID category_id FK
+        INTEGER amount
+        DATE month
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    asset_snapshots {
+        UUID id PK
+        UUID user_id FK
+        DATE snapshot_date
+        INTEGER total_assets
+        TIMESTAMPTZ created_at
+    }
+
+    recurring_transactions {
+        UUID id PK
+        UUID user_id FK
+        UUID category_id FK
+        INTEGER amount
+        VARCHAR frequency
+        DATE start_date
+        DATE next_date
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
+    account_movements {
+        UUID id PK
+        UUID user_id FK
+        UUID account_id FK
+        INTEGER amount
+        TIMESTAMPTZ occurred_at
+        TEXT note
+    }
+
+    budget_suggestions {
+        UUID id PK
+        UUID user_id FK
+        DATE month
+        UUID category_id FK
+        INTEGER suggested_amount
+        VARCHAR status
+        TIMESTAMPTZ created_at
+    }
+
+    asset_forecasts {
+        UUID id PK
+        UUID user_id FK
+        INTEGER horizon_months
+        DATE forecast_date
+        INTEGER predicted_assets
+        VARCHAR method
+        JSONB assumptions
+        TIMESTAMPTZ created_at
+    }
+
+    %% Relationships
+    users ||--o{ accounts : "has"
+    users ||--o{ categories : "has"
+    users ||--o{ transactions : "has"
+    users ||--o{ budgets : "has"
+    users ||--o{ asset_snapshots : "has"
+    users ||--o{ recurring_transactions : "has"
+    users ||--o{ account_movements : "has"
+    users ||--o{ budget_suggestions : "has"
+    users ||--o{ asset_forecasts : "has"
+
+    accounts ||--o{ account_movements : "records"
+
+    category_master }|--o{ category_master : "parent of"
+    category_master ||--o{ categories : "origin of"
+    categories }|--o{ categories : "parent of"
+
+    categories ||--o{ transactions : "categorizes"
+    categories ||--o{ budgets : "budget for"
+    categories ||--o{ recurring_transactions : "for"
+    categories ||--o{ budget_suggestions : "target"
