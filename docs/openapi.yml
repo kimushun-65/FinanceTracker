@@ -1,0 +1,2804 @@
+openapi: 3.0.3
+info:
+  title: FinSight API
+  description: 家計簿アプリケーション「FinSight」のREST API仕様書
+  version: 1.0.0
+  contact:
+    name: FinSight Team
+    email: support@finsight.com
+servers:
+  - url: https://api.finsight.com/v1
+    description: Production server
+  - url: http://localhost:8080/v1
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # 認証API
+  /auth/callback:
+    post:
+      tags:
+        - Authentication
+      summary: Auth0コールバック処理
+      description: Google認証後のコールバック処理。ユーザー情報の同期を行います。
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Auth0CallbackRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Auth0CallbackResponse'
+
+  /auth/sync:
+    post:
+      tags:
+        - Authentication
+      summary: ユーザー同期
+      description: Auth0のユーザー情報をシステムに同期します
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSyncResponse'
+
+  # ユーザー管理API
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: ユーザープロファイル取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    put:
+      tags:
+        - Users
+      summary: ユーザープロファイル更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    delete:
+      tags:
+        - Users
+      summary: アカウント削除
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountDeleteRequest'
+      responses:
+        '204':
+          description: 削除成功
+
+  /users/me/connections:
+    get:
+      tags:
+        - Users
+      summary: アカウント連携管理
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserConnectionsResponse'
+
+  # 口座管理API
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: 口座一覧取得
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListResponse'
+    post:
+      tags:
+        - Accounts
+      summary: 口座作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      summary: 口座詳細取得
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+    put:
+      tags:
+        - Accounts
+      summary: 口座更新
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+    delete:
+      tags:
+        - Accounts
+      summary: 口座削除
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '204':
+          description: 削除成功
+
+  /accounts/{accountId}/movements:
+    get:
+      tags:
+        - Accounts
+      summary: 口座履歴取得
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMovementListResponse'
+    post:
+      tags:
+        - Accounts
+      summary: 口座残高更新
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountMovementCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMovement'
+
+  # カテゴリ管理API
+  /categories/master:
+    get:
+      tags:
+        - Categories
+      summary: カテゴリマスター一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryMasterListResponse'
+    post:
+      tags:
+        - Categories
+      summary: カテゴリマスター作成
+      security:
+        - BearerAuth: ['admin:all']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryMasterCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryMaster'
+
+  /categories/master/{masterCategoryId}:
+    put:
+      tags:
+        - Categories
+      summary: カテゴリマスター更新
+      security:
+        - BearerAuth: ['admin:all']
+      parameters:
+        - $ref: '#/components/parameters/MasterCategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryMasterUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryMaster'
+    delete:
+      tags:
+        - Categories
+      summary: カテゴリマスター削除（非活性化）
+      security:
+        - BearerAuth: ['admin:all']
+      parameters:
+        - $ref: '#/components/parameters/MasterCategoryId'
+      responses:
+        '200':
+          description: 非活性化成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryMasterDeleteResponse'
+
+  /categories/copy-from-master:
+    post:
+      tags:
+        - Categories
+      summary: マスターからユーザーカテゴリへのコピー
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCopyRequest'
+      responses:
+        '201':
+          description: コピー成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryCopyResponse'
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: ユーザーカテゴリ一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+    post:
+      tags:
+        - Categories
+      summary: カテゴリ作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
+  /categories/{categoryId}:
+    put:
+      tags:
+        - Categories
+      summary: カテゴリ更新
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+    delete:
+      tags:
+        - Categories
+      summary: カテゴリ削除（非活性化）
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      responses:
+        '200':
+          description: 非活性化成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDeleteResponse'
+
+  # 取引管理API
+  /transactions:
+    get:
+      tags:
+        - Transactions
+      summary: 取引一覧取得
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [income, expense]
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: account_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: min_amount
+          in: query
+          schema:
+            type: integer
+        - name: max_amount
+          in: query
+          schema:
+            type: integer
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+    post:
+      tags:
+        - Transactions
+      summary: 取引作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/{transactionId}:
+    get:
+      tags:
+        - Transactions
+      summary: 取引詳細取得
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+    put:
+      tags:
+        - Transactions
+      summary: 取引更新
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+    delete:
+      tags:
+        - Transactions
+      summary: 取引削除
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '204':
+          description: 削除成功
+
+  /transactions/bulk:
+    post:
+      tags:
+        - Transactions
+      summary: 取引一括作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionBulkCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionBulkCreateResponse'
+
+  # 定期取引API
+  /recurring-transactions:
+    get:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引一覧取得
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionListResponse'
+    post:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTransactionCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransaction'
+
+  /recurring-transactions/{recurringTransactionId}:
+    get:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引詳細取得
+      parameters:
+        - $ref: '#/components/parameters/RecurringTransactionId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionDetail'
+    put:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引更新
+      parameters:
+        - $ref: '#/components/parameters/RecurringTransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTransactionUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransaction'
+    delete:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引無効化
+      parameters:
+        - $ref: '#/components/parameters/RecurringTransactionId'
+      responses:
+        '200':
+          description: 無効化成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionDeleteResponse'
+
+  /recurring-transactions/{recurringTransactionId}/execute:
+    post:
+      tags:
+        - Recurring Transactions
+      summary: 定期取引の手動実行
+      parameters:
+        - $ref: '#/components/parameters/RecurringTransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTransactionExecuteRequest'
+      responses:
+        '201':
+          description: 実行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionExecuteResponse'
+
+  /recurring-transactions/execute-monthly:
+    post:
+      tags:
+        - Recurring Transactions
+      summary: 月次定期取引の一括実行
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecurringTransactionMonthlyExecuteRequest'
+      responses:
+        '200':
+          description: 実行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionMonthlyExecuteResponse'
+
+  /recurring-transactions/schedule:
+    get:
+      tags:
+        - Recurring Transactions
+      summary: 今月の定期取引予定取得
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: month
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurringTransactionScheduleResponse'
+
+  # 予算管理API
+  /budgets:
+    get:
+      tags:
+        - Budgets
+      summary: 予算一覧取得
+      parameters:
+        - name: year
+          in: query
+          schema:
+            type: integer
+        - name: month
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetListResponse'
+    post:
+      tags:
+        - Budgets
+      summary: 予算設定
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetCreateResponse'
+
+  /budgets/current:
+    get:
+      tags:
+        - Budgets
+      summary: 今月の予算取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentBudgetResponse'
+
+  /budgets/{budgetId}:
+    put:
+      tags:
+        - Budgets
+      summary: 予算更新
+      parameters:
+        - $ref: '#/components/parameters/BudgetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetUpdateRequest'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budget'
+    delete:
+      tags:
+        - Budgets
+      summary: 予算削除
+      parameters:
+        - $ref: '#/components/parameters/BudgetId'
+      responses:
+        '204':
+          description: 削除成功
+
+  /budgets/performance:
+    get:
+      tags:
+        - Budgets
+      summary: 予算実績取得
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetPerformanceResponse'
+
+  # AI予算提案API
+  /budget-suggestions:
+    get:
+      tags:
+        - Budget Suggestions
+      summary: 予算提案取得
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: '2024-02'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSuggestionResponse'
+
+  /budget-suggestions/generate:
+    post:
+      tags:
+        - Budget Suggestions
+      summary: 予算提案生成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetSuggestionGenerateRequest'
+      responses:
+        '201':
+          description: 生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSuggestionGenerateResponse'
+
+  /budget-suggestions/{suggestionId}/accept:
+    put:
+      tags:
+        - Budget Suggestions
+      summary: 予算提案承認
+      parameters:
+        - $ref: '#/components/parameters/SuggestionId'
+      responses:
+        '200':
+          description: 承認成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSuggestionStatusResponse'
+
+  /budget-suggestions/{suggestionId}/reject:
+    put:
+      tags:
+        - Budget Suggestions
+      summary: 予算提案却下
+      parameters:
+        - $ref: '#/components/parameters/SuggestionId'
+      responses:
+        '200':
+          description: 却下成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSuggestionStatusResponse'
+
+  # 資産管理API
+  /assets/snapshots:
+    get:
+      tags:
+        - Assets
+      summary: 資産スナップショット取得
+      parameters:
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetSnapshotListResponse'
+    post:
+      tags:
+        - Assets
+      summary: 資産スナップショット作成
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetSnapshot'
+
+  # 資産予測API
+  /assets/forecasts/latest:
+    get:
+      tags:
+        - Asset Forecasts
+      summary: 資産予測取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetForecastResponse'
+
+  /assets/forecasts:
+    post:
+      tags:
+        - Asset Forecasts
+      summary: 資産予測作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetForecastCreateRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetForecastCreateResponse'
+
+  # レポートAPI
+  /reports/monthly:
+    get:
+      tags:
+        - Reports
+      summary: 月次レポート取得
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyReportResponse'
+
+  /reports/yearly:
+    get:
+      tags:
+        - Reports
+      summary: 年次レポート取得
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/YearlyReportResponse'
+
+  /reports/export:
+    post:
+      tags:
+        - Reports
+      summary: レポートエクスポート
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportExportRequest'
+      responses:
+        '200':
+          description: エクスポート開始
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportExportResponse'
+
+  /reports/email:
+    post:
+      tags:
+        - Reports
+      summary: レポートメール送信
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportEmailRequest'
+      responses:
+        '200':
+          description: メール送信成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportEmailResponse'
+
+  # 通知設定API
+  /notifications/settings:
+    get:
+      tags:
+        - Notifications
+      summary: 通知設定取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
+    put:
+      tags:
+        - Notifications
+      summary: 通知設定更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettingsUpdateRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettingsUpdateResponse'
+
+  /notifications/send-monthly-report:
+    post:
+      tags:
+        - Notifications
+      summary: 月次レポートメール送信（手動）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MonthlyReportSendRequest'
+      responses:
+        '200':
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyReportSendResponse'
+
+  /notifications/send-budget-alert:
+    post:
+      tags:
+        - Notifications
+      summary: 予算超過通知送信（システム用）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetAlertSendRequest'
+      responses:
+        '200':
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetAlertSendResponse'
+
+  # データエクスポート/インポートAPI
+  /data/export:
+    post:
+      tags:
+        - Data Management
+      summary: データエクスポート
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataExportRequest'
+      responses:
+        '202':
+          description: エクスポート開始
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportResponse'
+
+  /data/export/{jobId}/status:
+    get:
+      tags:
+        - Data Management
+      summary: エクスポートステータス確認
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportStatusResponse'
+
+  /data/import:
+    post:
+      tags:
+        - Data Management
+      summary: データインポート
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                type:
+                  type: string
+                  enum: [transactions, categories]
+      responses:
+        '202':
+          description: インポート開始
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataImportResponse'
+
+  /data/import/{jobId}/status:
+    get:
+      tags:
+        - Data Management
+      summary: インポートステータス確認
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataImportStatusResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: ページ番号（1から開始）
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      name: limit
+      in: query
+      description: 1ページあたりの件数
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Sort:
+      name: sort
+      in: query
+      description: ソート順（-で降順）
+      schema:
+        type: string
+        default: '-created_at'
+    From:
+      name: from
+      in: query
+      description: 開始日
+      schema:
+        type: string
+        format: date
+    To:
+      name: to
+      in: query
+      description: 終了日
+      schema:
+        type: string
+        format: date
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CategoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    MasterCategoryId:
+      name: masterCategoryId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RecurringTransactionId:
+      name: recurringTransactionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    BudgetId:
+      name: budgetId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SuggestionId:
+      name: suggestionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    # エラーレスポンス
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    # ページネーション
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+
+    # 基本的なエンティティ
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        auth0_user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [checking, savings, investment, credit_card, loan]
+        initial_balance:
+          type: integer
+        current_balance:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AccountMovement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        account_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+        occurred_at:
+          type: string
+          format: date-time
+        note:
+          type: string
+
+    CategoryMaster:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        master_id:
+          type: string
+          format: uuid
+          nullable: true
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        is_custom:
+          type: boolean
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+        amount:
+          type: integer
+        transaction_date:
+          type: string
+          format: date
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        description:
+          type: string
+        is_recurring:
+          type: boolean
+        recurring_transaction_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RecurringTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        amount:
+          type: integer
+        execution_day:
+          type: integer
+          minimum: 1
+          maximum: 31
+        last_executed_date:
+          type: string
+          format: date
+          nullable: true
+        next_execution_date:
+          type: string
+          format: date
+        is_active:
+          type: boolean
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        category:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+        amount:
+          type: integer
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+        spent:
+          type: integer
+        remaining:
+          type: integer
+        percentage:
+          type: number
+          format: float
+        created_at:
+          type: string
+          format: date-time
+
+    AssetSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        snapshot_date:
+          type: string
+          format: date
+        total_assets:
+          type: integer
+        change_from_previous:
+          type: integer
+        change_percentage:
+          type: number
+          format: float
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              account_id:
+                type: string
+                format: uuid
+              account_name:
+                type: string
+              balance:
+                type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationSettings:
+      type: object
+      properties:
+        monthly_report:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            send_day:
+              type: integer
+              minimum: 1
+              maximum: 31
+            send_time:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+            email:
+              type: string
+              format: email
+        budget_exceeded_alert:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            email:
+              type: string
+              format: email
+
+    # リクエスト/レスポンススキーマ
+    Auth0CallbackRequest:
+      type: object
+      required:
+        - auth0_user_id
+        - email
+        - email_verified
+      properties:
+        auth0_user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        email_verified:
+          type: boolean
+        name:
+          type: string
+        picture:
+          type: string
+        provider:
+          type: string
+        google_id:
+          type: string
+
+    Auth0CallbackResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        is_new_user:
+          type: boolean
+
+    UserSyncResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+
+    AccountDeleteRequest:
+      type: object
+      required:
+        - confirmation
+      properties:
+        confirmation:
+          type: string
+          enum: ['DELETE MY ACCOUNT']
+        reason:
+          type: string
+
+    UserConnectionsResponse:
+      type: object
+      properties:
+        connections:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              email:
+                type: string
+                format: email
+              connected_at:
+                type: string
+                format: date-time
+              profile_image:
+                type: string
+
+    AccountCreateRequest:
+      type: object
+      required:
+        - name
+        - type
+        - initial_balance
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [checking, savings, investment, credit_card, loan]
+        initial_balance:
+          type: integer
+
+    AccountUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+
+    AccountListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AccountMovementCreateRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: integer
+        note:
+          type: string
+
+    AccountMovementListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountMovement'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CategoryMasterListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryMaster'
+
+    CategoryMasterCreateRequest:
+      type: object
+      required:
+        - name
+        - sort_order
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        sort_order:
+          type: integer
+
+    CategoryMasterUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sort_order:
+          type: integer
+
+    CategoryMasterDeleteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+
+    CategoryCopyRequest:
+      type: object
+      required:
+        - master_category_ids
+      properties:
+        master_category_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    CategoryCopyResponse:
+      type: object
+      properties:
+        copied:
+          type: integer
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    CategoryListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    CategoryCreateRequest:
+      type: object
+      required:
+        - name
+        - sort_order
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        sort_order:
+          type: integer
+
+    CategoryUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        sort_order:
+          type: integer
+
+    CategoryDeleteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+
+    TransactionCreateRequest:
+      type: object
+      required:
+        - type
+        - amount
+        - transaction_date
+        - category_id
+      properties:
+        type:
+          type: string
+          enum: [income, expense]
+        amount:
+          type: integer
+        transaction_date:
+          type: string
+          format: date
+        category_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+    TransactionUpdateRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+        description:
+          type: string
+
+    TransactionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        summary:
+          type: object
+          properties:
+            total_income:
+              type: integer
+            total_expense:
+              type: integer
+            net:
+              type: integer
+
+    TransactionBulkCreateRequest:
+      type: object
+      required:
+        - transactions
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionCreateRequest'
+
+    TransactionBulkCreateResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    RecurringTransactionCreateRequest:
+      type: object
+      required:
+        - name
+        - category_id
+        - amount
+        - execution_day
+      properties:
+        name:
+          type: string
+        category_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+        execution_day:
+          type: integer
+          minimum: 1
+          maximum: 31
+        description:
+          type: string
+
+    RecurringTransactionUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: integer
+        execution_day:
+          type: integer
+          minimum: 1
+          maximum: 31
+        description:
+          type: string
+
+    RecurringTransactionListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecurringTransaction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    RecurringTransactionDetail:
+      allOf:
+        - $ref: '#/components/schemas/RecurringTransaction'
+        - type: object
+          properties:
+            execution_history:
+              type: array
+              items:
+                type: object
+                properties:
+                  executed_date:
+                    type: string
+                    format: date
+                  transaction_id:
+                    type: string
+                    format: uuid
+                  amount:
+                    type: integer
+
+    RecurringTransactionDeleteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+
+    RecurringTransactionExecuteRequest:
+      type: object
+      required:
+        - execution_date
+      properties:
+        execution_date:
+          type: string
+          format: date
+        amount_override:
+          type: integer
+        description_override:
+          type: string
+
+    RecurringTransactionExecuteResponse:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+        recurring_transaction:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            last_executed_date:
+              type: string
+              format: date
+            next_execution_date:
+              type: string
+              format: date
+
+    RecurringTransactionMonthlyExecuteRequest:
+      type: object
+      required:
+        - target_year
+        - target_month
+      properties:
+        target_year:
+          type: integer
+        target_month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        dry_run:
+          type: boolean
+          default: false
+
+    RecurringTransactionMonthlyExecuteResponse:
+      type: object
+      properties:
+        execution_summary:
+          type: object
+          properties:
+            target_month:
+              type: string
+            total_recurring_transactions:
+              type: integer
+            executed:
+              type: integer
+            skipped:
+              type: integer
+            failed:
+              type: integer
+        executed_transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              recurring_transaction_id:
+                type: string
+                format: uuid
+              transaction_id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              execution_date:
+                type: string
+                format: date
+              amount:
+                type: integer
+        skipped_transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              recurring_transaction_id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              reason:
+                type: string
+
+    RecurringTransactionScheduleResponse:
+      type: object
+      properties:
+        month:
+          type: string
+        schedule:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              transactions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+                    amount:
+                      type: integer
+                    category:
+                      type: string
+                    status:
+                      type: string
+                      enum: [pending, executed]
+        summary:
+          type: object
+          properties:
+            total_amount:
+              type: integer
+            total_transactions:
+              type: integer
+            pending:
+              type: integer
+            executed:
+              type: integer
+
+    BudgetCreateRequest:
+      type: object
+      required:
+        - budgets
+      properties:
+        budgets:
+          type: array
+          items:
+            type: object
+            required:
+              - category_id
+              - amount
+              - month
+            properties:
+              category_id:
+                type: string
+                format: uuid
+              amount:
+                type: integer
+              month:
+                type: string
+                pattern: '^\d{4}-\d{2}$'
+
+    BudgetCreateResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+        budgets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Budget'
+
+    BudgetUpdateRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+
+    BudgetListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Budget'
+        summary:
+          type: object
+          properties:
+            total_budget:
+              type: integer
+            total_spent:
+              type: integer
+            total_remaining:
+              type: integer
+            percentage:
+              type: number
+              format: float
+
+    CurrentBudgetResponse:
+      type: object
+      properties:
+        month:
+          type: string
+        current_date:
+          type: string
+          format: date
+        days_in_month:
+          type: integer
+        days_elapsed:
+          type: integer
+        days_remaining:
+          type: integer
+        data:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/Budget'
+              - type: object
+                properties:
+                  daily_average_budget:
+                    type: number
+                    format: float
+                  daily_average_spent:
+                    type: number
+                    format: float
+                  projected_month_end:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [on_track, completed, over_budget, under_spent, at_risk, over_projected]
+        summary:
+          type: object
+          properties:
+            total_budget:
+              type: integer
+            total_spent:
+              type: integer
+            total_remaining:
+              type: integer
+            percentage:
+              type: number
+              format: float
+            daily_average_budget:
+              type: number
+              format: float
+            daily_average_spent:
+              type: number
+              format: float
+            projected_month_end:
+              type: integer
+            status:
+              type: string
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              category:
+                type: string
+              message:
+                type: string
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              category:
+                type: string
+              message:
+                type: string
+
+    BudgetPerformanceResponse:
+      type: object
+      properties:
+        month:
+          type: string
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+              budget:
+                type: integer
+              actual:
+                type: integer
+              variance:
+                type: integer
+              percentage:
+                type: number
+                format: float
+              status:
+                type: string
+                enum: [under, over]
+        total:
+          type: object
+          properties:
+            budget:
+              type: integer
+            actual:
+              type: integer
+            variance:
+              type: integer
+            percentage:
+              type: number
+              format: float
+
+    BudgetSuggestionResponse:
+      type: object
+      properties:
+        month:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              category:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+              suggested_amount:
+                type: integer
+              current_budget:
+                type: integer
+              last_month_actual:
+                type: integer
+              three_month_average:
+                type: integer
+              reason:
+                type: string
+              confidence:
+                type: number
+                format: float
+              status:
+                type: string
+                enum: [pending, accepted, rejected]
+        summary:
+          type: object
+          properties:
+            total_suggested:
+              type: integer
+            total_current:
+              type: integer
+            potential_savings:
+              type: integer
+
+    BudgetSuggestionGenerateRequest:
+      type: object
+      required:
+        - month
+      properties:
+        month:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+        optimization_type:
+          type: string
+          enum: [conservative, balanced, aggressive]
+          default: balanced
+
+    BudgetSuggestionGenerateResponse:
+      type: object
+      properties:
+        month:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: object
+        created_at:
+          type: string
+          format: date-time
+
+    BudgetSuggestionStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [accepted, rejected]
+        budget_id:
+          type: string
+          format: uuid
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+
+    AssetSnapshotListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetSnapshot'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AssetForecastResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        horizon_months:
+          type: integer
+        forecast_date:
+          type: string
+          format: date
+        current_assets:
+          type: integer
+        predicted_assets:
+          type: integer
+        growth_rate:
+          type: number
+          format: float
+        method:
+          type: string
+          enum: [linear_regression, moving_average, monte_carlo, ml_based]
+        confidence_interval:
+          type: object
+          properties:
+            lower:
+              type: integer
+            upper:
+              type: integer
+        assumptions:
+          type: object
+          properties:
+            monthly_income:
+              type: integer
+            monthly_expense:
+              type: integer
+            savings_rate:
+              type: number
+              format: float
+            investment_return:
+              type: number
+              format: float
+            inflation_rate:
+              type: number
+              format: float
+        monthly_forecast:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              predicted_assets:
+                type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    AssetForecastCreateRequest:
+      type: object
+      required:
+        - horizon_months
+      properties:
+        horizon_months:
+          type: integer
+          minimum: 1
+          maximum: 60
+        scenario:
+          type: string
+          enum: [pessimistic, realistic, optimistic]
+          default: realistic
+        assumptions:
+          type: object
+          properties:
+            monthly_income:
+              type: integer
+            monthly_expense:
+              type: integer
+            major_expenses:
+              type: array
+              items:
+                type: object
+                properties:
+                  month:
+                    type: string
+                  amount:
+                    type: integer
+                  description:
+                    type: string
+
+    AssetForecastCreateResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        horizon_months:
+          type: integer
+        forecast_date:
+          type: string
+          format: date
+        predicted_assets:
+          type: integer
+        method:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    MonthlyReportResponse:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            year:
+              type: integer
+            month:
+              type: integer
+        summary:
+          type: object
+          properties:
+            total_income:
+              type: integer
+            total_expense:
+              type: integer
+            net_income:
+              type: integer
+            savings_rate:
+              type: number
+              format: float
+        top_categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              amount:
+                type: integer
+              percentage:
+                type: number
+                format: float
+        daily_trend:
+          type: array
+          items:
+            type: object
+        comparison:
+          type: object
+          properties:
+            previous_month:
+              type: object
+              properties:
+                total_expense:
+                  type: integer
+                change_amount:
+                  type: integer
+                change_percentage:
+                  type: number
+                  format: float
+            same_month_last_year:
+              type: object
+              properties:
+                total_expense:
+                  type: integer
+                change_amount:
+                  type: integer
+                change_percentage:
+                  type: number
+                  format: float
+
+    YearlyReportResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+        summary:
+          type: object
+          properties:
+            total_income:
+              type: integer
+            total_expense:
+              type: integer
+            net_income:
+              type: integer
+            average_monthly_expense:
+              type: integer
+            savings_rate:
+              type: number
+              format: float
+        monthly_breakdown:
+          type: array
+          items:
+            type: object
+        category_ranking:
+          type: array
+          items:
+            type: object
+        asset_growth:
+          type: object
+          properties:
+            beginning_balance:
+              type: integer
+            ending_balance:
+              type: integer
+            growth_amount:
+              type: integer
+            growth_rate:
+              type: number
+              format: float
+
+    ReportExportRequest:
+      type: object
+      required:
+        - type
+        - format
+      properties:
+        type:
+          type: string
+          enum: [monthly, yearly]
+        year:
+          type: integer
+        month:
+          type: integer
+        format:
+          type: string
+          enum: [pdf, excel, csv]
+        include_charts:
+          type: boolean
+          default: true
+
+    ReportExportResponse:
+      type: object
+      properties:
+        download_url:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    ReportEmailRequest:
+      type: object
+      required:
+        - type
+        - year
+        - month
+        - recipient_email
+      properties:
+        type:
+          type: string
+          enum: [monthly, yearly]
+        year:
+          type: integer
+        month:
+          type: integer
+        recipient_email:
+          type: string
+          format: email
+
+    ReportEmailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+
+    NotificationSettingsUpdateRequest:
+      type: object
+      properties:
+        monthly_report:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+            send_day:
+              type: integer
+              minimum: 1
+              maximum: 31
+            send_time:
+              type: string
+              pattern: '^\d{2}:\d{2}$'
+        budget_exceeded_alert:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+
+    NotificationSettingsUpdateResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    MonthlyReportSendRequest:
+      type: object
+      required:
+        - year
+        - month
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+
+    MonthlyReportSendResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        sent_to:
+          type: string
+          format: email
+        report_period:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+
+    BudgetAlertSendRequest:
+      type: object
+      required:
+        - categories
+        - month
+      properties:
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: string
+                format: uuid
+              category_name:
+                type: string
+              budget_amount:
+                type: integer
+              spent_amount:
+                type: integer
+              exceeded_amount:
+                type: integer
+              exceeded_date:
+                type: string
+                format: date
+        month:
+          type: string
+
+    BudgetAlertSendResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        sent_to:
+          type: string
+          format: email
+        categories_alerted:
+          type: integer
+        sent_at:
+          type: string
+          format: date-time
+
+    DataExportRequest:
+      type: object
+      required:
+        - format
+        - include
+      properties:
+        format:
+          type: string
+          enum: [csv, json, excel]
+        include:
+          type: array
+          items:
+            type: string
+            enum: [transactions, budgets, categories, accounts, recurring_transactions]
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+
+    DataExportResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        message:
+          type: string
+
+    DataExportStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        download_url:
+          type: string
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DataImportResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        message:
+          type: string
+
+    DataImportStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        summary:
+          type: object
+          properties:
+            total_rows:
+              type: integer
+            imported:
+              type: integer
+            skipped:
+              type: integer
+            errors:
+              type: integer
+          nullable: true
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              message:
+                type: string
+          nullable: true
+
+tags:
+  - name: Authentication
+    description: 認証関連のAPI
+  - name: Users
+    description: ユーザー管理API
+  - name: Accounts
+    description: 口座管理API
+  - name: Categories
+    description: カテゴリ管理API
+  - name: Transactions
+    description: 取引管理API
+  - name: Recurring Transactions
+    description: 定期取引API
+  - name: Budgets
+    description: 予算管理API
+  - name: Budget Suggestions
+    description: AI予算提案API
+  - name: Assets
+    description: 資産管理API
+  - name: Asset Forecasts
+    description: 資産予測API
+  - name: Reports
+    description: レポートAPI
+  - name: Notifications
+    description: 通知設定API
+  - name: Data Management
+    description: データエクスポート/インポートAPI
