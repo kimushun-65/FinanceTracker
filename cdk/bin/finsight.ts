@@ -5,6 +5,7 @@ import { VpcStack } from '../lib/stacks/vpc-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { AmplifyStack } from '../lib/stacks/amplify-stack';
+import { SesStack } from '../lib/stacks/ses-stack';
 import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
@@ -55,6 +56,14 @@ const amplifyStack = new AmplifyStack(app, `AmplifyStack-${environment}`, {
   env,
 });
 amplifyStack.addDependency(apiStack);
+
+// SESスタック（メール送信）
+const sesStack = new SesStack(app, `SesStack-${environment}`, {
+  config,
+  lambdaFunctions: apiStack.lambdaFunctions,
+  env,
+});
+sesStack.addDependency(apiStack);
 
 // タグを追加
 cdk.Tags.of(app).add('Environment', environment);
