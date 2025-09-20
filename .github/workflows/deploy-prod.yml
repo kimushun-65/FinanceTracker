@@ -121,9 +121,3 @@ jobs:
         run: |
           chmod +x scripts/test-deployment.sh
           ./scripts/test-deployment.sh prod
-
-      - name: Create deployment report
-        working-directory: ./cdk
-        run: |
-          chmod +x scripts/deployment-report.sh
-          ./scripts/deployment-report.sh prod

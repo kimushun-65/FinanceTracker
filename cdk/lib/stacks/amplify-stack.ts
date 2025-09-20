@@ -1,6 +1,7 @@
 import { Stack, StackProps, CfnOutput, SecretValue } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { App, GitHubSourceCodeProvider, Branch, RedirectStatus } from '@aws-cdk/aws-amplify-alpha';
+import { Role, ServicePrincipal, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { EnvironmentConfig } from '../interfaces/config';
 
 export interface AmplifyStackProps extends StackProps {
@@ -15,8 +16,21 @@ export class AmplifyStack extends Stack {
   constructor(scope: Construct, id: string, props: AmplifyStackProps) {
     super(scope, id, props);
 
+    // Amplify用のサービスロールを作成
+    const amplifyRole = new Role(this, 'AmplifyServiceRole', {
+      assumedBy: new ServicePrincipal('amplify.amazonaws.com'),
+      description: 'Service role for Amplify app',
+    });
+
+    // Secrets Managerへのアクセス権限を付与
+    amplifyRole.addToPolicy(new PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [`arn:aws:secretsmanager:${this.region}:${this.account}:secret:github-token*`],
+    }));
+
     // Amplifyアプリケーション作成
     this.amplifyApp = new App(this, 'FinSightApp', {
+      role: amplifyRole,
       appName: `finsight-frontend-${props.config.environment}`,
       description: `FinSight Frontend for ${props.config.environment}`,
       sourceCodeProvider: new GitHubSourceCodeProvider({
