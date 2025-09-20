@@ -65,8 +65,8 @@ jobs:
       - name: Run security scan
         working-directory: ./cdk
         run: |
-          chmod +x scripts/security-scan.sh
-          ./scripts/security-scan.sh
+          chmod +x scripts/security-check.sh
+          ./scripts/security-check.sh
 
   deploy:
     runs-on: ubuntu-latest
