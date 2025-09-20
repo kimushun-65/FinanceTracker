@@ -1,14 +1,128 @@
-# Welcome to your CDK TypeScript project
+# FinSight インフラストラクチャ (CDK)
 
-This is a blank project for CDK development with TypeScript.
+このディレクトリには、FinSight個人財務管理アプリケーションのAWS CDKインフラストラクチャコードが含まれています。
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## アーキテクチャ概要
 
-## Useful commands
+インフラストラクチャは以下のスタックで構成されています：
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+1. **VPC Stack** - パブリック/プライベートサブネットを持つネットワークインフラ
+2. **Database Stack** - Secrets Manager統合を持つRDS PostgreSQL
+3. **API Stack** - API Gateway、Lambda関数、Auth0統合
+4. **Amplify Stack** - GitHub統合によるフロントエンドホスティング
+5. **SES Stack** - メール送信設定
+6. **Monitoring Stack** - CloudWatchダッシュボードとアラーム
+7. **Security Stack** - WAFルールとセキュリティ設定
+
+## 前提条件
+
+- Node.js 18.x以上
+- 適切な認証情報で設定されたAWS CLI
+- CDK CLI (`npm install -g aws-cdk`)
+- Go 1.21以上（Lambda関数用）
+
+## プロジェクト構造
+
+```
+cdk/
+├── bin/            # CDKアプリのエントリポイント
+├── lib/            # スタック定義
+│   ├── stacks/     # 個別スタック実装
+│   └── interfaces/ # TypeScriptインターフェース
+├── lambda/         # Lambda関数のソースコード
+├── config/         # 環境設定
+└── scripts/        # デプロイとテストのスクリプト
+```
+
+## 環境設定
+
+環境固有の設定は `config/` ディレクトリに保存されています：
+- `dev.json` - 開発環境
+- `prod.json` - 本番環境
+
+## デプロイ
+
+### 初期セットアップ
+
+1. 依存関係のインストール:
+   ```bash
+   npm install
+   ```
+
+2. CDKのブートストラップ（初回のみ）:
+   ```bash
+   cdk bootstrap
+   ```
+
+### 開発環境へのデプロイ
+
+```bash
+./scripts/deploy-dev.sh
+```
+
+### 本番環境へのデプロイ
+
+```bash
+./scripts/deploy-prod.sh
+```
+
+## テスト
+
+### 統合テスト
+```bash
+./scripts/test-integration.sh dev
+```
+
+### パフォーマンステスト
+```bash
+./scripts/test-performance.sh dev
+```
+
+### セキュリティチェック
+```bash
+./scripts/security-check.sh dev
+```
+
+## Lambda関数
+
+アプリケーションには以下のLambda関数が含まれています：
+
+- **auth** - 認証と認可
+- **users** - ユーザープロファイル管理
+- **accounts** - 金融アカウント管理
+- **transactions** - 取引記録
+- **categories** - 取引カテゴリ分け
+- **budgets** - 予算管理
+- **reports** - 財務レポート
+- **notifications** - メール通知
+
+## コスト最適化
+
+以下によりコスト最適化されています：
+- 開発環境では単一のNATゲートウェイ
+- 非本番環境では小さいRDSインスタンスサイズ
+- Lambda予約同時実行数の制限
+- CloudWatchログ保持ポリシー
+
+## セキュリティ機能
+
+- レート制限付きWAF保護
+- LambdaとRDSのVPC分離
+- データベース認証情報のSecrets Manager管理
+- 最小権限のIAMロール
+- 全Lambda関数のX-Rayトレーシング
+
+## モニタリング
+
+CloudWatchダッシュボードへのアクセス:
+- 開発: https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-dev
+- 本番: https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-prod
+
+## 便利なコマンド
+
+* `npm run build`   TypeScriptをJavaScriptにコンパイル
+* `npm run watch`   変更を監視してコンパイル
+* `npm run test`    Jestユニットテストの実行
+* `npx cdk deploy`  デフォルトのAWSアカウント/リージョンにデプロイ
+* `npx cdk diff`    デプロイ済みスタックと現在の状態を比較
+* `npx cdk synth`   合成されたCloudFormationテンプレートを出力
