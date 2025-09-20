@@ -145,13 +145,3 @@ jobs:
         run: |
           chmod +x scripts/deployment-report.sh
           ./scripts/deployment-report.sh prod
-
-      - name: Notify deployment status
-        if: always()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#production-deployments'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
