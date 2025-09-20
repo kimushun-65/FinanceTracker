@@ -4,6 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { VpcStack } from '../lib/stacks/vpc-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
+import { AmplifyStack } from '../lib/stacks/amplify-stack';
 import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
@@ -46,6 +47,14 @@ const apiStack = new ApiStack(app, `ApiStack-${environment}`, {
   env,
 });
 apiStack.addDependency(databaseStack);
+
+// Amplifyスタック（フロントエンド）
+const amplifyStack = new AmplifyStack(app, `AmplifyStack-${environment}`, {
+  config,
+  apiEndpoint: apiStack.api.url,
+  env,
+});
+amplifyStack.addDependency(apiStack);
 
 // タグを追加
 cdk.Tags.of(app).add('Environment', environment);
