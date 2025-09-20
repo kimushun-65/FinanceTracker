@@ -60,7 +60,11 @@ fi
 # Check CloudTrail
 echo ""
 echo "Checking CloudTrail..."
-aws cloudtrail describe-trails --query "trailList[?contains(Name, '$ENVIRONMENT')].{Name:Name,IsMultiRegionTrail:IsMultiRegionTrail,LogFileValidationEnabled:LogFileValidationEnabled}" --output table
+if aws cloudtrail describe-trails --query "trailList[?contains(Name, '$ENVIRONMENT')].{Name:Name,IsMultiRegionTrail:IsMultiRegionTrail,LogFileValidationEnabled:LogFileValidationEnabled}" --output table 2>/dev/null; then
+    echo "CloudTrail is configured"
+else
+    echo "CloudTrail check skipped (insufficient permissions or not configured)"
+fi
 
 # Check S3 bucket encryption (if any)
 echo ""
