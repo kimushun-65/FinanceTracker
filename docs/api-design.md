@@ -594,6 +594,8 @@ DELETE /categories/master/{masterCategoryId}
 GET /categories
 ```
 
+**説明**: アクティブなカテゴリのみを返します（is_active=trueのカテゴリのみ）。非アクティブなカテゴリは含まれません。
+
 **レスポンス:**
 
 ```json
@@ -623,6 +625,8 @@ GET /categories
     }
   ]
 }
+
+注: is_active=falseのカテゴリは自動的にフィルタリングされます
 ```
 
 ### カテゴリ作成

@@ -320,7 +320,7 @@ paths:
       tags:
         - Categories
       summary: ユーザーカテゴリ一覧取得
-      description: アイコンとカラー情報を含むユーザーカテゴリ一覧を取得します
+      description: アクティブなカテゴリのみを取得します（is_active=trueのカテゴリのみ）
       responses:
         '200':
           description: 成功
