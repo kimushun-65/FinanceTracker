@@ -1,0 +1,10 @@
+{
+  "name": "authorizer",
+  "version": "1.0.0",
+  "description": "Lambda Authorizer for FinSight API",
+  "main": "index.js",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.0.1"
+  }
+}
