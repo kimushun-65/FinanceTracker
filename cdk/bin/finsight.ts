@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { VpcStack } from '../lib/stacks/vpc-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
-import { AmplifyStack } from '../lib/stacks/amplify-stack';
+// import { AmplifyStack } from '../lib/stacks/amplify-stack'; // 手動管理に移行
 import { SesStack } from '../lib/stacks/ses-stack';
 import { MonitoringStack } from '../lib/stacks/monitoring-stack';
 import { SecurityStack } from '../lib/stacks/security-stack';
@@ -51,13 +51,13 @@ const apiStack = new ApiStack(app, `ApiStack-${environment}`, {
 });
 apiStack.addDependency(databaseStack);
 
-// Amplifyスタック（フロントエンド）
-const amplifyStack = new AmplifyStack(app, `AmplifyStack-${environment}`, {
-  config,
-  apiEndpoint: apiStack.api.url,
-  env,
-});
-amplifyStack.addDependency(apiStack);
+// Amplifyスタック（フロントエンド）- 手動管理に移行
+// const amplifyStack = new AmplifyStack(app, `AmplifyStack-${environment}`, {
+//   config,
+//   apiEndpoint: apiStack.api.url,
+//   env,
+// });
+// amplifyStack.addDependency(apiStack);
 
 // SESスタック（メール送信）
 const sesStack = new SesStack(app, `SesStack-${environment}`, {
