@@ -82,32 +82,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-    delete:
-      tags:
-        - Users
-      summary: アカウント削除
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccountDeleteRequest'
-      responses:
-        '204':
-          description: 削除成功
 
-  /users/me/connections:
-    get:
-      tags:
-        - Users
-      summary: アカウント連携管理
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserConnectionsResponse'
 
   # 口座管理API
   /accounts:
@@ -145,19 +120,6 @@ paths:
                 $ref: '#/components/schemas/Account'
 
   /accounts/{accountId}:
-    get:
-      tags:
-        - Accounts
-      summary: 口座詳細取得
-      parameters:
-        - $ref: '#/components/parameters/AccountId'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Account'
     put:
       tags:
         - Accounts
@@ -188,23 +150,6 @@ paths:
           description: 削除成功
 
   /accounts/{accountId}/movements:
-    get:
-      tags:
-        - Accounts
-      summary: 口座履歴取得
-      parameters:
-        - $ref: '#/components/parameters/AccountId'
-        - $ref: '#/components/parameters/From'
-        - $ref: '#/components/parameters/To'
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountMovementListResponse'
     post:
       tags:
         - Accounts
@@ -296,25 +241,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/CategoryMasterDeleteResponse'
 
-  /categories/copy-from-master:
-    post:
-      tags:
-        - Categories
-      summary: マスターからユーザーカテゴリへのコピー
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryCopyRequest'
-      responses:
-        '201':
-          description: コピー成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryCopyResponse'
-
   /categories:
     get:
       tags:
@@ -328,23 +254,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryListResponse'
-    post:
-      tags:
-        - Categories
-      summary: カテゴリ作成
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CategoryCreateRequest'
-      responses:
-        '201':
-          description: 作成成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Category'
 
   /categories/{categoryId}:
     put:
@@ -441,19 +350,6 @@ paths:
                 $ref: '#/components/schemas/Transaction'
 
   /transactions/{transactionId}:
-    get:
-      tags:
-        - Transactions
-      summary: 取引詳細取得
-      parameters:
-        - $ref: '#/components/parameters/TransactionId'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Transaction'
     put:
       tags:
         - Transactions
@@ -482,25 +378,6 @@ paths:
       responses:
         '204':
           description: 削除成功
-
-  /transactions/bulk:
-    post:
-      tags:
-        - Transactions
-      summary: 取引一括作成
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransactionBulkCreateRequest'
-      responses:
-        '201':
-          description: 作成成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionBulkCreateResponse'
 
   /transactions/summary:
     get:
@@ -567,148 +444,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransactionMonthlySummaryResponse'
 
-  # 定期取引API
-  /recurring-transactions:
-    get:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引一覧取得
-      parameters:
-        - $ref: '#/components/parameters/Page'
-        - $ref: '#/components/parameters/Limit'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionListResponse'
-    post:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引作成
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecurringTransactionCreateRequest'
-      responses:
-        '201':
-          description: 作成成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransaction'
-
-  /recurring-transactions/{recurringTransactionId}:
-    get:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引詳細取得
-      parameters:
-        - $ref: '#/components/parameters/RecurringTransactionId'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionDetail'
-    put:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引更新
-      parameters:
-        - $ref: '#/components/parameters/RecurringTransactionId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecurringTransactionUpdateRequest'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransaction'
-    delete:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引無効化
-      parameters:
-        - $ref: '#/components/parameters/RecurringTransactionId'
-      responses:
-        '200':
-          description: 無効化成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionDeleteResponse'
-
-  /recurring-transactions/{recurringTransactionId}/execute:
-    post:
-      tags:
-        - Recurring Transactions
-      summary: 定期取引の手動実行
-      parameters:
-        - $ref: '#/components/parameters/RecurringTransactionId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecurringTransactionExecuteRequest'
-      responses:
-        '201':
-          description: 実行成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionExecuteResponse'
-
-  /recurring-transactions/execute-monthly:
-    post:
-      tags:
-        - Recurring Transactions
-      summary: 月次定期取引の一括実行
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RecurringTransactionMonthlyExecuteRequest'
-      responses:
-        '200':
-          description: 実行成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionMonthlyExecuteResponse'
-
-  /recurring-transactions/schedule:
-    get:
-      tags:
-        - Recurring Transactions
-      summary: 今月の定期取引予定取得
-      parameters:
-        - name: year
-          in: query
-          schema:
-            type: integer
-        - name: month
-          in: query
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RecurringTransactionScheduleResponse'
 
   # 予算管理API
   /budgets:
@@ -783,39 +518,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Budget'
-    delete:
-      tags:
-        - Budgets
-      summary: 予算削除
-      parameters:
-        - $ref: '#/components/parameters/BudgetId'
-      responses:
-        '204':
-          description: 削除成功
 
-  /budgets/performance:
-    get:
-      tags:
-        - Budgets
-      summary: 予算実績取得
-      parameters:
-        - name: year
-          in: query
-          required: true
-          schema:
-            type: integer
-        - name: month
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BudgetPerformanceResponse'
 
   # AI予算提案API
   /budget-suggestions:
@@ -949,17 +652,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssetSnapshotListResponse'
-    post:
-      tags:
-        - Assets
-      summary: 資産スナップショット作成
-      responses:
-        '201':
-          description: 作成成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AssetSnapshot'
 
   # 資産予測API
   /assets/forecasts/latest:
@@ -995,67 +687,6 @@ paths:
                 $ref: '#/components/schemas/AssetForecastCreateResponse'
 
   # レポートAPI
-  /reports/monthly:
-    get:
-      tags:
-        - Reports
-      summary: 月次レポート取得
-      parameters:
-        - name: year
-          in: query
-          required: true
-          schema:
-            type: integer
-        - name: month
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MonthlyReportResponse'
-
-  /reports/yearly:
-    get:
-      tags:
-        - Reports
-      summary: 年次レポート取得
-      parameters:
-        - name: year
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/YearlyReportResponse'
-
-  /reports/export:
-    post:
-      tags:
-        - Reports
-      summary: レポートエクスポート
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReportExportRequest'
-      responses:
-        '200':
-          description: エクスポート開始
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReportExportResponse'
 
   /reports/email:
     post:
@@ -1107,119 +738,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/NotificationSettingsUpdateResponse'
 
-  /notifications/send-monthly-report:
-    post:
-      tags:
-        - Notifications
-      summary: 月次レポートメール送信（手動）
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/MonthlyReportSendRequest'
-      responses:
-        '200':
-          description: 送信成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/MonthlyReportSendResponse'
 
-  /notifications/send-budget-alert:
-    post:
-      tags:
-        - Notifications
-      summary: 予算超過通知送信（システム用）
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BudgetAlertSendRequest'
-      responses:
-        '200':
-          description: 送信成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BudgetAlertSendResponse'
-
-  # データエクスポート/インポートAPI
-  /data/export:
-    post:
-      tags:
-        - Data Management
-      summary: データエクスポート
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DataExportRequest'
-      responses:
-        '202':
-          description: エクスポート開始
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataExportResponse'
-
-  /data/export/{jobId}/status:
-    get:
-      tags:
-        - Data Management
-      summary: エクスポートステータス確認
-      parameters:
-        - $ref: '#/components/parameters/JobId'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataExportStatusResponse'
-
-  /data/import:
-    post:
-      tags:
-        - Data Management
-      summary: データインポート
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                type:
-                  type: string
-                  enum: [transactions, categories]
-      responses:
-        '202':
-          description: インポート開始
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataImportResponse'
-
-  /data/import/{jobId}/status:
-    get:
-      tags:
-        - Data Management
-      summary: インポートステータス確認
-      parameters:
-        - $ref: '#/components/parameters/JobId'
-      responses:
-        '200':
-          description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DataImportStatusResponse'
 
 components:
   securitySchemes:
@@ -1295,13 +814,6 @@ components:
       schema:
         type: string
         format: uuid
-    RecurringTransactionId:
-      name: recurringTransactionId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
     BudgetId:
       name: budgetId
       in: path
@@ -1311,13 +823,6 @@ components:
         format: uuid
     SuggestionId:
       name: suggestionId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-    JobId:
-      name: jobId
       in: path
       required: true
       schema:
@@ -1497,12 +1002,6 @@ components:
               type: string
         description:
           type: string
-        is_recurring:
-          type: boolean
-        recurring_transaction_id:
-          type: string
-          format: uuid
-          nullable: true
         created_at:
           type: string
           format: date-time
@@ -1510,45 +1009,6 @@ components:
           type: string
           format: date-time
 
-    RecurringTransaction:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        category:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            name:
-              type: string
-        amount:
-          type: integer
-        execution_day:
-          type: integer
-          minimum: 1
-          maximum: 31
-        last_executed_date:
-          type: string
-          format: date
-          nullable: true
-        next_execution_date:
-          type: string
-          format: date
-        is_active:
-          type: boolean
-        description:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
 
     Budget:
       type: object
@@ -1684,35 +1144,6 @@ components:
           type: string
           format: email
 
-    AccountDeleteRequest:
-      type: object
-      required:
-        - confirmation
-      properties:
-        confirmation:
-          type: string
-          enum: ['DELETE MY ACCOUNT']
-        reason:
-          type: string
-
-    UserConnectionsResponse:
-      type: object
-      properties:
-        connections:
-          type: array
-          items:
-            type: object
-            properties:
-              provider:
-                type: string
-              email:
-                type: string
-                format: email
-              connected_at:
-                type: string
-                format: date-time
-              profile_image:
-                type: string
 
     AccountCreateRequest:
       type: object
@@ -1808,26 +1239,6 @@ components:
           type: string
           format: date-time
 
-    CategoryCopyRequest:
-      type: object
-      required:
-        - master_category_ids
-      properties:
-        master_category_ids:
-          type: array
-          items:
-            type: string
-            format: uuid
-
-    CategoryCopyResponse:
-      type: object
-      properties:
-        copied:
-          type: integer
-        categories:
-          type: array
-          items:
-            $ref: '#/components/schemas/Category'
 
     CategoryListResponse:
       type: object
@@ -1837,20 +1248,6 @@ components:
           items:
             $ref: '#/components/schemas/Category'
 
-    CategoryCreateRequest:
-      type: object
-      required:
-        - name
-        - sort_order
-      properties:
-        name:
-          type: string
-        parent_id:
-          type: string
-          format: uuid
-          nullable: true
-        sort_order:
-          type: integer
 
     CategoryUpdateRequest:
       type: object
@@ -1921,238 +1318,7 @@ components:
             net:
               type: integer
 
-    TransactionBulkCreateRequest:
-      type: object
-      required:
-        - transactions
-      properties:
-        transactions:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionCreateRequest'
 
-    TransactionBulkCreateResponse:
-      type: object
-      properties:
-        created:
-          type: integer
-        transactions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Transaction'
-
-    RecurringTransactionCreateRequest:
-      type: object
-      required:
-        - name
-        - category_id
-        - amount
-        - execution_day
-      properties:
-        name:
-          type: string
-        category_id:
-          type: string
-          format: uuid
-        amount:
-          type: integer
-        execution_day:
-          type: integer
-          minimum: 1
-          maximum: 31
-        description:
-          type: string
-
-    RecurringTransactionUpdateRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        amount:
-          type: integer
-        execution_day:
-          type: integer
-          minimum: 1
-          maximum: 31
-        description:
-          type: string
-
-    RecurringTransactionListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RecurringTransaction'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-    RecurringTransactionDetail:
-      allOf:
-        - $ref: '#/components/schemas/RecurringTransaction'
-        - type: object
-          properties:
-            execution_history:
-              type: array
-              items:
-                type: object
-                properties:
-                  executed_date:
-                    type: string
-                    format: date
-                  transaction_id:
-                    type: string
-                    format: uuid
-                  amount:
-                    type: integer
-
-    RecurringTransactionDeleteResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        is_active:
-          type: boolean
-        updated_at:
-          type: string
-          format: date-time
-
-    RecurringTransactionExecuteRequest:
-      type: object
-      required:
-        - execution_date
-      properties:
-        execution_date:
-          type: string
-          format: date
-        amount_override:
-          type: integer
-        description_override:
-          type: string
-
-    RecurringTransactionExecuteResponse:
-      type: object
-      properties:
-        transaction:
-          $ref: '#/components/schemas/Transaction'
-        recurring_transaction:
-          type: object
-          properties:
-            id:
-              type: string
-              format: uuid
-            last_executed_date:
-              type: string
-              format: date
-            next_execution_date:
-              type: string
-              format: date
-
-    RecurringTransactionMonthlyExecuteRequest:
-      type: object
-      required:
-        - target_year
-        - target_month
-      properties:
-        target_year:
-          type: integer
-        target_month:
-          type: integer
-          minimum: 1
-          maximum: 12
-        dry_run:
-          type: boolean
-          default: false
-
-    RecurringTransactionMonthlyExecuteResponse:
-      type: object
-      properties:
-        execution_summary:
-          type: object
-          properties:
-            target_month:
-              type: string
-            total_recurring_transactions:
-              type: integer
-            executed:
-              type: integer
-            skipped:
-              type: integer
-            failed:
-              type: integer
-        executed_transactions:
-          type: array
-          items:
-            type: object
-            properties:
-              recurring_transaction_id:
-                type: string
-                format: uuid
-              transaction_id:
-                type: string
-                format: uuid
-              name:
-                type: string
-              execution_date:
-                type: string
-                format: date
-              amount:
-                type: integer
-        skipped_transactions:
-          type: array
-          items:
-            type: object
-            properties:
-              recurring_transaction_id:
-                type: string
-                format: uuid
-              name:
-                type: string
-              reason:
-                type: string
-
-    RecurringTransactionScheduleResponse:
-      type: object
-      properties:
-        month:
-          type: string
-        schedule:
-          type: array
-          items:
-            type: object
-            properties:
-              date:
-                type: string
-                format: date
-              transactions:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      format: uuid
-                    name:
-                      type: string
-                    amount:
-                      type: integer
-                    category:
-                      type: string
-                    status:
-                      type: string
-                      enum: [pending, executed]
-        summary:
-          type: object
-          properties:
-            total_amount:
-              type: integer
-            total_transactions:
-              type: integer
-            pending:
-              type: integer
-            executed:
-              type: integer
 
     BudgetCreateRequest:
       type: object
@@ -2290,48 +1456,6 @@ components:
               message:
                 type: string
 
-    BudgetPerformanceResponse:
-      type: object
-      properties:
-        month:
-          type: string
-        categories:
-          type: array
-          items:
-            type: object
-            properties:
-              category:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-                  name:
-                    type: string
-              budget:
-                type: integer
-              actual:
-                type: integer
-              variance:
-                type: integer
-              percentage:
-                type: number
-                format: float
-              status:
-                type: string
-                enum: [under, over]
-        total:
-          type: object
-          properties:
-            budget:
-              type: integer
-            actual:
-              type: integer
-            variance:
-              type: integer
-            percentage:
-              type: number
-              format: float
 
     BudgetSuggestionResponse:
       type: object
@@ -2541,136 +1665,6 @@ components:
           type: string
           format: date-time
 
-    MonthlyReportResponse:
-      type: object
-      properties:
-        period:
-          type: object
-          properties:
-            year:
-              type: integer
-            month:
-              type: integer
-        summary:
-          type: object
-          properties:
-            total_income:
-              type: integer
-            total_expense:
-              type: integer
-            net_income:
-              type: integer
-            savings_rate:
-              type: number
-              format: float
-        top_categories:
-          type: array
-          items:
-            type: object
-            properties:
-              category:
-                type: string
-              amount:
-                type: integer
-              percentage:
-                type: number
-                format: float
-        daily_trend:
-          type: array
-          items:
-            type: object
-        comparison:
-          type: object
-          properties:
-            previous_month:
-              type: object
-              properties:
-                total_expense:
-                  type: integer
-                change_amount:
-                  type: integer
-                change_percentage:
-                  type: number
-                  format: float
-            same_month_last_year:
-              type: object
-              properties:
-                total_expense:
-                  type: integer
-                change_amount:
-                  type: integer
-                change_percentage:
-                  type: number
-                  format: float
-
-    YearlyReportResponse:
-      type: object
-      properties:
-        year:
-          type: integer
-        summary:
-          type: object
-          properties:
-            total_income:
-              type: integer
-            total_expense:
-              type: integer
-            net_income:
-              type: integer
-            average_monthly_expense:
-              type: integer
-            savings_rate:
-              type: number
-              format: float
-        monthly_breakdown:
-          type: array
-          items:
-            type: object
-        category_ranking:
-          type: array
-          items:
-            type: object
-        asset_growth:
-          type: object
-          properties:
-            beginning_balance:
-              type: integer
-            ending_balance:
-              type: integer
-            growth_amount:
-              type: integer
-            growth_rate:
-              type: number
-              format: float
-
-    ReportExportRequest:
-      type: object
-      required:
-        - type
-        - format
-      properties:
-        type:
-          type: string
-          enum: [monthly, yearly]
-        year:
-          type: integer
-        month:
-          type: integer
-        format:
-          type: string
-          enum: [pdf, excel, csv]
-        include_charts:
-          type: boolean
-          default: true
-
-    ReportExportResponse:
-      type: object
-      properties:
-        download_url:
-          type: string
-        expires_at:
-          type: string
-          format: date-time
 
     ReportEmailRequest:
       type: object
@@ -2730,168 +1724,7 @@ components:
           type: string
           format: date-time
 
-    MonthlyReportSendRequest:
-      type: object
-      required:
-        - year
-        - month
-      properties:
-        year:
-          type: integer
-        month:
-          type: integer
-          minimum: 1
-          maximum: 12
 
-    MonthlyReportSendResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        sent_to:
-          type: string
-          format: email
-        report_period:
-          type: string
-        sent_at:
-          type: string
-          format: date-time
-
-    BudgetAlertSendRequest:
-      type: object
-      required:
-        - categories
-        - month
-      properties:
-        categories:
-          type: array
-          items:
-            type: object
-            properties:
-              category_id:
-                type: string
-                format: uuid
-              category_name:
-                type: string
-              budget_amount:
-                type: integer
-              spent_amount:
-                type: integer
-              exceeded_amount:
-                type: integer
-              exceeded_date:
-                type: string
-                format: date
-        month:
-          type: string
-
-    BudgetAlertSendResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        sent_to:
-          type: string
-          format: email
-        categories_alerted:
-          type: integer
-        sent_at:
-          type: string
-          format: date-time
-
-    DataExportRequest:
-      type: object
-      required:
-        - format
-        - include
-      properties:
-        format:
-          type: string
-          enum: [csv, json, excel]
-        include:
-          type: array
-          items:
-            type: string
-            enum: [transactions, budgets, categories, accounts, recurring_transactions]
-        from:
-          type: string
-          format: date
-        to:
-          type: string
-          format: date
-
-    DataExportResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [processing, completed, failed]
-        message:
-          type: string
-
-    DataExportStatusResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [processing, completed, failed]
-        download_url:
-          type: string
-          nullable: true
-        expires_at:
-          type: string
-          format: date-time
-          nullable: true
-
-    DataImportResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [processing, completed, failed]
-        message:
-          type: string
-
-    DataImportStatusResponse:
-      type: object
-      properties:
-        job_id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [processing, completed, failed]
-        summary:
-          type: object
-          properties:
-            total_rows:
-              type: integer
-            imported:
-              type: integer
-            skipped:
-              type: integer
-            errors:
-              type: integer
-          nullable: true
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              row:
-                type: integer
-              message:
-                type: string
-          nullable: true
 
     # 新しいレスポンススキーマ
     MonthlySummaryResponse:
@@ -3097,8 +1930,6 @@ tags:
     description: カテゴリ管理API
   - name: Transactions
     description: 取引管理API
-  - name: Recurring Transactions
-    description: 定期取引API
   - name: Budgets
     description: 予算管理API
   - name: Budget Suggestions
@@ -3113,5 +1944,3 @@ tags:
     description: サマリー情報API
   - name: Notifications
     description: 通知設定API
-  - name: Data Management
-    description: データエクスポート/インポートAPI

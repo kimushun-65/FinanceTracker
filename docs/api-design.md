@@ -255,58 +255,6 @@ PUT /users/me
 }
 ```
 
-### アカウント連携管理
-
-```
-GET /users/me/connections
-```
-
-**説明**: 連携されているソーシャルアカウントの一覧を取得
-
-**レスポンス:**
-
-```json
-{
-  "connections": [
-    {
-      "provider": "google-oauth2",
-      "email": "user@gmail.com",
-      "connected_at": "2024-01-01T09:00:00Z",
-      "profile_image": "https://lh3.googleusercontent.com/..."
-    }
-  ]
-}
-```
-
-### アカウント削除
-
-```
-DELETE /users/me
-```
-
-**説明**: ユーザーアカウントの削除。システム内のデータを削除後、Auth0 のユーザーも削除します。
-
-**リクエスト:**
-
-```json
-{
-  "confirmation": "DELETE MY ACCOUNT",
-  "reason": "利用終了のため"
-}
-```
-
-**レスポンス:**
-
-```
-204 No Content
-```
-
-**処理内容:**
-
-1. すべての取引データを匿名化
-2. 口座情報を削除
-3. 予算・カテゴリデータを削除
-4. Auth0 Management API を使用して Auth0 ユーザーを削除
 
 ---
 
@@ -351,25 +299,6 @@ GET /accounts
 }
 ```
 
-### 口座詳細取得
-
-```
-GET /accounts/{accountId}
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440001",
-  "name": "みずほ銀行",
-  "type": "checking",
-  "initial_balance": 100000,
-  "current_balance": 1200000,
-  "created_at": "2024-01-01T09:00:00Z",
-  "updated_at": "2024-01-20T10:00:00Z"
-}
-```
 
 ### 口座作成
 
@@ -629,36 +558,6 @@ GET /categories
 注: is_active=falseのカテゴリは自動的にフィルタリングされます
 ```
 
-### カテゴリ作成
-
-```
-POST /categories
-```
-
-**リクエスト:**
-
-```json
-{
-  "name": "医療費",
-  "parent_id": null,
-  "sort_order": 11
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440032",
-  "master_id": null,
-  "parent_id": null,
-  "name": "医療費",
-  "is_custom": true,
-  "sort_order": 11,
-  "is_active": true,
-  "created_at": "2024-01-21T09:00:00Z"
-}
-```
 
 ### カテゴリ更新
 
@@ -891,352 +790,11 @@ GET /transactions/summary/monthly
 }
 ```
 
-### 取引一括作成
 
-```
-POST /transactions/bulk
-```
-
-**リクエスト:**
-
-```json
-{
-  "transactions": [
-    {
-      "type": "expense",
-      "amount": 1000,
-      "transaction_date": "2024-01-21",
-      "category_id": "550e8400-e29b-41d4-a716-446655440030",
-      "description": "朝食"
-    },
-    {
-      "type": "expense",
-      "amount": 1200,
-      "transaction_date": "2024-01-21",
-      "category_id": "550e8400-e29b-41d4-a716-446655440030",
-      "description": "昼食"
-    }
-  ]
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "created": 2,
-  "transactions": [
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440043",
-      "type": "expense",
-      "amount": 1000,
-      "transaction_date": "2024-01-21",
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440030",
-        "name": "食費"
-      },
-      "description": "朝食"
-    },
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440044",
-      "type": "expense",
-      "amount": 1200,
-      "transaction_date": "2024-01-21",
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440030",
-        "name": "食費"
-      },
-      "description": "昼食"
-    }
-  ]
-}
-```
 
 ---
 
-## 5. 定期取引 API
-
-### 定期取引一覧取得
-
-```
-GET /recurring-transactions
-```
-
-**レスポンス:**
-
-```json
-{
-  "data": [
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440050",
-      "name": "家賃",
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440033",
-        "name": "住居費"
-      },
-      "amount": 90000,
-      "execution_day": 25,
-      "last_executed_date": "2024-01-25",
-      "next_execution_date": "2024-02-25",
-      "is_active": true,
-      "description": "毎月25日に家賃支払い",
-      "created_at": "2024-01-01T09:00:00Z",
-      "updated_at": "2024-01-25T10:00:00Z"
-    },
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440051",
-      "name": "光熱費",
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440034",
-        "name": "光熱費"
-      },
-      "amount": 15000,
-      "execution_day": 31,
-      "last_executed_date": null,
-      "next_execution_date": "2024-02-29",
-      "is_active": true,
-      "description": "毎月末に光熱費支払い",
-      "created_at": "2024-01-21T10:00:00Z",
-      "updated_at": "2024-01-21T10:00:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 5,
-    "page": 1,
-    "limit": 20,
-    "total_pages": 1
-  }
-}
-```
-
-### 定期取引作成
-
-```
-POST /recurring-transactions
-```
-
-**リクエスト:**
-
-```json
-{
-  "name": "電話代",
-  "category_id": "550e8400-e29b-41d4-a716-446655440034",
-  "amount": 8000,
-  "execution_day": 15,
-  "description": "毎月15日に携帯電話料金支払い"
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440052",
-  "name": "電話代",
-  "category": {
-    "id": "550e8400-e29b-41d4-a716-446655440034",
-    "name": "光熱費"
-  },
-  "amount": 8000,
-  "execution_day": 15,
-  "last_executed_date": null,
-  "next_execution_date": "2024-02-15",
-  "is_active": true,
-  "description": "毎月15日に携帯電話料金支払い",
-  "created_at": "2024-01-21T10:00:00Z",
-  "updated_at": "2024-01-21T10:00:00Z"
-}
-```
-
-### 定期取引更新
-
-```
-PUT /recurring-transactions/{recurringTransactionId}
-```
-
-**リクエスト:**
-
-```json
-{
-  "name": "家賃（更新）",
-  "amount": 95000,
-  "execution_day": 27,
-  "description": "毎月27日に家賃支払い（値上げ後）"
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440050",
-  "name": "家賃（更新）",
-  "category": {
-    "id": "550e8400-e29b-41d4-a716-446655440033",
-    "name": "住居費"
-  },
-  "amount": 95000,
-  "execution_day": 27,
-  "last_executed_date": "2024-01-25",
-  "next_execution_date": "2024-02-27",
-  "is_active": true,
-  "description": "毎月27日に家賃支払い（値上げ後）",
-  "updated_at": "2024-01-21T11:00:00Z"
-}
-```
-
-### 定期取引無効化
-
-```
-DELETE /recurring-transactions/{recurringTransactionId}
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440051",
-  "is_active": false,
-  "updated_at": "2024-01-21T11:00:00Z"
-}
-```
-
-
-### 月次定期取引の一括実行
-
-```
-POST /recurring-transactions/execute-monthly
-```
-
-**説明:** 指定した月の全ての定期取引を一括実行します。バッチ処理での使用を想定。
-
-**リクエスト:**
-
-```json
-{
-  "target_year": 2024,
-  "target_month": 2,
-  "dry_run": false
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "execution_summary": {
-    "target_month": "2024-02",
-    "total_recurring_transactions": 5,
-    "executed": 3,
-    "skipped": 2,
-    "failed": 0
-  },
-  "executed_transactions": [
-    {
-      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440050",
-      "transaction_id": "550e8400-e29b-41d4-a716-446655440062",
-      "name": "家賃",
-      "execution_date": "2024-02-25",
-      "amount": 90000
-    },
-    {
-      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440052",
-      "transaction_id": "550e8400-e29b-41d4-a716-446655440063",
-      "name": "電話代",
-      "execution_date": "2024-02-15",
-      "amount": 8000
-    },
-    {
-      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440051",
-      "transaction_id": "550e8400-e29b-41d4-a716-446655440064",
-      "name": "光熱費",
-      "execution_date": "2024-02-29",
-      "amount": 15000
-    }
-  ],
-  "skipped_transactions": [
-    {
-      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440053",
-      "name": "保険料",
-      "reason": "already_executed_this_month"
-    },
-    {
-      "recurring_transaction_id": "550e8400-e29b-41d4-a716-446655440054",
-      "name": "ジム会費",
-      "reason": "inactive"
-    }
-  ]
-}
-```
-
-### 今月の定期取引予定取得
-
-```
-GET /recurring-transactions/schedule
-```
-
-**クエリパラメータ:**
-
-| パラメータ | 型      | 必須 | 説明 |
-| ---------- | ------- | ---- | ---- |
-| year       | integer | No   | 年   |
-| month      | integer | No   | 月   |
-
-**レスポンス:**
-
-```json
-{
-  "month": "2024-02",
-  "schedule": [
-    {
-      "date": "2024-02-15",
-      "transactions": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440052",
-          "name": "電話代",
-          "amount": 8000,
-          "category": "光熱費",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "date": "2024-02-25",
-      "transactions": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440050",
-          "name": "家賃",
-          "amount": 90000,
-          "category": "住居費",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "date": "2024-02-29",
-      "transactions": [
-        {
-          "id": "550e8400-e29b-41d4-a716-446655440051",
-          "name": "光熱費",
-          "amount": 15000,
-          "category": "光熱費",
-          "status": "pending"
-        }
-      ]
-    }
-  ],
-  "summary": {
-    "total_amount": 113000,
-    "total_transactions": 3,
-    "pending": 3,
-    "executed": 0
-  }
-}
-```
-
----
-
-## 6. 予算管理 API
+## 5. 予算管理 API
 
 ### 予算一覧取得
 
@@ -1359,17 +917,6 @@ PUT /budgets/{budgetId}
 }
 ```
 
-### 予算削除
-
-```
-DELETE /budgets/{budgetId}
-```
-
-**レスポンス:**
-
-```
-204 No Content
-```
 
 ### 今月の予算取得
 
@@ -1485,7 +1032,7 @@ GET /budgets/current
 
 ---
 
-## 7. AI 予算提案 API
+## 6. AI 予算提案 API
 
 ### 予算提案取得
 
@@ -1588,7 +1135,7 @@ PUT /budget-suggestions/{suggestionId}/reject
 
 ---
 
-## 8. 資産管理 API
+## 7. 資産管理 API
 
 ### 資産スナップショット取得
 
@@ -1643,26 +1190,10 @@ GET /assets/snapshots
 }
 ```
 
-### 資産スナップショット作成
-
-```
-POST /assets/snapshots
-```
-
-**レスポンス:**
-
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440091",
-  "snapshot_date": "2024-01-22",
-  "total_assets": 1550000,
-  "created_at": "2024-01-22T00:00:00Z"
-}
-```
 
 ---
 
-## 9. 資産予測 API
+## 8. 資産予測 API
 
 ### 資産予測取得
 
@@ -1745,126 +1276,6 @@ POST /assets/forecasts
 }
 ```
 
----
-
-## 10. レポート API
-
-### 月次レポート取得
-
-```
-GET /reports/monthly
-```
-
-**クエリパラメータ:**
-
-| パラメータ | 型      | 必須 | 説明 |
-| ---------- | ------- | ---- | ---- |
-| year       | integer | Yes  | 年   |
-| month      | integer | Yes  | 月   |
-
-**レスポンス:**
-
-```json
-{
-  "period": {
-    "year": 2024,
-    "month": 1
-  },
-  "summary": {
-    "total_income": 250000,
-    "total_expense": 106672,
-    "net_income": 143328,
-    "savings_rate": 57.3
-  },
-  "top_categories": [
-    {
-      "category": "食費",
-      "amount": 33368,
-      "percentage": 31.3
-    },
-    {
-      "category": "住居費",
-      "amount": 24964,
-      "percentage": 23.4
-    }
-  ],
-  "daily_trend": [...],
-  "comparison": {
-    "previous_month": {
-      "total_expense": 94222,
-      "change_amount": 12450,
-      "change_percentage": 13.2
-    },
-    "same_month_last_year": {
-      "total_expense": 98500,
-      "change_amount": 8172,
-      "change_percentage": 8.3
-    }
-  }
-}
-```
-
-### 年次レポート取得
-
-```
-GET /reports/yearly
-```
-
-**クエリパラメータ:**
-
-| パラメータ | 型      | 必須 | 説明 |
-| ---------- | ------- | ---- | ---- |
-| year       | integer | Yes  | 年   |
-
-**レスポンス:**
-
-```json
-{
-  "year": 2024,
-  "summary": {
-    "total_income": 3000000,
-    "total_expense": 2400000,
-    "net_income": 600000,
-    "average_monthly_expense": 200000,
-    "savings_rate": 20.0
-  },
-  "monthly_breakdown": [...],
-  "category_ranking": [...],
-  "asset_growth": {
-    "beginning_balance": 1000000,
-    "ending_balance": 1600000,
-    "growth_amount": 600000,
-    "growth_rate": 60.0
-  }
-}
-```
-
-### レポートエクスポート
-
-```
-POST /reports/export
-```
-
-**リクエスト:**
-
-```json
-{
-  "type": "monthly",
-  "year": 2024,
-  "month": 1,
-  "format": "pdf",
-  "include_charts": true
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "download_url": "https://api.finsight.com/downloads/reports/550e8400-e29b-41d4-a716-446655440110.pdf",
-  "expires_at": "2024-01-22T10:00:00Z"
-}
-```
 
 ### レポートメール送信
 
@@ -1949,70 +1360,6 @@ PUT /notifications/settings
 }
 ```
 
-### 月次レポートメール送信（手動）
-
-```
-POST /notifications/send-monthly-report
-```
-
-**説明:** 指定した月の月次レポートを即座にメール送信します。
-
-**リクエスト:**
-
-```json
-{
-  "year": 2024,
-  "month": 1
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "message": "月次レポートを送信しました",
-  "sent_to": "user@gmail.com",
-  "report_period": "2024-01",
-  "sent_at": "2024-01-21T10:00:00Z"
-}
-```
-
-### 予算超過通知送信（システム用）
-
-```
-POST /notifications/send-budget-alert
-```
-
-**説明:** 予算超過が検出された際にシステムが自動的に呼び出すエンドポイント。
-
-**リクエスト:**
-
-```json
-{
-  "categories": [
-    {
-      "category_id": "550e8400-e29b-41d4-a716-446655440031",
-      "category_name": "交通費",
-      "budget_amount": 10000,
-      "spent_amount": 12500,
-      "exceeded_amount": 2500,
-      "exceeded_date": "2024-02-15"
-    }
-  ],
-  "month": "2024-02"
-}
-```
-
-**レスポンス:**
-
-```json
-{
-  "message": "予算超過通知を送信しました",
-  "sent_to": "user@gmail.com",
-  "categories_alerted": 1,
-  "sent_at": "2024-02-16T09:00:00Z"
-}
-```
 
 ---
 
@@ -2057,54 +1404,6 @@ GET /summary/monthly
 }
 ```
 
-### 当月取引一覧取得
-
-```
-GET /transactions/current-month
-```
-
-**説明:** 当月の取引一覧をカテゴリ別集計と併せて取得します。
-
-**クエリパラメータ:**
-- include_summary: true | false（カテゴリ別集計を含むか）
-
-**レスポンス:**
-
-```json
-{
-  "month": "2024-02",
-  "transactions": [
-    {
-      "id": "550e8400-e29b-41d4-a716-446655440020",
-      "type": "expense",
-      "amount": 1500,
-      "category": {
-        "id": "550e8400-e29b-41d4-a716-446655440001",
-        "name": "食費",
-        "icon": "🍎",
-        "color": "#4CAF50"
-      },
-      "description": "ランチ",
-      "transaction_date": "2024-02-15",
-      "created_at": "2024-02-15T12:30:00Z"
-    }
-  ],
-  "category_summary": [
-    {
-      "category_id": "550e8400-e29b-41d4-a716-446655440001",
-      "category_name": "食費",
-      "total_amount": 45000,
-      "transaction_count": 30,
-      "percentage": 25.7
-    }
-  ],
-  "monthly_total": {
-    "income": 250000,
-    "expenses": 175000,
-    "net_income": 75000
-  }
-}
-```
 
 ### 取引サマリー取得
 
