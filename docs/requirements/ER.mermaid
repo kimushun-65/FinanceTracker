@@ -1,8 +1,9 @@
 erDiagram
     users {
         UUID id PK
+        VARCHAR auth0_user_id
         VARCHAR email
-        VARCHAR hashed_password
+        VARCHAR name
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -34,6 +35,8 @@ erDiagram
         UUID master_id FK
         UUID parent_id FK
         VARCHAR name
+        VARCHAR icon
+        VARCHAR color
         BOOLEAN is_custom
         INTEGER sort_order
         BOOLEAN is_active
@@ -49,8 +52,6 @@ erDiagram
         INTEGER amount
         DATE transaction_date
         TEXT description
-        BOOLEAN is_recurring
-        UUID recurring_transaction_id FK
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -60,7 +61,7 @@ erDiagram
         UUID user_id FK
         UUID category_id FK
         INTEGER amount
-        DATE month
+        VARCHAR month
         TIMESTAMPTZ created_at
         TIMESTAMPTZ updated_at
     }
@@ -70,21 +71,8 @@ erDiagram
         UUID user_id FK
         DATE snapshot_date
         INTEGER total_assets
+        JSONB account_breakdown
         TIMESTAMPTZ created_at
-    }
-
-    recurring_transactions {
-        UUID id PK
-        UUID user_id FK
-        UUID category_id FK
-        VARCHAR name
-        INTEGER amount
-        INTEGER execution_day
-        DATE last_executed_date
-        BOOLEAN is_active
-        VARCHAR description
-        TIMESTAMPTZ created_at
-        TIMESTAMPTZ updated_at
     }
 
     account_movements {
@@ -99,10 +87,15 @@ erDiagram
     budget_suggestions {
         UUID id PK
         UUID user_id FK
-        DATE month
+        VARCHAR month
         UUID category_id FK
         INTEGER suggested_amount
+        INTEGER current_budget
+        INTEGER last_month_actual
+        INTEGER three_month_average
         VARCHAR status
+        TEXT reason
+        FLOAT confidence
         TIMESTAMPTZ created_at
     }
 
@@ -117,16 +110,29 @@ erDiagram
         TIMESTAMPTZ created_at
     }
 
+    notification_settings {
+        UUID id PK
+        UUID user_id FK
+        BOOLEAN monthly_report_enabled
+        INTEGER monthly_report_send_day
+        TIME monthly_report_send_time
+        VARCHAR monthly_report_email
+        BOOLEAN budget_exceeded_alert_enabled
+        VARCHAR budget_exceeded_alert_email
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ updated_at
+    }
+
     %% Relationships
     users ||--o{ accounts : "has"
     users ||--o{ categories : "has"
     users ||--o{ transactions : "has"
     users ||--o{ budgets : "has"
     users ||--o{ asset_snapshots : "has"
-    users ||--o{ recurring_transactions : "has"
     users ||--o{ account_movements : "has"
     users ||--o{ budget_suggestions : "has"
     users ||--o{ asset_forecasts : "has"
+    users ||--|| notification_settings : "has"
 
     accounts ||--o{ account_movements : "records"
 
@@ -136,7 +142,4 @@ erDiagram
 
     categories ||--o{ transactions : "categorizes"
     categories ||--o{ budgets : "budget for"
-    categories ||--o{ recurring_transactions : "for"
     categories ||--o{ budget_suggestions : "target"
-    
-    recurring_transactions ||--o{ transactions : "generates"

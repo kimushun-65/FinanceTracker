@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+.history/
+.vscode/
+
+# Environment variables
+backend/.env
+frontend/.env.local
+
+# Database data
+db_data/
+
+# Go binaries (compiled executables)
+backend/bin/
+backend/api
+backend/seed
+
+# Go modules cache (Docker volume)
+go_modules/
+
+# Next.js build
+frontend/.next/
+frontend/node_modules/
+
+.serena

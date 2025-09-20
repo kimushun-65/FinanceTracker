@@ -7,23 +7,24 @@
 #### 集約ルート: User
 ```
 エンティティ: User (users)
-責務: ユーザーアカウントの管理と認証情報の保持
+責務: ユーザーアカウントの管理とAuth0統合
 
 属性:
 - id: UUID - ユーザー一意識別子
+- auth0UserId: string - Auth0ユーザーID
 - email: Email - メールアドレス（値オブジェクト）
-- hashedPassword: HashedPassword - ハッシュ化されたパスワード（値オブジェクト）
+- name: string - ユーザー名
 - createdAt: timestamp - 作成日時
 - updatedAt: timestamp - 更新日時
 
 値オブジェクト:
 - Email: メールアドレス
-- HashedPassword: パスワードハッシュ
 
 ビジネスルール:
 - メールアドレスはシステム全体で一意
-- パスワードは必ずハッシュ化して保存
+- Auth0ユーザーIDはシステム全体で一意
 - メールアドレスは有効な形式である必要がある
+- 認証はAuth0を通じて行われる
 ```
 
 #### 値オブジェクト: Email
@@ -46,22 +47,24 @@
 - 一度設定された値は不変
 ```
 
-#### 値オブジェクト: HashedPassword
+#### 値オブジェクト: HexColor
 ```
-値オブジェクト: HashedPassword
-責務: セキュアなパスワードハッシュを表現
+値オブジェクト: HexColor
+責務: HEX形式の色を表現
 
 属性:
-- value: string - ハッシュ化されたパスワード
+- value: string - HEX形式の色（#RRGGBB）
 
 振る舞い:
-- verify(plainPassword: string): boolean - パスワード検証
-- toString(): string - ハッシュ文字列表現
+- validate(): boolean - HEX形式の検証
+- toRgb(): {r: number, g: number, b: number} - RGB値に変換
+- equals(other: HexColor): boolean - 色の同一性判定
+- toString(): string - 文字列表現
 
 ビジネスルール:
-- bcrypt/scrypt/argon2等の安全なハッシュアルゴリズムを使用
+- #で始まる6桁の16進数（例: #3B82F6）
+- 大文字小文字は区別しない
 - 一度設定された値は不変
-- 平文パスワードは保持しない
 ```
 
 ---
@@ -241,75 +244,6 @@
 - 不変オブジェクト（演算結果は新しいインスタンス）
 ```
 
-### 集約: RecurringTransaction（定期取引集約）
-
-#### 集約ルート: RecurringTransaction
-```
-エンティティ: RecurringTransaction (recurring_transactions)
-責務: 月次定期取引のテンプレート管理
-
-属性:
-- id: UUID - 定期取引一意識別子
-- userId: UUID - ユーザーID（FK）
-- categoryId: UUID - カテゴリID（FK）
-- name: string - 定期取引名称
-- amount: Money - 金額（値オブジェクト）
-- executionDay: ExecutionDay - 実行日（値オブジェクト）
-- lastExecutedDate: date - 最終実行日
-- isActive: boolean - 有効フラグ
-- description: string - 説明・メモ
-- createdAt: timestamp - 作成日時
-- updatedAt: timestamp - 更新日時
-
-値オブジェクト:
-- ExecutionDay: 月内実行日
-- Money: 金額
-
-ビジネスルール:
-- 月に1回のみ実行
-- 指定した日付で自動実行
-- 無効化された定期取引は実行されない
-- 同じ月に複数回実行されない
-```
-
-#### 値オブジェクト: ExecutionDay
-```
-値オブジェクト: ExecutionDay
-責務: 月内の実行日を表現
-
-属性:
-- day: integer - 実行日（1-31）
-
-振る舞い:
-- getExecutionDateForMonth(year: integer, month: integer): date - 指定月の実行日を取得
-- isValidForMonth(year: integer, month: integer): boolean - 指定月で有効な日付か判定
-- adjustForShortMonth(year: integer, month: integer): date - 短い月の場合の調整
-- toString(): string - 日付の文字列表現
-
-ビジネスルール:
-- dayは1-31の範囲
-- 31日を指定した場合、30日以下の月は月末日に調整
-- 2月29日を指定した場合、平年は28日に調整
-- 無効な日付は月末日にフォールバック
-```
-
-#### ドメインサービス: RecurringTransactionExecutor
-```
-ドメインサービス: RecurringTransactionExecutor
-責務: 定期取引の実行判定と実行処理
-
-振る舞い:
-- findExecutableTransactions(targetDate: date): RecurringTransaction[] - 実行対象の定期取引を取得
-- shouldExecute(transaction: RecurringTransaction, targetDate: date): boolean - 実行すべきか判定
-- execute(transaction: RecurringTransaction, executionDate: date): Transaction - 定期取引を実行して通常取引を作成
-- markAsExecuted(transaction: RecurringTransaction, executionDate: date): void - 実行済みとしてマーク
-
-ビジネスルール:
-- 同じ月に既に実行済みの場合は実行しない
-- 実行日が指定日以降の場合のみ実行
-- 非アクティブな定期取引は実行しない
-```
-
 ---
 
 ## 4. カテゴリ管理コンテキスト（Category Management Context）
@@ -352,6 +286,8 @@
 - masterId: UUID - マスターカテゴリID（FK、オプション）
 - parentId: UUID - 親カテゴリID（FK、自己参照）
 - name: CategoryName - カテゴリ名（値オブジェクト）
+- icon: string - カテゴリアイコン（絵文字またはアイコンID）
+- color: HexColor - カテゴリ色（値オブジェクト）
 - isCustom: boolean - カスタムカテゴリフラグ
 - sortOrder: integer - 並び順
 - isActive: boolean - 有効フラグ
@@ -360,6 +296,7 @@
 
 値オブジェクト:
 - CategoryName: カテゴリ名称
+- HexColor: HEX形式の色
 
 ビジネスルール:
 - マスターカテゴリはユーザーごとにコピーされる
@@ -402,43 +339,18 @@
 - userId: UUID - ユーザーID（FK）
 - categoryId: UUID - カテゴリID（FK）
 - amount: Money - 予算額（値オブジェクト）
-- month: YearMonth - 対象年月（値オブジェクト）
+- month: string - 対象年月（YYYY-MM形式）
 - createdAt: timestamp - 作成日時
 - updatedAt: timestamp - 更新日時
 
 値オブジェクト:
 - Money: 金額
-- YearMonth: 年月
 
 ビジネスルール:
 - ユーザー、カテゴリ、年月の組み合わせは一意
 - 予算額は0より大きい値
 - 過去の予算もコピー元として参照可能
-```
-
-#### 値オブジェクト: YearMonth
-```
-値オブジェクト: YearMonth
-責務: 年月を表現
-
-属性:
-- year: integer - 年
-- month: integer - 月
-
-振る舞い:
-- addMonths(months: integer): YearMonth - 月数を加算
-- getFirstDay(): date - 月初日を取得
-- getLastDay(): date - 月末日を取得
-- isFuture(): boolean - 未来か判定
-- isPast(): boolean - 過去か判定
-- isCurrent(): boolean - 当月か判定
-- format(): string - フォーマット済み文字列（2025年1月）
-- equals(other: YearMonth): boolean - 年月の同一性判定
-
-ビジネスルール:
-- yearは1900以上
-- monthは1-12
-- 一度設定された値は不変
+- monthはYYYY-MM形式（例: 2024-02）
 ```
 
 ### 集約: BudgetSuggestion（予算提案集約）
@@ -451,9 +363,12 @@
 属性:
 - id: UUID - 提案一意識別子
 - userId: UUID - ユーザーID（FK）
-- month: YearMonth - 対象年月（値オブジェクト）
+- month: string - 対象年月（YYYY-MM形式）
 - categoryId: UUID - カテゴリID（FK）
 - suggestedAmount: Money - 提案金額（値オブジェクト）
+- currentBudget: Money - 現在の予算額（値オブジェクト）
+- lastMonthActual: Money - 前月実績（値オブジェクト）
+- threeMonthAverage: Money - 3ヶ月平均（値オブジェクト）
 - status: SuggestionStatus - ステータス（値オブジェクト）
 - reason: string - 提案理由
 - confidence: float - 信頼度（0-1）
@@ -504,12 +419,11 @@
 - userId: UUID - ユーザーID（FK）
 - snapshotDate: date - スナップショット日付
 - totalAssets: Money - 総資産額（値オブジェクト）
-- accountBreakdown: AccountBreakdown[] - 口座別内訳（値オブジェクト）
+- accountBreakdown: JSON - 口座別内訳（JSONBフィールド）
 - createdAt: timestamp - 作成日時
 
 値オブジェクト:
 - Money: 金額
-- AccountBreakdown: 口座別残高内訳
 
 ビジネスルール:
 - ユーザーと日付の組み合わせは一意
@@ -589,17 +503,46 @@
 
 ---
 
+## 7. 通知管理コンテキスト（Notification Management Context）
+
+### 集約: NotificationSettings（通知設定集約）
+
+#### 集約ルート: NotificationSettings
+```
+エンティティ: NotificationSettings (notification_settings)
+責務: ユーザーの通知設定管理
+
+属性:
+- id: UUID - 通知設定一意識別子
+- userId: UUID - ユーザーID（FK）
+- monthlyReportEnabled: boolean - 月次レポート有効フラグ
+- monthlyReportSendDay: integer - 送信日（1-31）
+- monthlyReportSendTime: Time - 送信時刻
+- monthlyReportEmail: Email - 送信先メールアドレス
+- budgetExceededAlertEnabled: boolean - 予算超過アラート有効フラグ
+- budgetExceededAlertEmail: Email - アラート送信先メールアドレス
+- createdAt: timestamp - 作成日時
+- updatedAt: timestamp - 更新日時
+
+ビジネスルール:
+- ユーザーごとに1つのみ存在
+- 送信日は1-31の範囲
+- 送信時刻はHH:mm形式
+```
+
+---
+
 ## ドメイン間の連携
 
 ### イベント駆動による連携
 各集約間は以下のドメインイベントで連携：
 
-1. **UserCreated** → 各コンテキストでユーザー参照を作成
+1. **UserCreated** → 各コンテキストでユーザー参照を作成、通知設定を初期化
 2. **TransactionCreated** → 予算消化計算、口座残高更新
 3. **BudgetUpdated** → 予算達成率の再計算
 4. **AccountBalanceChanged** → 資産スナップショットの更新
-5. **RecurringTransactionExecuted** → 自動で通常取引を作成
-6. **AssetSnapshotCreated** → 資産予測の再計算トリガー
+5. **AssetSnapshotCreated** → 資産予測の再計算トリガー
+6. **BudgetExceeded** → 予算超過通知のトリガー
 
 ### 整合性の保証
 - 各集約内：強整合性（トランザクション保証）
