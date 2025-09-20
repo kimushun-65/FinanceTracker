@@ -9,7 +9,7 @@ import {
   MethodOptions,
   AuthorizationType,
 } from 'aws-cdk-lib/aws-apigateway';
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
+import { Function, Runtime, Code, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { Vpc, SecurityGroup } from 'aws-cdk-lib/aws-ec2';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { DatabaseInstance } from 'aws-cdk-lib/aws-rds';
@@ -60,6 +60,7 @@ export class ApiStack extends Stack {
       },
       timeout: Duration.seconds(10),
       memorySize: 256,
+      tracing: Tracing.ACTIVE,
     });
 
     // API Gateway Authorizer
@@ -108,6 +109,7 @@ export class ApiStack extends Stack {
         environment: commonEnv,
         timeout: Duration.seconds(props.config.lambdaConfig.timeout),
         memorySize: props.config.lambdaConfig.memorySize,
+        tracing: Tracing.ACTIVE,
       });
 
       // データベースシークレットへの読み取り権限付与

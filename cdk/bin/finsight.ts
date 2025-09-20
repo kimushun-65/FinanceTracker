@@ -6,6 +6,7 @@ import { DatabaseStack } from '../lib/stacks/database-stack';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { AmplifyStack } from '../lib/stacks/amplify-stack';
 import { SesStack } from '../lib/stacks/ses-stack';
+import { MonitoringStack } from '../lib/stacks/monitoring-stack';
 import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
@@ -64,6 +65,16 @@ const sesStack = new SesStack(app, `SesStack-${environment}`, {
   env,
 });
 sesStack.addDependency(apiStack);
+
+// MonitoringStack（監視・ダッシュボード）
+const monitoringStack = new MonitoringStack(app, `MonitoringStack-${environment}`, {
+  config,
+  lambdaFunctions: apiStack.lambdaFunctions,
+  database: databaseStack.database,
+  api: apiStack.api,
+  env,
+});
+monitoringStack.addDependency(apiStack);
 
 // タグを追加
 cdk.Tags.of(app).add('Environment', environment);
