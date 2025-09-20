@@ -4,6 +4,10 @@ set -euo pipefail
 
 echo "Building Lambda functions..."
 
+# Get to the right directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+cd "$SCRIPT_DIR/.."
+
 # Lambda functions to build
 FUNCTIONS=(
     "users"
@@ -48,7 +52,6 @@ cd lambda/authorizer
 
 # Install dependencies and build
 npm ci --production
-npm run build
 
 echo "Successfully built authorizer function"
 cd - > /dev/null
@@ -58,7 +61,6 @@ echo "Building database init function..."
 cd lambda/db-init
 
 npm ci --production
-npm run build
 
 echo "Successfully built database init function"
 cd - > /dev/null

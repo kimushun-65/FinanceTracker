@@ -5,10 +5,10 @@
   "auth0Domain": "your-prod-auth0-domain.auth0.com",
   "auth0Audience": "https://api.finsight.prod",
   "auth0ClientId": "your-prod-auth0-client-id",
-  "githubOwner": "your-github-username",
+  "githubOwner": "kimushun-65",
   "repositoryName": "FinanceTracker",
   "databaseConfig": {
-    "databaseName": "finsight_prod",
+    "databaseName": "finsight",
     "port": 5432,
     "backupRetentionDays": 7,
     "preferredBackupWindow": "03:00-04:00",
