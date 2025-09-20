@@ -110,12 +110,6 @@ jobs:
           chmod +x scripts/build-lambda.sh
           ./scripts/build-lambda.sh
 
-      - name: Create deployment backup
-        working-directory: ./cdk
-        run: |
-          chmod +x scripts/backup-resources.sh
-          ./scripts/backup-resources.sh prod
-
       - name: Deploy to production (blue-green)
         working-directory: ./cdk
         run: |
