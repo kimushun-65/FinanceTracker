@@ -17,7 +17,7 @@ export class AmplifyStack extends Stack {
 
     // Amplifyアプリケーション作成
     this.amplifyApp = new App(this, 'FinSightApp', {
-      appName: `finsight-${props.config.environment}`,
+      appName: `finsight-frontend-${props.config.environment}`,
       description: `FinSight Frontend for ${props.config.environment}`,
       sourceCodeProvider: new GitHubSourceCodeProvider({
         owner: props.config.githubOwner,
