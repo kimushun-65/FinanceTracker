@@ -30,10 +30,9 @@ export class MonitoringStack extends Stack {
       displayName: 'FinSight System Alerts',
     });
 
-    // 開発環境ではメール通知を設定
-    if (props.config.environment !== 'prod') {
-      this.alertTopic.addSubscription(new EmailSubscription('dev-alerts@finsight.local'));
-    }
+    // Production email notifications
+    // NOTE: Update this email address to your actual alert email
+    this.alertTopic.addSubscription(new EmailSubscription('alerts@finsight.com'));
 
     // Lambda関数のメトリクス
     const lambdaWidgets = Object.entries(props.lambdaFunctions).map(([name, func]) => {

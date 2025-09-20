@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ENVIRONMENT="${1:-dev}"
+ENVIRONMENT="${1:-prod}"
 
 echo "=== Performance Tests for $ENVIRONMENT environment ==="
 echo ""

@@ -37,11 +37,10 @@ export class SesStack extends Stack {
       displayName: 'FinSight Email Complaint Notifications',
     });
 
-    // 開発環境では通知メールを送信
-    if (props.config.environment !== 'prod') {
-      bounceTopic.addSubscription(new EmailSubscription('dev-bounce@finsight.local'));
-      complaintTopic.addSubscription(new EmailSubscription('dev-complaint@finsight.local'));
-    }
+    // Production email notifications for bounce and complaint handling
+    // NOTE: Update these email addresses to your actual monitoring emails
+    bounceTopic.addSubscription(new EmailSubscription('bounce-notifications@finsight.com'));
+    complaintTopic.addSubscription(new EmailSubscription('complaint-notifications@finsight.com'));
 
     // イベント宛先の設定（基本的なSNS通知のみ）
     // CloudWatchとEventDestinationは後で設定

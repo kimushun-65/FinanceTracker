@@ -36,7 +36,7 @@ export class VpcStack extends Stack {
           subnetType: SubnetType.PRIVATE_WITH_EGRESS,
         },
       ],
-      natGateways: props.environment === 'prod' ? 2 : 1,
+      natGateways: 2,
     });
 
     // Lambda用セキュリティグループ

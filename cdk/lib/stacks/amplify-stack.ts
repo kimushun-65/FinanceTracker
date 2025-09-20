@@ -49,14 +49,13 @@ export class AmplifyStack extends Stack {
     });
 
     // ブランチ設定
-    const branchName = props.config.environment === 'prod' ? 'main' : 
-                     props.config.environment === 'staging' ? 'staging' : 'develop';
+    const branchName = 'main'; // Always use main branch for production
     
     this.branch = this.amplifyApp.addBranch(branchName, {
       branchName: branchName,
-      stage: props.config.environment === 'prod' ? 'PRODUCTION' : 'DEVELOPMENT',
+      stage: 'PRODUCTION', // Always production
       autoBuild: true,
-      performanceMode: props.config.environment === 'prod',
+      performanceMode: true, // Always enable performance mode
     });
 
     // カスタムドメイン設定（ドメインが設定されている場合）
@@ -67,7 +66,7 @@ export class AmplifyStack extends Stack {
       });
       
       domain.mapRoot(this.branch);
-      domain.mapSubDomain(this.branch, props.config.environment === 'prod' ? 'www' : props.config.environment);
+      domain.mapSubDomain(this.branch, 'www'); // Always use www for production
     }
 
     // 出力
@@ -83,9 +82,7 @@ export class AmplifyStack extends Stack {
 
     if (props.config.customDomain) {
       new CfnOutput(this, 'CustomDomainUrl', {
-        value: props.config.environment === 'prod' 
-          ? `https://${props.config.customDomain}` 
-          : `https://${props.config.environment}.${props.config.customDomain}`,
+        value: `https://${props.config.customDomain}`, // Production URL
         description: 'Custom Domain URL',
       });
     }

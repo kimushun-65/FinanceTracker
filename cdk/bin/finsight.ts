@@ -12,8 +12,8 @@ import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
 
-// 環境を取得（デフォルトは'dev'）
-const environment = app.node.tryGetContext('env') || 'dev';
+// 環境を取得（デフォルトは'prod'）
+const environment = app.node.tryGetContext('env') || 'prod';
 
 // 環境設定を読み込み
 const config: EnvironmentConfig = require(`../config/${environment}.json`);

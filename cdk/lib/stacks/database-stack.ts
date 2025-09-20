@@ -39,9 +39,7 @@ export class DatabaseStack extends Stack {
       engine: DatabaseInstanceEngine.postgres({
         version: PostgresEngineVersion.VER_15,
       }),
-      instanceType: props.environment === 'prod'
-        ? InstanceType.of(InstanceClass.T3, InstanceSize.SMALL)
-        : InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
+      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.SMALL),
       vpc: props.vpc,
       vpcSubnets: {
         subnetType: SubnetType.PRIVATE_WITH_EGRESS,

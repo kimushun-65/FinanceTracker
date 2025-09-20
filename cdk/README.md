@@ -37,7 +37,6 @@ cdk/
 ## 環境設定
 
 環境固有の設定は `config/` ディレクトリに保存されています：
-- `dev.json` - 開発環境
 - `prod.json` - 本番環境
 
 ## デプロイ
@@ -54,12 +53,6 @@ cdk/
    cdk bootstrap
    ```
 
-### 開発環境へのデプロイ
-
-```bash
-./scripts/deploy-dev.sh
-```
-
 ### 本番環境へのデプロイ
 
 ```bash
@@ -70,17 +63,17 @@ cdk/
 
 ### 統合テスト
 ```bash
-./scripts/test-integration.sh dev
+./scripts/test-integration.sh prod
 ```
 
 ### パフォーマンステスト
 ```bash
-./scripts/test-performance.sh dev
+./scripts/test-performance.sh prod
 ```
 
 ### セキュリティチェック
 ```bash
-./scripts/security-check.sh dev
+./scripts/security-check.sh prod
 ```
 
 ## Lambda関数
@@ -99,8 +92,8 @@ cdk/
 ## コスト最適化
 
 以下によりコスト最適化されています：
-- 開発環境では単一のNATゲートウェイ
-- 非本番環境では小さいRDSインスタンスサイズ
+- マルチAZ構成でのNATゲートウェイ（高可用性）
+- 適切なRDSインスタンスサイズ（T3.small）
 - Lambda予約同時実行数の制限
 - CloudWatchログ保持ポリシー
 
@@ -115,8 +108,7 @@ cdk/
 ## モニタリング
 
 CloudWatchダッシュボードへのアクセス:
-- 開発: https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-dev
-- 本番: https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-prod
+- https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-prod
 
 ## 便利なコマンド
 

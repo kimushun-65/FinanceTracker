@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-ENVIRONMENT="${1:-dev}"
+ENVIRONMENT="${1:-prod}"
 
 echo "=== Testing $ENVIRONMENT deployment ==="
 

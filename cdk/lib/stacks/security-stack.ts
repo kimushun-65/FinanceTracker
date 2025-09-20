@@ -27,7 +27,7 @@ export class SecurityStack extends Stack {
           priority: 1,
           statement: {
             rateBasedStatement: {
-              limit: props.config.environment === 'prod' ? 2000 : 1000,
+              limit: 2000, // Production rate limit
               aggregateKeyType: 'IP',
             },
           },
@@ -51,7 +51,7 @@ export class SecurityStack extends Stack {
               },
             },
           },
-          action: props.config.environment === 'prod' ? { block: {} } : { count: {} },
+          action: { block: {} }, // Always block in production
           visibilityConfig: {
             sampledRequestsEnabled: true,
             cloudWatchMetricsEnabled: true,
@@ -198,7 +198,7 @@ export class SecurityStack extends Stack {
               ],
             },
           },
-          action: props.config.environment === 'prod' ? { block: {} } : { count: {} },
+          action: { block: {} }, // Always block in production
           visibilityConfig: {
             sampledRequestsEnabled: true,
             cloudWatchMetricsEnabled: true,
