@@ -4,6 +4,11 @@
 
 家計簿アプリ「FinSight」の包括的実装計画です。フロントエンド（Next.js）、バックエンド（Go + Gin）、データベース（PostgreSQL）、インフラ（AWS）を段階的に構築します。
 
+### 現在のステータス (2025-09-20)
+- **完了**: Phase 1 (インフラ基盤構築) - 全AWSインフラストラクチャのデプロイ完了
+- **一部完了**: Phase 3 (データベース設計) - テーブル作成完了
+- **次のステップ**: Phase 2 (バックエンド開発) またはPhase 4 (フロントエンド開発)
+
 ## 技術スタック
 
 ### フロントエンド
@@ -38,89 +43,106 @@
 
 ## 実装フェーズ
 
-### Phase 1: インフラ基盤構築 (週1-2)
+### Phase 1: インフラ基盤構築 (週1-2) ✅ 完了
 
-#### 1.1 AWS CDK セットアップ
-**期間**: 2日間
+#### 1.1 AWS CDK セットアップ ✅
+**期間**: 2日間 → 実際: 1日
+**完了日**: 2025-09-20
 
 **タスク**:
-- [ ] CDKプロジェクト初期化
-- [ ] VPCスタック作成
-- [ ] セキュリティグループ設定
-- [ ] RDS PostgreSQL構築
-- [ ] Secrets Manager設定
+- [x] CDKプロジェクト初期化
+- [x] VPCスタック作成
+- [x] セキュリティグループ設定
+- [x] RDS PostgreSQL構築
+- [x] Secrets Manager設定
 
 **成果物**:
 ```
-infrastructure/
+cdk/  ✅ 完成
 ├── bin/finsight.ts
 ├── lib/stacks/
 │   ├── vpc-stack.ts
 │   ├── database-stack.ts
-│   └── certificate-stack.ts
+│   ├── api-stack.ts
+│   ├── amplify-stack.ts
+│   ├── ses-stack.ts
+│   ├── monitoring-stack.ts
+│   └── security-stack.ts
 ├── config/
-│   ├── dev.json
-│   └── prod.json
+│   └── prod.json  # devは削除
 └── package.json
 ```
 
 **検証**:
-- [ ] VPC作成確認
-- [ ] RDS接続テスト
-- [ ] Secrets Manager動作確認
+- [x] VPC作成確認
+- [x] RDS接続テスト（エンドポイント: databasestack-prod-finsightdatabasef280e403-b2z9dwrgvkhw.c3m8i0meki0q.ap-northeast-1.rds.amazonaws.com）
+- [x] Secrets Manager動作確認
 
-#### 1.2 API Gateway + Lambda基盤
-**期間**: 3日間
+#### 1.2 API Gateway + Lambda基盤 ✅
+**期間**: 3日間 → 実際: 1日
+**完了日**: 2025-09-20
 
 **タスク**:
-- [ ] API Gatewayスタック作成
-- [ ] Lambda関数デプロイ設定
-- [ ] Auth0 Lambda Authorizer実装
-- [ ] CORS設定
-- [ ] CloudWatch Logs設定
+- [x] API Gatewayスタック作成
+- [x] Lambda関数デプロイ設定
+- [x] Auth0 Lambda Authorizer実装
+- [x] CORS設定
+- [x] CloudWatch Logs設定
 
 **成果物**:
 ```
-infrastructure/lib/stacks/
+cdk/lib/stacks/  ✅ 完成
 ├── api-stack.ts
 └── monitoring-stack.ts
 
-lambda/
+lambda/  ✅ 構成完了（実装はプレースホルダー）
 ├── auth/
 ├── users/
-└── shared/
+├── accounts/
+├── transactions/
+├── categories/
+├── budgets/
+├── reports/
+├── notifications/
+├── authorizer/  # Node.js Auth0認証
+└── db-init/     # Node.js DB初期化
 ```
 
 **検証**:
-- [ ] API Gateway動作確認
-- [ ] Lambda関数実行確認
-- [ ] JWT認証テスト
-- [ ] ログ出力確認
+- [x] API Gateway動作確認（https://65x5ziikn3.execute-api.ap-northeast-1.amazonaws.com/prod/）
+- [x] Lambda関数実行確認（プレースホルダー実装）
+- [ ] JWT認証テスト（Auth0設定後に実施予定）
+- [x] ログ出力確認
 
-#### 1.3 フロントエンドホスティング
-**期間**: 2日間
+#### 1.3 フロントエンドホスティング ✅
+**期間**: 2日間 → 実際: 1日
+**完了日**: 2025-09-20
 
 **タスク**:
-- [ ] Amplifyスタック作成
-- [ ] GitHub連携設定
-- [ ] 環境変数設定
-- [ ] カスタムドメイン設定
-- [ ] SSL証明書設定
+- [x] Amplifyスタック作成
+- [x] GitHub連携設定
+- [x] 環境変数設定
+- [ ] カスタムドメイン設定（オプション）
+- [ ] SSL証明書設定（カスタムドメイン使用時）
 
 **成果物**:
 ```
-infrastructure/lib/stacks/
-├── amplify-stack.ts
-└── certificate-stack.ts
+cdk/lib/stacks/  ✅ 完成
+└── amplify-stack.ts
+
+# デプロイ済みURL
+- API: https://65x5ziikn3.execute-api.ap-northeast-1.amazonaws.com/prod/
+- Frontend: https://main.d3ppd99k9cae8.amplifyapp.com
+- Dashboard: https://ap-northeast-1.console.aws.amazon.com/cloudwatch/home?region=ap-northeast-1#dashboards:name=FinSight-prod
 ```
 
 **検証**:
-- [ ] Amplifyデプロイ確認
-- [ ] GitHub連携動作確認
-- [ ] カスタムドメインアクセス
-- [ ] SSL証明書確認
+- [x] Amplifyデプロイ確認（https://main.d3ppd99k9cae8.amplifyapp.com）
+- [x] GitHub連携動作確認
+- [ ] カスタムドメインアクセス（未設定）
+- [x] SSL証明書確認（Amplifyデフォルト）
 
-### Phase 2: バックエンド開発 (週3-6)
+### Phase 2: バックエンド開発 (週3-6) 🚧 次のフェーズ
 
 #### 2.1 プロジェクト構造とドメイン層
 **期間**: 4日間
@@ -227,28 +249,33 @@ internal/interface/
 - [ ] 認証付きリクエストテスト
 - [ ] エラーレスポンステスト
 
-### Phase 3: データベース設計・実装 (週5-6)
+### Phase 3: データベース設計・実装 (週5-6) 📋 一部完了
 
-#### 3.1 テーブル設計
-**期間**: 2日間
+#### 3.1 テーブル設計 ✅
+**期間**: 2日間 → 実際: 1日
+**完了日**: 2025-09-20
 
 **タスク**:
-- [ ] ER図に基づくテーブル定義
-- [ ] インデックス設計
-- [ ] 制約設定
-- [ ] シーケンス設定
+- [x] ER図に基づくテーブル定義
+- [x] インデックス設計
+- [x] 制約設定
+- [x] シーケンス設定
 
 **成果物**:
 ```
-database/
-├── migrations/
-│   ├── 001_create_users.sql
-│   ├── 002_create_accounts.sql
-│   ├── 003_create_categories.sql
-│   ├── 004_create_transactions.sql
-│   └── 005_create_budgets.sql
-└── seeds/
-    └── master_categories.sql
+cdk/lambda/db-init/index.js  ✅ 完成
+# 以下のテーブルが自動作成される:
+- users
+- accounts  
+- category_master
+- categories
+- transactions
+- budgets
+- asset_snapshots
+- account_movements
+- budget_suggestions
+- asset_forecasts
+- notification_settings
 ```
 
 #### 3.2 マスターデータ投入
@@ -259,7 +286,7 @@ database/
 - [ ] シードデータ作成
 - [ ] データ投入スクリプト
 
-### Phase 4: フロントエンド開発 (週7-12)
+### Phase 4: フロントエンド開発 (週7-12) 🚧 Auth0設定待ち
 
 #### 4.1 プロジェクト構造とベース実装
 **期間**: 3日間
@@ -413,7 +440,7 @@ src/widgets/settings/
 └── report-settings/
 ```
 
-### Phase 5: 統合・テスト (週13-14)
+### Phase 5: 統合・テスト (週13-14) 🗓 将来のフェーズ
 
 #### 5.1 E2E テスト
 **期間**: 3日間
@@ -441,7 +468,7 @@ src/widgets/settings/
 - [ ] SQLインジェクション対策確認
 - [ ] 機密情報漏洩チェック
 
-### Phase 6: デプロイ・本番化 (週15-16)
+### Phase 6: デプロイ・本番化 (週15-16) ✅ インフラ部分完了
 
 #### 6.1 CI/CDパイプライン
 **期間**: 3日間
@@ -452,14 +479,15 @@ src/widgets/settings/
 - [ ] 自動デプロイ設定
 - [ ] 環境別デプロイ
 
-#### 6.2 本番環境構築
-**期間**: 2日間
+#### 6.2 本番環境構築 ✅
+**期間**: 2日間 → 実際: 1日
+**完了日**: 2025-09-20
 
 **タスク**:
-- [ ] 本番環境設定
-- [ ] ドメイン設定
-- [ ] SSL証明書設定
-- [ ] 監視設定
+- [x] 本番環境設定
+- [ ] ドメイン設定（オプション）
+- [x] SSL証明書設定（Amplifyデフォルト）
+- [x] 監視設定
 
 #### 6.3 運用準備
 **期間**: 2日間
@@ -472,9 +500,9 @@ src/widgets/settings/
 
 ## 各週の詳細タスク
 
-### 第1週: インフラストラクチャ基盤
+### 第1週: インフラストラクチャ基盤 ✅ 完了
 
-#### Day 1-2: AWS CDK基盤構築
+#### Day 1-2: AWS CDK基盤構築 ✅
 ```bash
 # 1. CDKプロジェクト初期化
 mkdir infrastructure && cd infrastructure
@@ -490,7 +518,7 @@ touch lib/stacks/vpc-stack.ts
 touch lib/stacks/database-stack.ts
 ```
 
-#### Day 3-5: API Gateway + Lambda設定
+#### Day 3-5: API Gateway + Lambda設定 ✅
 ```bash
 # 1. APIスタック作成
 touch lib/stacks/api-stack.ts
@@ -501,7 +529,7 @@ cd lambda/auth && go mod init auth
 cd ../users && go mod init users
 ```
 
-#### Day 6-7: フロントエンドホスティング
+#### Day 6-7: フロントエンドホスティング ✅
 ```bash
 # 1. Next.jsプロジェクト作成
 npx create-next-app@latest frontend --typescript --tailwind --app
@@ -511,18 +539,21 @@ cd frontend && npm install @auth0/nextjs-auth0
 touch infrastructure/lib/stacks/amplify-stack.ts
 ```
 
-### 第2週: インフラ完成とバックエンド開始
+### 第2週: インフラ完成とバックエンド開始 ✅ インフラ完了
 
-#### Day 8-10: SES設定と監視
+#### Day 8-10: SES設定と監視 ✅
 ```bash
-# 1. SESスタック作成
-touch infrastructure/lib/stacks/ses-stack.ts
+# 1. SESスタック作成 ✅
+touch cdk/lib/stacks/ses-stack.ts
 
-# 2. 監視スタック作成
-touch infrastructure/lib/stacks/monitoring-stack.ts
+# 2. 監視スタック作成 ✅
+touch cdk/lib/stacks/monitoring-stack.ts
 
-# 3. 全スタックデプロイ
-cdk deploy --all --context env=dev
+# 3. セキュリティスタック作成 ✅
+touch cdk/lib/stacks/security-stack.ts
+
+# 4. 全スタックデプロイ ✅ 完了
+cdk deploy --all --context env=prod
 ```
 
 #### Day 11-14: バックエンドプロジェクト構築
@@ -604,14 +635,15 @@ export const LoginButton = () => {
 
 ## 成果物チェックリスト
 
-### インフラ
-- [ ] VPC、サブネット、セキュリティグループ
-- [ ] RDS PostgreSQL（Multi-AZ本番）
-- [ ] API Gateway + Lambda関数群
-- [ ] Amplify ホスティング
-- [ ] SES メール送信
-- [ ] CloudWatch 監視・アラート
-- [ ] X-Ray 分散トレーシング
+### インフラ ✅ 完了
+- [x] VPC、サブネット、セキュリティグループ
+- [x] RDS PostgreSQL（t3.small、7日間バックアップ）
+- [x] API Gateway + Lambda関数群
+- [x] Amplify ホスティング
+- [x] SES メール送信（検証待ち）
+- [x] CloudWatch 監視・アラート
+- [x] X-Ray 分散トレーシング
+- [x] WAF セキュリティ保護
 
 ### バックエンド
 - [ ] Clean Architecture構造
@@ -630,8 +662,8 @@ export const LoginButton = () => {
 - [ ] E2E テスト
 
 ### データベース
-- [ ] 12テーブル設計・実装
-- [ ] インデックス・制約設定
+- [x] 12テーブル設計・実装（db-init Lambda関数で自動作成）
+- [x] インデックス・制約設定
 - [ ] マスターデータ投入
 - [ ] マイグレーション管理
 
@@ -692,4 +724,17 @@ export const LoginButton = () => {
 - [ ] RDS垂直スケーリング
 - [ ] CDN活用
 
-このロードマップに従って実装を進めることで、16週間（約4ヶ月）でFinSightアプリケーションを完成させることができます。
+## 現在の進捗サマリー
+
+### 完了したもの (2025-09-20)
+1. **全AWSインフラストラクチャ** - 7スタックすべてデプロイ完了
+2. **データベーススキーマ** - ER図に基づく12テーブル作成完了
+3. **本番環境構築** - prod環境への移行完了
+
+### 残作業
+1. **Auth0設定** - 認証・認可の実装
+2. **Lambda関数実装** - ビジネスロジックの実装
+3. **フロントエンド開発** - Next.jsアプリケーション開発
+4. **SESメール検証** - noreply@finsight.comの検証
+
+このロードマップに従って実装を進めることで、16週間（約4ヶ月）でFinSightアプリケーションを完成させることができます。現在、約1週間でインフラ部分が完了し、予定よりも順調に進んでいます。
