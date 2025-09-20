@@ -1,5 +1,10 @@
 module finsight/users
 
-go 1.24.5
+go 1.21
 
-require github.com/aws/aws-lambda-go v1.49.0 // indirect
+require (
+    github.com/aws/aws-lambda-go v1.49.0
+    finsight/common v0.0.0
+)
+
+replace finsight/common => ../common

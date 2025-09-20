@@ -7,6 +7,10 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Move out of GOPATH if we're in it
+export GO111MODULE=on
+export GOPROXY=https://proxy.golang.org,direct
+
 # Lambda関数リスト
 FUNCTIONS="users accounts transactions categories budgets reports auth notifications"
 
@@ -21,7 +25,22 @@ for func in $FUNCTIONS; do
         
         # main.goが存在する場合のみビルド
         if [ -f "main.go" ]; then
-            GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap main.go
+            # go.modがない場合は作成
+            if [ ! -f "go.mod" ]; then
+                go mod init finsight/$func
+            fi
+            
+            # 共通ライブラリへのreplace追加
+            if ! grep -q "replace finsight/common" go.mod; then
+                echo "" >> go.mod
+                echo "replace finsight/common => ../common" >> go.mod
+            fi
+            
+            # 依存関係の更新
+            GO111MODULE=on go mod tidy || true
+            
+            # ビルド
+            GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap main.go
             echo "✓ Built $func"
         else
             # main.goが存在しない場合は、プレースホルダーを作成
@@ -58,14 +77,12 @@ func main() {
 }
 EOF
             # go.modファイルを作成
-            if [ ! -f "go.mod" ]; then
-                go mod init finsight/$func
-                go get github.com/aws/aws-lambda-go/events
-                go get github.com/aws/aws-lambda-go/lambda
-            fi
+            go mod init finsight/$func
+            go get github.com/aws/aws-lambda-go/events
+            go get github.com/aws/aws-lambda-go/lambda
             
             # ビルド
-            GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap main.go
+            GO111MODULE=on GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bootstrap main.go
             echo "✓ Created and built placeholder for $func"
         fi
         
