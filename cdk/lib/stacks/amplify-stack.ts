@@ -28,6 +28,16 @@ export class AmplifyStack extends Stack {
       resources: [`arn:aws:secretsmanager:${this.region}:${this.account}:secret:github-token*`],
     }));
 
+    // Amplifyがログを作成できる権限を追加
+    amplifyRole.addToPolicy(new PolicyStatement({
+      actions: [
+        'logs:CreateLogGroup',
+        'logs:CreateLogStream',
+        'logs:PutLogEvents'
+      ],
+      resources: ['*'],
+    }));
+
     // Amplifyアプリケーション作成
     this.amplifyApp = new App(this, 'FinSightApp', {
       role: amplifyRole,
