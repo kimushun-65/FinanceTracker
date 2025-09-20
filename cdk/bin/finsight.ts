@@ -7,6 +7,7 @@ import { ApiStack } from '../lib/stacks/api-stack';
 import { AmplifyStack } from '../lib/stacks/amplify-stack';
 import { SesStack } from '../lib/stacks/ses-stack';
 import { MonitoringStack } from '../lib/stacks/monitoring-stack';
+import { SecurityStack } from '../lib/stacks/security-stack';
 import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
@@ -75,6 +76,14 @@ const monitoringStack = new MonitoringStack(app, `MonitoringStack-${environment}
   env,
 });
 monitoringStack.addDependency(apiStack);
+
+// SecurityStack（WAF設定）
+const securityStack = new SecurityStack(app, `SecurityStack-${environment}`, {
+  config,
+  api: apiStack.api,
+  env,
+});
+securityStack.addDependency(apiStack);
 
 // タグを追加
 cdk.Tags.of(app).add('Environment', environment);
