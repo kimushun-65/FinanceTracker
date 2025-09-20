@@ -3,6 +3,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { VpcStack } from '../lib/stacks/vpc-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
+import { ApiStack } from '../lib/stacks/api-stack';
 import { EnvironmentConfig } from '../lib/interfaces/config';
 
 const app = new cdk.App();
@@ -34,6 +35,17 @@ const databaseStack = new DatabaseStack(app, `DatabaseStack-${environment}`, {
   env,
 });
 databaseStack.addDependency(vpcStack);
+
+// APIスタック
+const apiStack = new ApiStack(app, `ApiStack-${environment}`, {
+  vpc: vpcStack.vpc,
+  lambdaSecurityGroup: vpcStack.lambdaSecurityGroup,
+  database: databaseStack.database,
+  dbSecret: databaseStack.dbSecret,
+  config,
+  env,
+});
+apiStack.addDependency(databaseStack);
 
 // タグを追加
 cdk.Tags.of(app).add('Environment', environment);
