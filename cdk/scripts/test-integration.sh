@@ -22,7 +22,7 @@ echo ""
 echo "Test 1: Health Check"
 HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "$API_ENDPOINT/v1/health")
 STATUS_CODE=$(echo "$HEALTH_RESPONSE" | tail -n1)
-BODY=$(echo "$HEALTH_RESPONSE" | head -n-1)
+BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
 
 if [ "$STATUS_CODE" == "200" ]; then
     echo "✓ Health check passed"

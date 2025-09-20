@@ -9,15 +9,22 @@
 ```
 backend/
 ├── cmd/
-│   ├── api/            # APIサーバーのエントリポイント
-│   ├── migrate/        # DBマイグレーション
-│   └── seed/           # DBシーダー
+│   └── lambda/         # Lambda関数のエントリポイント
+│       ├── users/
+│       ├── accounts/
+│       ├── transactions/
+│       ├── categories/
+│       ├── budgets/
+│       ├── reports/
+│       ├── auth/
+│       └── notifications/
 ├── internal/
 │   ├── domain/         # ドメイン層（最内層）
-│   │   ├── auth/       # 認証・認可コンテキスト
-│   │   ├── project/    # プロジェクト管理コンテキスト
-│   │   ├── request/    # 承認ワークフローコンテキスト
-│   │   ├── workload/   # 稼働管理コンテキスト
+│   │   ├── user/       # ユーザーコンテキスト
+│   │   ├── account/    # アカウントコンテキスト
+│   │   ├── transaction/# 取引コンテキスト
+│   │   ├── category/   # カテゴリコンテキスト
+│   │   ├── budget/     # 予算コンテキスト
 │   │   └── common/     # 共通ドメイン要素
 │   ├── application/    # アプリケーション層
 │   │   ├── dto/        # データ転送オブジェクト
@@ -26,10 +33,10 @@ backend/
 │   ├── infrastructure/ # インフラストラクチャ層
 │   │   ├── database/   # DB接続
 │   │   ├── gorm/       # GORM実装
-│   │   └── jwt/        # JWT実装
+│   │   ├── auth0/      # Auth0実装
+│   │   └── aws/        # AWS SDK実装
 │   └── interface/      # インターフェース層（プレゼンテーション層）
-│       ├── controller/ # HTTPコントローラー
-│       └── middleware/ # HTTPミドルウェア
+│       └── lambda/     # Lambdaハンドラー
 ```
 
 ## レイヤー詳細と責務
@@ -454,7 +461,7 @@ func (c *EntityController) CreateEntity(ctx *gin.Context) {
 - インフラストラクチャ → ドメイン（リポジトリインターフェースの実装）
 
 ### 2. ドメイン駆動設計（DDD）
-- **境界づけられたコンテキスト**: auth, project, request, workload
+- **境界づけられたコンテキスト**: user, account, transaction, category, budget
 - **集約ルート**: 各コンテキストの主要エンティティ
 - **値オブジェクト**: 不変で交換可能なオブジェクト
 
