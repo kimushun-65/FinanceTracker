@@ -7,7 +7,8 @@ AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築し�
 ## 進捗サマリー
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
-- **Phase 2: ドメイン層実装** - 75%完了（Asset/Notification未実装）
+- **Phase 2: ドメイン層実装** - 100%完了 ✅
+- **Phase 2.5: Auth0認証実装** - 未着手 🆕
 - **Phase 3: アプリケーション層実装** - 未着手
 - **Phase 4: インフラストラクチャ層実装** - 40%完了（GORMモデル定義済み、DB接続未実装）
 - **Phase 5: HTTPインターフェース層実装** - 30%完了（ルーティング・ミドルウェア実装済み、ハンドラー未実装）
@@ -165,18 +166,17 @@ backend/
   - [x] value/suggestion_status.go
   - [x] repository/budget_repository.go
   - [x] repository/budget_suggestion_repository.go
-- [ ] AssetSnapshot エンティティ（資産管理コンテキスト）
-  - [ ] entity/asset_snapshot.go
-  - [ ] value/account_breakdown.go（口座別内訳）
-  - [ ] repository/asset_snapshot_repository.go
-- [ ] AssetForecast エンティティ（資産予測管理）
-  - [ ] entity/asset_forecast.go
-  - [ ] value/forecast_method.go
-  - [ ] value/assumptions.go
-  - [ ] repository/asset_forecast_repository.go
-- [ ] NotificationSettings エンティティ（通知管理コンテキスト）
-  - [ ] entity/notification_settings.go
-  - [ ] repository/notification_settings_repository.go
+- [x] AssetSnapshot エンティティ（資産管理コンテキスト）
+  - [x] entity/asset_snapshot.go
+  - [x] value/account_breakdown.go（口座別内訳）
+  - [x] repository/asset_snapshot_repository.go
+- [x] AssetForecast エンティティ（資産予測管理）
+  - [x] entity/asset_forecast.go
+  - [x] value/assumptions.go（予測手法は単一のため forecast_method.go は削除）
+  - [x] repository/asset_forecast_repository.go
+- [x] NotificationSettings エンティティ（通知管理コンテキスト）
+  - [x] entity/notification_settings.go
+  - [x] repository/notification_settings_repository.go
 
 ## Phase 3: アプリケーション層実装
 ### 3.1 DTOの定義
@@ -248,8 +248,8 @@ backend/
 - [ ] notification_settings_repository.go
 
 ### 4.4 外部サービス連携
-- [ ] Auth0認証サービス
-  - [x] JWT検証ミドルウェア実装
+- [ ] Auth0認証サービス → 詳細は`docs/plan/auth0_implementation.md`参照
+  - [x] JWT検証ミドルウェア実装（基本実装済み）
   - [ ] JWKセット取得・キャッシュ実装
 - [ ] メール送信サービス
 - [ ] キャッシュサービス（Redis）
@@ -353,10 +353,9 @@ backend/
 - Reportテーブル/エンティティは実装しない（レポートは既存データの集計表示のみ）
 
 ## 次のステップ
-1. **ドメイン層の残り実装**（Phase 2完了）
-   - AssetSnapshot/AssetForecastエンティティ実装
-   - NotificationSettingsエンティティ実装
-   - 関連する値オブジェクトとリポジトリインターフェース
+1. **Auth0認証実装**（Phase 2.5） 🆕 **優先実装**
+   - 詳細は`docs/plan/auth0_implementation.md`を参照
+   - フロントエンド・バックエンド・インフラ全体での認証実装
 2. **アプリケーション層の実装**（Phase 3）
    - ユースケース（サービス）の実装
    - DTOの定義（Asset/Notification含む）
