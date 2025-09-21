@@ -17,7 +17,7 @@ type Base struct {
 }
 
 // BeforeCreate sets the ID if it's not already set.
-func (base *Base) BeforeCreate(tx *gorm.DB) error {
+func (base *Base) BeforeCreate(_ *gorm.DB) error {
 	if base.ID == uuid.Nil {
 		base.ID = uuid.New()
 	}

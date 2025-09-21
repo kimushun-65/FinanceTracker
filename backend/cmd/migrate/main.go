@@ -19,6 +19,10 @@ import (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
@@ -38,25 +42,26 @@ func main() {
 	// Get command
 	if len(os.Args) < 2 {
 		printUsage(cfg.AppEnv)
-		return
+		return 0
 	}
 
 	command := os.Args[1]
 
 	if err := runCommand(command, cfg, logger); err != nil {
 		logger.Error(err.Error())
-		os.Exit(1)
+		return 1
 	}
+
+	return 0
 }
 
 // printUsage prints the usage message based on the environment
 func printUsage(appEnv string) {
 	if appEnv == "development" {
-		fmt.Println("Usage: migrate [apply|check|diff|validate|dev-setup]")
+		log.Fatal("Usage: migrate [apply|check|diff|validate|dev-setup]")
 	} else {
-		fmt.Println("Usage: migrate [apply|check|diff|validate]")
+		log.Fatal("Usage: migrate [apply|check|diff|validate]")
 	}
-	os.Exit(1)
 }
 
 // runCommand executes the specified command

@@ -27,141 +27,157 @@ type Auth0Claims struct {
 	Permissions []string `json:"permissions"`
 }
 
-// Auth returns a middleware that validates JWT tokens from Auth0.
-func Auth(cfg *config.Config) gin.HandlerFunc {
-	// Construct the JWKS URL
+// authConfig holds configuration for Auth middleware
+type authConfig struct {
+	jwksURL          string
+	expectedAudience string
+	expectedIssuer   string
+}
+
+// newAuthConfig creates a new authConfig from the application config
+func newAuthConfig(cfg *config.Config) *authConfig {
 	auth0Domain := cfg.Auth0Domain
 	if !strings.HasPrefix(auth0Domain, "https://") {
 		auth0Domain = "https://" + auth0Domain
 	}
-	jwksURL := auth0Domain + "/.well-known/jwks.json"
 
-	// Parse Auth0 audience
-	expectedAudience := cfg.Auth0Audience
-	expectedIssuer := auth0Domain + "/"
+	return &authConfig{
+		jwksURL:          auth0Domain + "/.well-known/jwks.json",
+		expectedAudience: cfg.Auth0Audience,
+		expectedIssuer:   auth0Domain + "/",
+	}
+}
+
+// Auth returns a middleware that validates JWT tokens from Auth0.
+func Auth(cfg *config.Config) gin.HandlerFunc {
+	authCfg := newAuthConfig(cfg)
 
 	return func(c *gin.Context) {
-		// Extract token from Authorization header
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			if err := c.Error(errors.NewUnauthorizedError("Missing authorization header")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
+		if err := authenticateRequest(c, authCfg); err != nil {
+			handleAuthError(c, err)
 			return
 		}
-
-		// Check Bearer prefix
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			if err := c.Error(errors.NewUnauthorizedError("Invalid authorization header format")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		tokenString := parts[1]
-
-		// Parse token with claims
-		token, err := jwt.ParseWithClaims(tokenString, &Auth0Claims{}, func(token *jwt.Token) (interface{}, error) {
-			// Verify signing algorithm
-			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, errors.NewUnauthorizedError("Unexpected signing method")
-			}
-
-			// Get the key ID from token header
-			kid, ok := token.Header["kid"].(string)
-			if !ok {
-				return nil, errors.NewUnauthorizedError("Missing key ID")
-			}
-
-			// Fetch JWKS (in production, this should be cached)
-			publicKey, err := fetchPublicKey(jwksURL, kid)
-			if err != nil {
-				return nil, err
-			}
-
-			return publicKey, nil
-		})
-
-		if err != nil || !token.Valid {
-			if err := c.Error(errors.NewUnauthorizedError("Invalid token")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Extract and validate claims
-		claims, ok := token.Claims.(*Auth0Claims)
-		if !ok {
-			if err := c.Error(errors.NewUnauthorizedError("Invalid token claims")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Verify issuer
-		if claims.Issuer != expectedIssuer {
-			if err := c.Error(errors.NewUnauthorizedError("Invalid token issuer")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Verify audience
-		audValid := false
-		for _, aud := range claims.Audience {
-			if aud == expectedAudience {
-				audValid = true
-				break
-			}
-		}
-		if !audValid {
-			if err := c.Error(errors.NewUnauthorizedError("Invalid token audience")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Check token expiration
-		if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
-			if err := c.Error(errors.NewUnauthorizedError("Token has expired")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Extract user ID from subject
-		userID := claims.Subject
-		if userID == "" {
-			if err := c.Error(errors.NewUnauthorizedError("Missing user ID in token")); err != nil {
-				c.Abort()
-				return
-			}
-			c.Abort()
-			return
-		}
-
-		// Set user information in context
-		c.Set("UserID", userID)
-		c.Set("Claims", claims)
-		c.Set("Permissions", claims.Permissions)
-
 		c.Next()
 	}
+}
+
+// authenticateRequest handles the authentication flow for a request
+func authenticateRequest(c *gin.Context, cfg *authConfig) error {
+	// Extract token
+	tokenString, err := extractTokenFromHeader(c)
+	if err != nil {
+		return err
+	}
+
+	// Parse and validate token
+	token, err := parseToken(tokenString, cfg.jwksURL)
+	if err != nil {
+		return errors.NewUnauthorizedError("Invalid token")
+	}
+
+	if !token.Valid {
+		return errors.NewUnauthorizedError("Invalid token")
+	}
+
+	// Validate claims
+	claims, err := validateClaims(token, cfg.expectedIssuer, cfg.expectedAudience)
+	if err != nil {
+		return err
+	}
+
+	// Set user information in context
+	setUserContext(c, claims)
+	return nil
+}
+
+// setUserContext sets user information in the Gin context
+func setUserContext(c *gin.Context, claims *Auth0Claims) {
+	c.Set("UserID", claims.Subject)
+	c.Set("Claims", claims)
+	c.Set("Permissions", claims.Permissions)
+}
+
+// extractTokenFromHeader extracts the JWT token from the Authorization header
+func extractTokenFromHeader(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", errors.NewUnauthorizedError("Missing authorization header")
+	}
+
+	// Check Bearer prefix
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return "", errors.NewUnauthorizedError("Invalid authorization header format")
+	}
+
+	return parts[1], nil
+}
+
+// parseToken parses the JWT token and fetches the public key
+func parseToken(tokenString, jwksURL string) (*jwt.Token, error) {
+	return jwt.ParseWithClaims(tokenString, &Auth0Claims{}, func(token *jwt.Token) (interface{}, error) {
+		// Verify signing algorithm
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, errors.NewUnauthorizedError("Unexpected signing method")
+		}
+
+		// Get the key ID from token header
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, errors.NewUnauthorizedError("Missing key ID")
+		}
+
+		// Fetch JWKS (in production, this should be cached)
+		return fetchPublicKey(jwksURL, kid)
+	})
+}
+
+// validateClaims validates the token claims
+func validateClaims(token *jwt.Token, expectedIssuer, expectedAudience string) (*Auth0Claims, error) {
+	// Extract claims
+	claims, ok := token.Claims.(*Auth0Claims)
+	if !ok {
+		return nil, errors.NewUnauthorizedError("Invalid token claims")
+	}
+
+	// Verify issuer
+	if claims.Issuer != expectedIssuer {
+		return nil, errors.NewUnauthorizedError("Invalid token issuer")
+	}
+
+	// Verify audience
+	audValid := false
+	for _, aud := range claims.Audience {
+		if aud == expectedAudience {
+			audValid = true
+			break
+		}
+	}
+	if !audValid {
+		return nil, errors.NewUnauthorizedError("Invalid token audience")
+	}
+
+	// Check token expiration
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+		return nil, errors.NewUnauthorizedError("Token has expired")
+	}
+
+	// Verify user ID exists
+	if claims.Subject == "" {
+		return nil, errors.NewUnauthorizedError("Missing user ID in token")
+	}
+
+	return claims, nil
+}
+
+// handleAuthError handles authentication errors
+func handleAuthError(c *gin.Context, err error) {
+	if appErr, ok := err.(*errors.AppError); ok {
+		_ = c.Error(appErr)
+	} else {
+		_ = c.Error(errors.NewUnauthorizedError(err.Error()))
+	}
+	c.Abort()
 }
 
 // fetchPublicKey fetches the public key from Auth0 JWKS endpoint.
@@ -188,9 +204,7 @@ func fetchPublicKey(jwksURL, kid string) (interface{}, error) {
 		return nil, errors.NewExternalServiceError("Auth0", err)
 	}
 	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			// Log error but don't return it
-		}
+		_ = resp.Body.Close()
 	}()
 
 	if resp.StatusCode != http.StatusOK {
