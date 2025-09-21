@@ -4,20 +4,31 @@
 FinanceTrackerバックエンドをDocker環境で開発するためのタスクリストです。
 AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築します。
 
+## 進捗サマリー
+- **Phase 0: 開発環境構築** - 90%完了
+- **Phase 1: プロジェクト構造構築** - 70%完了
+- **Phase 2: ドメイン層実装** - 未着手
+- **Phase 3: アプリケーション層実装** - 未着手
+- **Phase 4: インフラストラクチャ層実装** - 未着手
+- **Phase 5: HTTPインターフェース層実装** - 未着手
+- **Phase 6: テスト実装** - 未着手
+- **Phase 7: CI/CD・運用設定** - 40%完了
+- **Phase 8: Lambda統合** - 未着手
+
 ## Phase 0: 開発環境構築
 ### 0.1 Docker環境セットアップ
-- [ ] Docker Composeファイル作成
+- [x] Docker Composeファイル作成
   - Goアプリケーション用コンテナ (Gin)
   - PostgreSQL用コンテナ
   - pgAdmin用コンテナ（DB管理用）
-- [ ] Dockerfileの作成（マルチステージビルド）
-- [ ] docker-compose.ymlの作成
-- [ ] .env.exampleファイル作成（環境変数テンプレート）
+- [x] Dockerfileの作成（マルチステージビルド）
+- [x] docker-compose.ymlの作成
+- [x] .env.exampleファイル作成（環境変数テンプレート）
 
 ### 0.2 Ginプロジェクト初期化
-- [ ] backend/ディレクトリ作成
-- [ ] go mod init
-- [ ] 基本的な依存関係のインストール
+- [x] backend/ディレクトリ作成
+- [x] go mod init
+- [x] 基本的な依存関係のインストール
   - gin-gonic/gin
   - gorm.io/gorm
   - gorm.io/driver/postgres
@@ -27,24 +38,24 @@ AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築し�
 
 ### 0.3 データベースセットアップ
 - [ ] PostgreSQL初期化スクリプト作成
-- [ ] Atlas（ariga.io/atlas）のセットアップ
-  - [ ] atlasfileの作成（プロジェクトルート）
+- [x] Atlas（ariga.io/atlas）のセットアップ
+  - [x] atlas.hclの作成（プロジェクトルート）
   - [ ] スキーマファイル（schema.hcl）の作成（cmd/migrate/schema.hcl）
-  - [ ] マイグレーションディレクトリ構成（cmd/migrate/migrations/）
+  - [x] マイグレーションディレクトリ構成（cmd/migrate/migrations/）
 - [ ] 初期スキーマ作成（テーブル定義）
-- [ ] cmd/migrate/main.go作成（マイグレーション実行コマンド）
-- [ ] cmd/seed/main.go作成（シードデータ投入コマンド）
+- [x] cmd/migrate/main.go作成（マイグレーション実行コマンド）
+- [x] cmd/seed/main.go作成（シードデータ投入コマンド）
 - [ ] cmd/seed/data/にシードデータファイル配置
 
 ### 0.4 開発ツール設定
-- [ ] Makefileの作成（ビルド、テスト、実行コマンド）
-  - [ ] make api - APIサーバー起動
-  - [ ] make migrate - マイグレーション実行
-  - [ ] make seed - シードデータ投入
-  - [ ] make atlas-* - Atlas関連コマンド
-- [ ] air.tomlの作成（ホットリロード設定）
-- [ ] .gitignoreの更新
-- [ ] atlasfile（Atlas設定ファイル）の作成
+- [x] Makefileの作成（ビルド、テスト、実行コマンド）
+  - [x] make api - APIサーバー起動
+  - [x] make migrate - マイグレーション実行
+  - [x] make seed - シードデータ投入
+  - [x] make atlas-* - Atlas関連コマンド
+- [x] air.tomlの作成（ホットリロード設定）
+- [x] .gitignoreの更新
+- [x] atlas.hcl（Atlas設定ファイル）の作成
 
 ## Phase 1: プロジェクト構造構築（オニオンアーキテクチャ）
 ### 1.1 ディレクトリ構造作成
@@ -52,12 +63,12 @@ AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築し�
 backend/
 ├── cmd/
 │   ├── api/
-│   │   └── main.go              # APIサーバーエントリポイント
+│   │   └── main.go              # APIサーバーエントリポイント ✓
 │   ├── migrate/
-│   │   ├── main.go              # マイグレーション実行
-│   │   └── migrations/          # マイグレーションファイル
+│   │   ├── main.go              # マイグレーション実行 ✓
+│   │   └── migrations/          # マイグレーションファイル ✓
 │   └── seed/
-│       ├── main.go              # シードデータ投入
+│       ├── main.go              # シードデータ投入 ✓
 │       └── data/                # シードデータファイル
 ├── internal/
 │   ├── domain/                  # ドメイン層
@@ -66,45 +77,37 @@ backend/
 │   │   ├── transaction/
 │   │   ├── category/
 │   │   ├── budget/
-│   │   └── common/
-│   ├── application/             # アプリケーション層
-│   │   ├── dto/
-│   │   ├── usecase/
-│   │   └── service/
-│   ├── infrastructure/          # インフラストラクチャ層
-│   │   ├── postgres/
-│   │   ├── auth/
-│   │   └── external/
+│   │   └── common/              ✓
+│   ├── application/             # アプリケーション層 ✓
+│   ├── infrastructure/          # インフラストラクチャ層 ✓
 │   └── interface/               # インターフェース層
-│       ├── http/
-│       │   ├── handler/
-│       │   ├── middleware/
-│       │   └── router/
-│       └── validator/
+│       └── http/
+│           ├── middleware/      ✓
+│           └── router/          ✓
 ├── pkg/                         # 共有パッケージ
-│   ├── config/
-│   ├── errors/
-│   └── logger/
-├── scripts/                     # ユーティリティスクリプト
-├── docker/                      # Docker関連ファイル
+│   ├── config/                  ✓
+│   ├── errors/                  ✓
+│   └── logger/                  ✓
+├── scripts/                     # ユーティリティスクリプト ✓
+│   └── check-architecture.sh    ✓
 ├── docs/                        # ドキュメント
 └── tests/                       # テストファイル
 ```
 
 ### 1.2 基本設定ファイル作成
-- [ ] pkg/config/config.go（設定管理）
-- [ ] pkg/logger/logger.go（ログ設定）
+- [x] pkg/config/config.go（設定管理）
+- [x] pkg/logger/logger.go（ログ設定）
 - [ ] pkg/errors/errors.go（カスタムエラー）
 
 ### 1.3 HTTPサーバー基本実装
-- [ ] cmd/api/main.go（APIサーバーエントリポイント）
+- [x] cmd/api/main.go（APIサーバーエントリポイント）
 - [ ] internal/interface/http/router/router.go（ルーティング設定）
 - [ ] middleware実装（CORS, ロギング, エラーハンドリング）
 
 ### 1.4 マイグレーション・シード実装
-- [ ] cmd/migrate/main.go（Atlasマイグレーション実行）
+- [x] cmd/migrate/main.go（Atlasマイグレーション実行）
 - [ ] cmd/migrate/schema.hcl（スキーマ定義）
-- [ ] cmd/seed/main.go（シードデータ投入）
+- [x] cmd/seed/main.go（シードデータ投入）
 - [ ] cmd/seed/data/*.json（シードデータファイル）
 
 ## Phase 2: ドメイン層実装
@@ -233,18 +236,18 @@ backend/
 
 ## Phase 7: CI/CD・運用設定
 ### 7.1 GitHub Actions設定
-- [ ] テスト自動実行
-- [ ] ビルド自動化
+- [x] テスト自動実行
+- [x] ビルド自動化
 - [ ] Dockerイメージビルド
 
 ### 7.2 監視・ログ設定
-- [ ] 構造化ログ実装
+- [x] 構造化ログ実装
 - [ ] メトリクス収集
-- [ ] ヘルスチェックエンドポイント
+- [x] ヘルスチェックエンドポイント
 
 ### 7.3 ドキュメント作成
 - [ ] API仕様書（OpenAPI/Swagger）
-- [ ] 開発者向けREADME
+- [x] 開発者向けREADME
 - [ ] 環境構築手順書
 
 ## Phase 8: Lambda統合（オプション）
