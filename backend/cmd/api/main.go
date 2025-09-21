@@ -3,13 +3,17 @@
 package main
 
 import (
-	"fmt"
 	stdlog "log"
 
+	"financetracker/internal/application/service"
+	"financetracker/internal/infrastructure/auth0"
+	"financetracker/internal/infrastructure/persistence/postgres"
+	"financetracker/internal/interface/handler"
+	"financetracker/internal/interface/router"
 	"financetracker/pkg/config"
+	"financetracker/pkg/database"
 	"financetracker/pkg/logger"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -31,37 +35,34 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-	// Set Gin mode
-	gin.SetMode(cfg.GinMode)
+	// Initialize database
+	db, err := database.New(cfg, log)
+	if err != nil {
+		log.Error("Failed to connect to database: " + err.Error())
+		return
+	}
+	defer db.Close()
 
-	// Create Gin router
-	router := gin.New()
+	// Initialize Auth0
+	auth0Client := auth0.NewClient(cfg.Auth0Domain, cfg.Auth0Audience)
+	authMiddleware := auth0.NewAuthMiddleware(auth0Client)
 
-	// Middlewares
-	router.Use(gin.Recovery())
-	router.Use(gin.Logger())
+	// Initialize repositories
+	userRepo := postgres.NewUserRepository(db.DB)
 
-	// Health check endpoint
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "healthy",
-			"app":    "FinanceTracker API",
-		})
-	})
+	// Initialize services
+	authService := service.NewAuthService(userRepo)
 
-	// API routes
-	api := router.Group("/api")
-	api.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Welcome to FinanceTracker API",
-			"version": "1.0.0",
-		})
+	// Initialize handlers
+	authHandler := handler.NewAuthHandler(authService, auth0Client, authMiddleware, cfg.Auth0ClientID, cfg.Auth0CallbackURL)
+
+	// Create router with handlers
+	r := router.NewWithHandlers(cfg, log, &router.Handlers{
+		AuthHandler: authHandler,
 	})
 
 	// Start server
-	port := fmt.Sprintf(":%s", cfg.AppPort)
-	log.Info("Starting server on port" + port)
-	if err := router.Run(port); err != nil {
+	if err := r.Run(); err != nil {
 		log.Error("Failed to start server: " + err.Error())
 		return
 	}

@@ -10,15 +10,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Handlers contains all HTTP handlers
+type Handlers struct {
+	AuthHandler interface {
+		Login(*gin.Context)
+		Callback(*gin.Context)
+		Logout(*gin.Context)
+		GetCurrentUser(*gin.Context)
+	}
+}
+
 // Router represents the HTTP router with its dependencies.
 type Router struct {
-	engine *gin.Engine
-	cfg    *config.Config
-	logger *logger.Logger
+	engine   *gin.Engine
+	cfg      *config.Config
+	logger   *logger.Logger
+	handlers *Handlers
 }
 
 // New creates a new router instance with all routes configured.
 func New(cfg *config.Config, logger *logger.Logger) *Router {
+	return NewWithHandlers(cfg, logger, nil)
+}
+
+// NewWithHandlers creates a new router instance with handlers.
+func NewWithHandlers(cfg *config.Config, logger *logger.Logger, handlers *Handlers) *Router {
 	// Set Gin mode based on environment
 	gin.SetMode(cfg.GinMode)
 
@@ -33,9 +49,10 @@ func New(cfg *config.Config, logger *logger.Logger) *Router {
 	engine.Use(middleware.CORS(cfg))
 
 	router := &Router{
-		engine: engine,
-		cfg:    cfg,
-		logger: logger,
+		engine:   engine,
+		cfg:      cfg,
+		logger:   logger,
+		handlers: handlers,
 	}
 
 	// Setup routes
@@ -55,13 +72,30 @@ func (r *Router) setupRoutes() {
 		// Public routes (no auth required)
 		public := v1.Group("")
 		public.GET("/", r.apiInfo)
-		// TODO: Add auth callback endpoints
-		// public.POST("/auth/callback", authHandler.Callback)
+		
+		// Auth routes (no auth required)
+		auth := public.Group("/auth")
+		if r.handlers != nil && r.handlers.AuthHandler != nil {
+			auth.GET("/login", r.handlers.AuthHandler.Login)
+			auth.GET("/callback", r.handlers.AuthHandler.Callback)
+			auth.POST("/logout", r.handlers.AuthHandler.Logout)
+		} else {
+			auth.GET("/login", r.notImplemented)    // TODO: authHandler.Login
+			auth.GET("/callback", r.notImplemented) // TODO: authHandler.Callback
+			auth.POST("/logout", r.notImplemented)  // TODO: authHandler.Logout
+		}
 
 		// Protected routes (auth required)
 		protected := v1.Group("")
 		protected.Use(middleware.Auth(r.cfg))
 		{
+			// Auth user info (requires auth)
+			if r.handlers != nil && r.handlers.AuthHandler != nil {
+				protected.GET("/auth/user", r.handlers.AuthHandler.GetCurrentUser)
+			} else {
+				protected.GET("/auth/user", r.notImplemented) // TODO: authHandler.GetCurrentUser
+			}
+			
 			// User routes
 			users := protected.Group("/users")
 			users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
