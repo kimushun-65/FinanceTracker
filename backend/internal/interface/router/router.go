@@ -72,7 +72,7 @@ func (r *Router) setupRoutes() {
 		// Public routes (no auth required)
 		public := v1.Group("")
 		public.GET("/", r.apiInfo)
-		
+
 		// Auth routes (no auth required)
 		auth := public.Group("/auth")
 		if r.handlers != nil && r.handlers.AuthHandler != nil {
@@ -95,7 +95,7 @@ func (r *Router) setupRoutes() {
 			} else {
 				protected.GET("/auth/user", r.notImplemented) // TODO: authHandler.GetCurrentUser
 			}
-			
+
 			// User routes
 			users := protected.Group("/users")
 			users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser

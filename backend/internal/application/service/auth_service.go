@@ -13,18 +13,21 @@ import (
 	"financetracker/internal/infrastructure/auth0"
 )
 
+// AuthService 認証関連のビジネスロジックを担当するサービス
 type AuthService struct {
 	userRepo repository.UserRepository
 }
 
+// NewAuthService 新しい認証サービスを作成
 func NewAuthService(userRepo repository.UserRepository) *AuthService {
 	return &AuthService{
 		userRepo: userRepo,
 	}
 }
 
+// SyncUser Auth0ユーザー情報をデータベースと同期
 func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, claims *auth0.TokenClaims) (*entity.User, error) {
-	// Import necessary value objects
+	// 必要な値オブジェクトを作成
 	auth0IDValue, err := userValue.NewAuth0ID(userInfo.Sub)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Auth0 ID: %w", err)
@@ -35,7 +38,7 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, cl
 		return nil, fmt.Errorf("failed to create email value: %w", err)
 	}
 
-	// Check if user already exists
+	// ユーザーが既に存在するか確認
 	existingUser, err := s.userRepo.FindByAuth0UserID(ctx, *auth0IDValue)
 	if err != nil {
 		var notFoundErr *common.NotFoundError
@@ -45,7 +48,7 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, cl
 	}
 
 	if existingUser != nil {
-		// Update existing user
+		// 既存ユーザーを更新
 		if err := existingUser.UpdateProfile(userInfo.Name, *emailValue); err != nil {
 			return nil, fmt.Errorf("failed to update user profile: %w", err)
 		}
@@ -57,7 +60,7 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, cl
 		return existingUser, nil
 	}
 
-	// Create new user
+	// 新規ユーザーを作成
 	newUser, err := entity.NewUser(*auth0IDValue, *emailValue, userInfo.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new user: %w", err)
@@ -70,6 +73,7 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, cl
 	return newUser, nil
 }
 
+// GetUserByAuth0ID Auth0 IDでユーザーを取得
 func (s *AuthService) GetUserByAuth0ID(ctx context.Context, auth0ID string) (*entity.User, error) {
 	auth0IDValue, err := userValue.NewAuth0ID(auth0ID)
 	if err != nil {

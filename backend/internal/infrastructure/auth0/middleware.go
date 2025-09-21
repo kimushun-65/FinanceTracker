@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// contextKey コンテキストキーの型
 type contextKey string
 
 const (
@@ -16,16 +17,19 @@ const (
 	UserIDContextKey contextKey = "user_id"
 )
 
+// AuthMiddleware 認証ミドルウェア
 type AuthMiddleware struct {
 	client *Client
 }
 
+// NewAuthMiddleware 新しい認証ミドルウェアを作成
 func NewAuthMiddleware(client *Client) *AuthMiddleware {
 	return &AuthMiddleware{
 		client: client,
 	}
 }
 
+// RequireAuth 認証を必須とするミドルウェア
 func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := m.extractToken(c.Request)
@@ -46,10 +50,10 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Set claims in context
+		// クレームをコンテキストに設定
 		c.Set(string(ClaimsContextKey), claims)
 
-		// Extract user ID
+		// ユーザーIDを抽出
 		userID := claims.Subject
 		if claims.UserID != "" {
 			userID = claims.UserID
@@ -60,6 +64,7 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	}
 }
 
+// RequireScope 特定のスコープを必須とするミドルウェア
 func (m *AuthMiddleware) RequireScope(scope string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, exists := m.GetClaims(c)
@@ -83,6 +88,7 @@ func (m *AuthMiddleware) RequireScope(scope string) gin.HandlerFunc {
 	}
 }
 
+// RequireRole 特定のロールを必須とするミドルウェア
 func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, exists := m.GetClaims(c)
@@ -114,6 +120,7 @@ func (m *AuthMiddleware) RequireRole(role string) gin.HandlerFunc {
 	}
 }
 
+// extractToken リクエストからトークンを抽出
 func (m *AuthMiddleware) extractToken(r *http.Request) string {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -128,6 +135,7 @@ func (m *AuthMiddleware) extractToken(r *http.Request) string {
 	return parts[1]
 }
 
+// hasScope 必要なスコープが付与されているかチェック
 func (m *AuthMiddleware) hasScope(grantedScope, requiredScope string) bool {
 	if grantedScope == "" {
 		return false
@@ -143,6 +151,7 @@ func (m *AuthMiddleware) hasScope(grantedScope, requiredScope string) bool {
 	return false
 }
 
+// GetClaims Ginコンテキストからクレームを取得
 func (m *AuthMiddleware) GetClaims(c *gin.Context) (*TokenClaims, bool) {
 	claims, exists := c.Get(string(ClaimsContextKey))
 	if !exists {
@@ -157,6 +166,7 @@ func (m *AuthMiddleware) GetClaims(c *gin.Context) (*TokenClaims, bool) {
 	return tokenClaims, true
 }
 
+// GetUserID GinコンテキストからユーザーIDを取得
 func (m *AuthMiddleware) GetUserID(c *gin.Context) (string, bool) {
 	userID, exists := c.Get(string(UserIDContextKey))
 	if !exists {
@@ -171,6 +181,7 @@ func (m *AuthMiddleware) GetUserID(c *gin.Context) (string, bool) {
 	return id, true
 }
 
+// GetUserIDFromContext コンテキストからユーザーIDを取得
 func GetUserIDFromContext(ctx context.Context) (string, bool) {
 	userID := ctx.Value(UserIDContextKey)
 	if userID == nil {
@@ -181,6 +192,7 @@ func GetUserIDFromContext(ctx context.Context) (string, bool) {
 	return id, ok
 }
 
+// SetUserIDInContext コンテキストにユーザーIDを設定
 func SetUserIDInContext(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, UserIDContextKey, userID)
 }

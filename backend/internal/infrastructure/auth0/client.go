@@ -12,6 +12,7 @@ import (
 	"github.com/square/go-jose/v3"
 )
 
+// Client Auth0クライアントを表現する構造体
 type Client struct {
 	domain     string
 	audience   string
@@ -20,6 +21,7 @@ type Client struct {
 	jwksExpiry time.Time
 }
 
+// NewClient 新しいAuth0クライアントインスタンスを作成
 func NewClient(domain, audience string) *Client {
 	return &Client{
 		domain:   domain,
@@ -27,6 +29,7 @@ func NewClient(domain, audience string) *Client {
 	}
 }
 
+// GetJWKS Auth0からJSON Web Key Setを取得しキャッシュする
 func (c *Client) GetJWKS(ctx context.Context) (*jose.JSONWebKeySet, error) {
 	c.jwksMutex.RLock()
 	if c.jwks != nil && time.Now().Before(c.jwksExpiry) {
@@ -38,7 +41,7 @@ func (c *Client) GetJWKS(ctx context.Context) (*jose.JSONWebKeySet, error) {
 	c.jwksMutex.Lock()
 	defer c.jwksMutex.Unlock()
 
-	// Double-check after acquiring write lock
+	// 書き込みロック取得後に再度チェック
 	if c.jwks != nil && time.Now().Before(c.jwksExpiry) {
 		return c.jwks, nil
 	}
@@ -72,18 +75,22 @@ func (c *Client) GetJWKS(ctx context.Context) (*jose.JSONWebKeySet, error) {
 	return &jwks, nil
 }
 
+// GetDomain Auth0ドメインを取得
 func (c *Client) GetDomain() string {
 	return c.domain
 }
 
+// GetAudience Auth0 Audienceを取得
 func (c *Client) GetAudience() string {
 	return c.audience
 }
 
+// GetIssuer Auth0発行者URLを取得
 func (c *Client) GetIssuer() string {
 	return fmt.Sprintf("https://%s/", c.domain)
 }
 
+// TokenClaims JWTトークンのクレーム情報
 type TokenClaims struct {
 	Issuer    string   `json:"iss"`
 	Subject   string   `json:"sub"`
@@ -93,11 +100,12 @@ type TokenClaims struct {
 	Scope     string   `json:"scope,omitempty"`
 	Azp       string   `json:"azp,omitempty"`
 
-	// Custom claims
+	// カスタムクレーム
 	UserID string   `json:"https://api.financetracker.local/user_id,omitempty"`
 	Roles  []string `json:"https://api.financetracker.local/roles,omitempty"`
 }
 
+// ValidateToken JWTトークンを検証しクレームを取得
 func (c *Client) ValidateToken(ctx context.Context, tokenString string) (*TokenClaims, error) {
 	jwks, err := c.GetJWKS(ctx)
 	if err != nil {
@@ -127,7 +135,7 @@ func (c *Client) ValidateToken(ctx context.Context, tokenString string) (*TokenC
 		return nil, fmt.Errorf("no matching key found")
 	}
 
-	// Validate standard claims
+	// 標準クレームを検証
 	if err := c.validateClaims(&claims); err != nil {
 		return nil, err
 	}
@@ -135,13 +143,14 @@ func (c *Client) ValidateToken(ctx context.Context, tokenString string) (*TokenC
 	return &claims, nil
 }
 
+// validateClaims クレームの妥当性を検証
 func (c *Client) validateClaims(claims *TokenClaims) error {
-	// Check issuer
+	// 発行者をチェック
 	if claims.Issuer != c.GetIssuer() {
 		return fmt.Errorf("invalid issuer: %s", claims.Issuer)
 	}
 
-	// Check audience
+	// Audienceをチェック
 	audienceFound := false
 	for _, aud := range claims.Audience {
 		if aud == c.audience {
@@ -153,7 +162,7 @@ func (c *Client) validateClaims(claims *TokenClaims) error {
 		return fmt.Errorf("invalid audience")
 	}
 
-	// Check expiration
+	// 有効期限をチェック
 	if time.Now().Unix() > claims.ExpiresAt {
 		return fmt.Errorf("token expired")
 	}
@@ -161,6 +170,7 @@ func (c *Client) validateClaims(claims *TokenClaims) error {
 	return nil
 }
 
+// UserInfo Auth0ユーザー情報
 type UserInfo struct {
 	Sub           string `json:"sub"`
 	Name          string `json:"name"`
@@ -170,6 +180,7 @@ type UserInfo struct {
 	UpdatedAt     string `json:"updated_at"`
 }
 
+// GetUserInfo アクセストークンを使用してユーザー情報を取得
 func (c *Client) GetUserInfo(ctx context.Context, accessToken string) (*UserInfo, error) {
 	userInfoURL := fmt.Sprintf("https://%s/userinfo", c.domain)
 	req, err := http.NewRequestWithContext(ctx, "GET", userInfoURL, nil)
@@ -199,10 +210,11 @@ func (c *Client) GetUserInfo(ctx context.Context, accessToken string) (*UserInfo
 	return &userInfo, nil
 }
 
+// BuildLoginURL Auth0ログインURLを構築
 func (c *Client) BuildLoginURL(state, redirectURI string) string {
 	params := url.Values{}
 	params.Set("response_type", "code")
-	params.Set("client_id", "") // This should be injected from env
+	params.Set("client_id", "") // 環境変数から注入する必要がある
 	params.Set("redirect_uri", redirectURI)
 	params.Set("scope", "openid profile email")
 	params.Set("state", state)
@@ -211,9 +223,10 @@ func (c *Client) BuildLoginURL(state, redirectURI string) string {
 	return fmt.Sprintf("https://%s/authorize?%s", c.domain, params.Encode())
 }
 
+// BuildLogoutURL Auth0ログアウトURLを構築
 func (c *Client) BuildLogoutURL(returnTo string) string {
 	params := url.Values{}
-	params.Set("client_id", "") // This should be injected from env
+	params.Set("client_id", "") // 環境変数から注入する必要がある
 	params.Set("returnTo", returnTo)
 
 	return fmt.Sprintf("https://%s/v2/logout?%s", c.domain, params.Encode())

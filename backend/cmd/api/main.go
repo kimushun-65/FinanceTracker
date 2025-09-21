@@ -7,7 +7,7 @@ import (
 
 	"financetracker/internal/application/service"
 	"financetracker/internal/infrastructure/auth0"
-	"financetracker/internal/infrastructure/persistence/postgres"
+	gormRepo "financetracker/internal/infrastructure/gorm/repository"
 	"financetracker/internal/interface/handler"
 	"financetracker/internal/interface/router"
 	"financetracker/pkg/config"
@@ -41,14 +41,18 @@ func main() {
 		log.Error("Failed to connect to database: " + err.Error())
 		return
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Error("Failed to close database: " + err.Error())
+		}
+	}()
 
 	// Initialize Auth0
 	auth0Client := auth0.NewClient(cfg.Auth0Domain, cfg.Auth0Audience)
 	authMiddleware := auth0.NewAuthMiddleware(auth0Client)
 
 	// Initialize repositories
-	userRepo := postgres.NewUserRepository(db.DB)
+	userRepo := gormRepo.NewUserRepository(db.DB)
 
 	// Initialize services
 	authService := service.NewAuthService(userRepo)
