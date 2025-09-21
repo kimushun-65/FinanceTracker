@@ -190,6 +190,7 @@ func runGORMAutoMigration(cfg *config.Config, logger *logger.Logger) error {
 		// Tables with foreign keys to base tables
 		&model.Account{},
 		&model.Category{},
+		&model.AccountMovement{},
 
 		// Tables with foreign keys to above tables
 		&model.Transaction{},

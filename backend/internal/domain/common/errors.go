@@ -153,3 +153,39 @@ func NewBusinessRuleError(rule, message string) *BusinessRuleError {
 		Message: message,
 	}
 }
+
+// DomainErrorType ドメインエラーのタイプ定数
+type DomainErrorType string
+
+const (
+	DomainErrorTypeInvalidValue   DomainErrorType = "INVALID_VALUE"
+	DomainErrorTypeNotFound       DomainErrorType = "NOT_FOUND"
+	DomainErrorTypeConflict       DomainErrorType = "CONFLICT"
+	DomainErrorTypeBusinessRule   DomainErrorType = "BUSINESS_RULE"
+)
+
+// GenericDomainError 汎用的なドメインエラー
+type GenericDomainError struct {
+	Type    DomainErrorType
+	Message string
+}
+
+func (e GenericDomainError) Error() string {
+	return e.Message
+}
+
+func (e GenericDomainError) ErrorCode() string {
+	return string(e.Type)
+}
+
+func (e GenericDomainError) ErrorType() string {
+	return "GenericDomainError"
+}
+
+// NewDomainError 新しいGenericDomainErrorを作成
+func NewDomainError(errorType DomainErrorType, message string) *GenericDomainError {
+	return &GenericDomainError{
+		Type:    errorType,
+		Message: message,
+	}
+}

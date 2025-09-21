@@ -13,9 +13,8 @@ type TransactionType string
 
 // TransactionType constants define the types of financial transactions.
 const (
-	TransactionTypeIncome   TransactionType = "INCOME"
-	TransactionTypeExpense  TransactionType = "EXPENSE"
-	TransactionTypeTransfer TransactionType = "TRANSFER"
+	TransactionTypeIncome  TransactionType = "INCOME"
+	TransactionTypeExpense TransactionType = "EXPENSE"
 )
 
 // Transaction represents a financial transaction.
