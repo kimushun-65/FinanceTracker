@@ -8,6 +8,8 @@ import (
 	"financetracker/pkg/logger"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // Handlers contains all HTTP handlers
@@ -65,6 +67,9 @@ func NewWithHandlers(cfg *config.Config, logger *logger.Logger, handlers *Handle
 func (r *Router) setupRoutes() {
 	// ヘルスチェックエンドポイント（認証不要）
 	r.engine.GET("/health", r.healthCheck)
+	
+	// Swagger UIエンドポイント
+	r.engine.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1 ルート
 	v1 := r.engine.Group("/api/v1")
@@ -187,6 +192,13 @@ func (r *Router) Run() error {
 
 // Handler functions
 
+// healthCheck ヘルスチェックエンドポイント
+// @Summary ヘルスチェック
+// @Description APIの稼働状態を確認します
+// @Tags system
+// @Produce json
+// @Success 200 {object} map[string]interface{} "ヘルスチェック結果"
+// @Router /health [get]
 func (r *Router) healthCheck(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status": "healthy",
@@ -194,11 +206,18 @@ func (r *Router) healthCheck(c *gin.Context) {
 	})
 }
 
+// apiInfo API情報エンドポイント
+// @Summary API情報
+// @Description APIの基本情報を返します
+// @Tags system
+// @Produce json
+// @Success 200 {object} map[string]interface{} "API情報"
+// @Router / [get]
 func (r *Router) apiInfo(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Welcome to FinanceTracker API",
 		"version": "1.0.0",
-		"docs":    "/api/v1/docs", // TODO: Add Swagger docs
+		"docs":    "/docs/index.html",
 	})
 }
 

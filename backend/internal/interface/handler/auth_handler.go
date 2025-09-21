@@ -29,6 +29,11 @@ func NewAuthHandler(authService *service.AuthService, auth0Client *auth0.Client,
 }
 
 // Login Auth0ログインページへリダイレクト
+// @Summary Auth0ログイン
+// @Description Auth0のログインページへリダイレクトします
+// @Tags auth
+// @Success 307 {string} string "Auth0ログインページへリダイレクト"
+// @Router /auth/login [get]
 func (h *AuthHandler) Login(c *gin.Context) {
 	// CSRF防止用のstateパラメーターを生成
 	state := generateRandomString(32) // 実装が必要
@@ -43,6 +48,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Callback Auth0からのコールバックを処理
+// @Summary Auth0コールバック
+// @Description Auth0からの認証コールバックを処理し、ユーザー情報を保存します
+// @Tags auth
+// @Param code query string true "認証コード"
+// @Param state query string true "CSRF防止用のstate"
+// @Success 200 {object} map[string]interface{} "ユーザー情報とトークン"
+// @Failure 400 {object} map[string]interface{} "リクエストエラー"
+// @Failure 401 {object} map[string]interface{} "認証エラー"
+// @Failure 500 {object} map[string]interface{} "内部エラー"
+// @Router /auth/callback [get]
 func (h *AuthHandler) Callback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
@@ -76,6 +91,11 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 }
 
 // Logout Auth0からログアウト
+// @Summary ログアウト
+// @Description ユーザーをログアウトし、Auth0のログアウトページへリダイレクトします
+// @Tags auth
+// @Success 307 {string} string "Auth0ログアウトページへリダイレクト"
+// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// セッションクッキーをクリア
 	// Auth0ログアウトURLを構築
@@ -86,6 +106,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // GetCurrentUser 現在の認証済みユーザー情報を取得
+// @Summary 現在のユーザー情報取得
+// @Description 認証済みユーザーの情報を取得します
+// @Tags auth
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "ユーザー情報"
+// @Failure 401 {object} map[string]interface{} "認証エラー"
+// @Failure 500 {object} map[string]interface{} "内部エラー"
+// @Router /auth/user [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	claims, exists := h.middleware.GetClaims(c)
 	if !exists {

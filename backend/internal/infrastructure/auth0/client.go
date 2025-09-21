@@ -15,6 +15,7 @@ import (
 // Client Auth0クライアントを表現する構造体
 type Client struct {
 	domain     string
+	clientID   string
 	audience   string
 	jwks       *jose.JSONWebKeySet
 	jwksMutex  sync.RWMutex
@@ -22,9 +23,10 @@ type Client struct {
 }
 
 // NewClient 新しいAuth0クライアントインスタンスを作成
-func NewClient(domain, audience string) *Client {
+func NewClient(domain, clientID, audience string) *Client {
 	return &Client{
 		domain:   domain,
+		clientID: clientID,
 		audience: audience,
 	}
 }
@@ -214,7 +216,7 @@ func (c *Client) GetUserInfo(ctx context.Context, accessToken string) (*UserInfo
 func (c *Client) BuildLoginURL(state, redirectURI string) string {
 	params := url.Values{}
 	params.Set("response_type", "code")
-	params.Set("client_id", "") // 環境変数から注入する必要がある
+	params.Set("client_id", c.clientID)
 	params.Set("redirect_uri", redirectURI)
 	params.Set("scope", "openid profile email")
 	params.Set("state", state)
@@ -226,7 +228,7 @@ func (c *Client) BuildLoginURL(state, redirectURI string) string {
 // BuildLogoutURL Auth0ログアウトURLを構築
 func (c *Client) BuildLogoutURL(returnTo string) string {
 	params := url.Values{}
-	params.Set("client_id", "") // 環境変数から注入する必要がある
+	params.Set("client_id", c.clientID)
 	params.Set("returnTo", returnTo)
 
 	return fmt.Sprintf("https://%s/v2/logout?%s", c.domain, params.Encode())

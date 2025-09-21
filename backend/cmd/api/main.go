@@ -2,6 +2,25 @@
 // It sets up the HTTP server with all necessary middleware and routes.
 package main
 
+// @title FinanceTracker API
+// @version 1.0
+// @description Finance management REST API with Auth0 authentication
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@financetracker.local
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
 import (
 	stdlog "log"
 
@@ -13,6 +32,8 @@ import (
 	"financetracker/pkg/config"
 	"financetracker/pkg/database"
 	"financetracker/pkg/logger"
+
+	_ "financetracker/docs" // Swagger生成ドキュメント
 
 	"github.com/joho/godotenv"
 )
@@ -48,7 +69,7 @@ func main() {
 	}()
 
 	// Initialize Auth0
-	auth0Client := auth0.NewClient(cfg.Auth0Domain, cfg.Auth0Audience)
+	auth0Client := auth0.NewClient(cfg.Auth0Domain, cfg.Auth0ClientID, cfg.Auth0Audience)
 	authMiddleware := auth0.NewAuthMiddleware(auth0Client)
 
 	// Initialize repositories
