@@ -31,7 +31,7 @@ FinSight は、個人の財務管理を簡単かつ効率的に行うための�
 
 - **Web**: Next.js 14+ with TypeScript
 - **状態管理**: Redux Toolkit
-- **UI ライブラリ**: Material-UI
+- **UI ライブラリ**: Shadcn-UI
 
 ### インフラストラクチャ
 

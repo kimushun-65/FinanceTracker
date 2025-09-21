@@ -167,6 +167,8 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       - name: Check formatting
+        env:
+          GOTOOLCHAIN: go1.23.0
         run: |
           go fmt ./...
           go install golang.org/x/tools/cmd/goimports@latest
@@ -208,6 +210,8 @@ jobs:
 
       - name: Run go vet
         working-directory: backend
+        env:
+          GOTOOLCHAIN: go1.23.0
         run: |
           echo "::group::go vet output"
           go vet ./... || (echo "::error::go vet failed" && exit 1)
@@ -234,9 +238,13 @@ jobs:
           cache-dependency-path: backend/go.sum
 
       - name: Download dependencies
+        env:
+          GOTOOLCHAIN: go1.23.0
         run: go mod download
 
       - name: Build
+        env:
+          GOTOOLCHAIN: go1.23.0
         run: |
           echo "::group::Build output"
           go build -v ./...
@@ -270,6 +278,8 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Check Onion Architecture
+        env:
+          GOTOOLCHAIN: go1.23.0
         run: |
           chmod +x ./scripts/check-architecture.sh
           echo "::group::Architecture check output"
