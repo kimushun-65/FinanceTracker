@@ -15,7 +15,7 @@ type Balance struct {
 func NewBalance(initialBalance, currentBalance value.Money) (*Balance, error) {
 	// 通貨の整合性チェック
 	if initialBalance.Currency() != currentBalance.Currency() {
-		return nil, common.NewValidationError("balance", "currency mismatch", 
+		return nil, common.NewValidationError("balance", "currency mismatch",
 			"initial balance and current balance must have the same currency")
 	}
 
@@ -173,6 +173,6 @@ func (b Balance) String() string {
 
 // Equals 残高の同一性判定
 func (b Balance) Equals(other Balance) bool {
-	return b.initialBalance.Equals(other.initialBalance) && 
-		   b.currentBalance.Equals(other.currentBalance)
+	return b.initialBalance.Equals(other.initialBalance) &&
+		b.currentBalance.Equals(other.currentBalance)
 }

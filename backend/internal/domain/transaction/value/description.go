@@ -30,14 +30,14 @@ func NewDescription(value string) (Description, error) {
 // validateDescription 説明の妥当性を検証
 func validateDescription(value string) error {
 	normalized := strings.TrimSpace(value)
-	
+
 	if len(normalized) > maxDescriptionLength {
 		return common.NewDomainError(
 			common.DomainErrorTypeInvalidValue,
 			"説明が長すぎます（最大500文字）",
 		)
 	}
-	
+
 	return nil
 }
 

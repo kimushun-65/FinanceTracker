@@ -158,10 +158,10 @@ func NewBusinessRuleError(rule, message string) *BusinessRuleError {
 type DomainErrorType string
 
 const (
-	DomainErrorTypeInvalidValue   DomainErrorType = "INVALID_VALUE"
-	DomainErrorTypeNotFound       DomainErrorType = "NOT_FOUND"
-	DomainErrorTypeConflict       DomainErrorType = "CONFLICT"
-	DomainErrorTypeBusinessRule   DomainErrorType = "BUSINESS_RULE"
+	DomainErrorTypeInvalidValue DomainErrorType = "INVALID_VALUE"
+	DomainErrorTypeNotFound     DomainErrorType = "NOT_FOUND"
+	DomainErrorTypeConflict     DomainErrorType = "CONFLICT"
+	DomainErrorTypeBusinessRule DomainErrorType = "BUSINESS_RULE"
 )
 
 // GenericDomainError 汎用的なドメインエラー

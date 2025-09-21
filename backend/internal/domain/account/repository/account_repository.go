@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"financetracker/internal/domain/account/entity"
 	accountValue "financetracker/internal/domain/account/value"
 	"financetracker/internal/domain/common/repository"
 	"financetracker/internal/domain/common/value"
 	userValue "financetracker/internal/domain/user/value"
+	"github.com/google/uuid"
 )
 
 // AccountRepository 口座リポジトリのインターフェース
@@ -51,16 +51,16 @@ type AccountMovementRepository interface {
 
 // AccountFilter 口座検索フィルター
 type AccountFilter struct {
-	AccountType   *accountValue.AccountType `json:"account_type,omitempty"`   // 口座タイプでフィルタ
-	NameQuery     *string                   `json:"name_query,omitempty"`     // 口座名の部分一致検索
-	HasPositiveBalance *bool               `json:"has_positive_balance,omitempty"` // プラス残高のみ
-	HasNegativeBalance *bool               `json:"has_negative_balance,omitempty"` // マイナス残高のみ
+	AccountType        *accountValue.AccountType `json:"account_type,omitempty"`         // 口座タイプでフィルタ
+	NameQuery          *string                   `json:"name_query,omitempty"`           // 口座名の部分一致検索
+	HasPositiveBalance *bool                     `json:"has_positive_balance,omitempty"` // プラス残高のみ
+	HasNegativeBalance *bool                     `json:"has_negative_balance,omitempty"` // マイナス残高のみ
 }
 
 // ToMap フィルター条件をマップ形式で取得
 func (f AccountFilter) ToMap() map[string]any {
 	result := make(map[string]any)
-	
+
 	if f.AccountType != nil {
 		result["account_type"] = f.AccountType.Value()
 	}
@@ -73,16 +73,16 @@ func (f AccountFilter) ToMap() map[string]any {
 	if f.HasNegativeBalance != nil {
 		result["has_negative_balance"] = *f.HasNegativeBalance
 	}
-	
+
 	return result
 }
 
 // IsEmpty フィルターが空かどうかを判定
 func (f AccountFilter) IsEmpty() bool {
-	return f.AccountType == nil && 
-		   f.NameQuery == nil && 
-		   f.HasPositiveBalance == nil && 
-		   f.HasNegativeBalance == nil
+	return f.AccountType == nil &&
+		f.NameQuery == nil &&
+		f.HasPositiveBalance == nil &&
+		f.HasNegativeBalance == nil
 }
 
 // MovementFilter 移動履歴検索フィルター
@@ -97,7 +97,7 @@ type MovementFilter struct {
 // ToMap フィルター条件をマップ形式で取得
 func (f MovementFilter) ToMap() map[string]any {
 	result := f.DateRangeFilter.ToMap()
-	
+
 	if f.MovementType != nil {
 		result["movement_type"] = string(*f.MovementType)
 	}
@@ -110,17 +110,17 @@ func (f MovementFilter) ToMap() map[string]any {
 	if f.NoteQuery != nil {
 		result["note_query"] = *f.NoteQuery
 	}
-	
+
 	return result
 }
 
 // IsEmpty フィルターが空かどうかを判定
 func (f MovementFilter) IsEmpty() bool {
-	return f.DateRangeFilter.IsEmpty() && 
-		   f.MovementType == nil && 
-		   f.AmountMin == nil && 
-		   f.AmountMax == nil && 
-		   f.NoteQuery == nil
+	return f.DateRangeFilter.IsEmpty() &&
+		f.MovementType == nil &&
+		f.AmountMin == nil &&
+		f.AmountMax == nil &&
+		f.NoteQuery == nil
 }
 
 // MovementSummary 移動履歴のサマリー

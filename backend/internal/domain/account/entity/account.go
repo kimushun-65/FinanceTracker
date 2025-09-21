@@ -24,7 +24,7 @@ func NewAccount(
 	initialBalance value.Money,
 ) *Account {
 	balance := accountValue.NewBalanceWithInitial(initialBalance)
-	
+
 	return &Account{
 		BaseEntity: common.NewBaseEntity(),
 		userID:     userID,
@@ -94,9 +94,9 @@ func (a *Account) UpdateBalance(amount value.Money, isDeposit bool) error {
 		if checkErr != nil {
 			return checkErr
 		}
-		
+
 		if !canWithdraw {
-			return common.NewBusinessRuleError("insufficient_balance", 
+			return common.NewBusinessRuleError("insufficient_balance",
 				"insufficient balance for withdrawal")
 		}
 
@@ -135,8 +135,6 @@ func (a Account) CanWithdraw(amount value.Money) (bool, error) {
 	return a.balance.CanWithdraw(amount, false)
 }
 
-
-
 // GetDisplayInfo 表示用の口座情報を取得
 func (a Account) GetDisplayInfo() AccountDisplayInfo {
 	return AccountDisplayInfo{
@@ -149,7 +147,7 @@ func (a Account) GetDisplayInfo() AccountDisplayInfo {
 // GetBalanceStatus 残高の状態を取得
 func (a Account) GetBalanceStatus() BalanceStatus {
 	status := BalanceStatusNormal
-	
+
 	if a.balance.IsNegative() {
 		status = BalanceStatusNegative
 	} else if a.balance.IsZero() {
@@ -157,9 +155,9 @@ func (a Account) GetBalanceStatus() BalanceStatus {
 	}
 
 	return BalanceStatus{
-		Status:       status,
-		HasGained:    a.balance.HasGained(),
-		HasLost:      a.balance.HasLost(),
+		Status:             status,
+		HasGained:          a.balance.HasGained(),
+		HasLost:            a.balance.HasLost(),
 		GainLossPercentage: a.balance.GetGainLossPercentage(),
 	}
 }

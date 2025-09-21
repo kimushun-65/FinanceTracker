@@ -38,7 +38,7 @@ func NewTransaction(
 	}
 
 	baseEntity := common.NewBaseEntity()
-	
+
 	return Transaction{
 		BaseEntity:  baseEntity,
 		userID:      userID,
@@ -65,35 +65,35 @@ func validateTransactionParams(
 			"ユーザーIDが必要です",
 		)
 	}
-	
+
 	if accountID == uuid.Nil {
 		return common.NewDomainError(
 			common.DomainErrorTypeInvalidValue,
 			"アカウントIDが必要です",
 		)
 	}
-	
+
 	if categoryID == uuid.Nil {
 		return common.NewDomainError(
 			common.DomainErrorTypeInvalidValue,
 			"カテゴリIDが必要です",
 		)
 	}
-	
+
 	if amount.IsZero() {
 		return common.NewDomainError(
 			common.DomainErrorTypeInvalidValue,
 			"金額は0より大きい必要があります",
 		)
 	}
-	
+
 	if date.IsZero() {
 		return common.NewDomainError(
 			common.DomainErrorTypeInvalidValue,
 			"取引日が必要です",
 		)
 	}
-	
+
 	return nil
 }
 
@@ -140,7 +140,7 @@ func (t *Transaction) UpdateAmount(amount value.Money) error {
 			"金額は0より大きい必要があります",
 		)
 	}
-	
+
 	t.amount = amount
 	t.UpdateTimestamp()
 	return nil
@@ -160,7 +160,7 @@ func (t *Transaction) UpdateDate(date time.Time) error {
 			"取引日が必要です",
 		)
 	}
-	
+
 	t.date = date
 	t.UpdateTimestamp()
 	return nil

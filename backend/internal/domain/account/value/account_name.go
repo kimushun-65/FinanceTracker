@@ -14,7 +14,7 @@ type AccountName struct {
 // NewAccountName 新しいAccountNameインスタンスを作成
 func NewAccountName(value string) (*AccountName, error) {
 	name := strings.TrimSpace(value)
-	
+
 	if err := validateAccountName(name); err != nil {
 		return nil, err
 	}

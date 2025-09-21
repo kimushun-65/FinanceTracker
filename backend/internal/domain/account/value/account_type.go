@@ -13,15 +13,15 @@ type AccountType struct {
 
 // 定義済みの口座タイプ
 const (
-	AccountTypeChecking   = "checking"    // 普通預金
-	AccountTypeInvestment = "investment"  // 投資
-	AccountTypeCash       = "cash"        // 現金
+	AccountTypeChecking   = "checking"   // 普通預金
+	AccountTypeInvestment = "investment" // 投資
+	AccountTypeCash       = "cash"       // 現金
 )
 
 // NewAccountType 新しいAccountTypeインスタンスを作成
 func NewAccountType(value string) (*AccountType, error) {
 	accountType := strings.TrimSpace(strings.ToLower(value))
-	
+
 	if err := validateAccountType(accountType); err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func validateAccountType(accountType string) error {
 	}
 
 	if !validTypes[accountType] {
-		return common.NewValidationError("account_type", accountType, 
+		return common.NewValidationError("account_type", accountType,
 			"invalid account type. Must be one of: checking, cash, investment")
 	}
 

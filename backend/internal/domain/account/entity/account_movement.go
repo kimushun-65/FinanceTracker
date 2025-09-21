@@ -128,11 +128,11 @@ func (am AccountMovement) CanModify() bool {
 // GetDisplayInfo 表示用の移動情報を取得
 func (am AccountMovement) GetDisplayInfo() MovementDisplayInfo {
 	return MovementDisplayInfo{
-		Amount:        am.GetAbsoluteAmount().Format(),
-		Type:          am.GetMovementType(),
-		OccurredAt:    am.occurredAt.Format("2006-01-02 15:04"),
-		Note:          am.note,
-		CanModify:     am.CanModify(),
+		Amount:     am.GetAbsoluteAmount().Format(),
+		Type:       am.GetMovementType(),
+		OccurredAt: am.occurredAt.Format("2006-01-02 15:04"),
+		Note:       am.note,
+		CanModify:  am.CanModify(),
 	}
 }
 
