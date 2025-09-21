@@ -4,7 +4,7 @@ FROM golang:1.23-alpine
 RUN apk update && apk add --no-cache \
     git \
     curl \
-    mysql-client \
+    postgresql-client \
     ca-certificates \
     tzdata \
     make \
@@ -15,6 +15,9 @@ RUN curl -sSf https://atlasgo.sh | sh
 
 # golangci-lintのインストール (v1.64.8)
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
+
+# airのインストール (ホットリロード用)
+RUN go install github.com/air-verse/air@latest
 
 # タイムゾーン設定
 ENV TZ=Asia/Tokyo
@@ -30,5 +33,5 @@ RUN go mod download
 # ソースコード全体をコピー
 COPY . .
 
-# 開発用エントリーポイント
-CMD ["go", "run", "cmd/api/main.go"]
+# 開発用エントリーポイント（airでホットリロード）
+CMD ["air", "-c", ".air.toml"]

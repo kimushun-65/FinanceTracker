@@ -13,7 +13,7 @@ services:
       - ./backend:/app
       - go_modules:/go/pkg/mod
     working_dir: /app
-    command: go run cmd/api/main.go
+    command: air
     depends_on:
       db:
         condition: service_healthy
