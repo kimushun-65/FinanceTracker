@@ -4,7 +4,7 @@
 FinanceTrackerのドメイン層をクリーンアーキテクチャに基づいて実装します。
 ドメイン層は、ビジネスルールとエンティティを定義し、外部の実装詳細から独立させます。
 
-**注**: この計画は`docs/requirements/domain-design.md`との整合性チェックを反映した更新版です。
+**注**: この計画は`docs/requirements/domain-design.md`との整合性チェックを反映し、YAGNI原則に基づいてシンプル化した更新版です。
 
 ## 実装順序と依存関係
 
@@ -39,12 +39,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
    - ValidationError
    - ConflictError
 
-5. ドメインイベント基盤
-   - `internal/domain/common/event/domain_event.go`
-     - イベントインターフェース
-     - イベント基底構造体
-   - `internal/domain/common/event/event_publisher.go`
-     - イベントパブリッシャーインターフェース
 
 ### 2. Userドメイン
 **優先度**: 高
@@ -63,9 +57,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
 4. `internal/domain/user/repository/user_repository.go`
    - ユーザーリポジトリインターフェース
 
-5. `internal/domain/user/event/user_events.go`
-   - UserCreatedイベント
-   - UserUpdatedイベント
 
 ### 3. Accountドメイン
 **優先度**: 高
@@ -93,8 +84,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
 6. `internal/domain/account/repository/account_repository.go`
    - 口座リポジトリインターフェース
 
-7. `internal/domain/account/event/account_events.go`
-   - AccountBalanceChangedイベント
 
 ### 4. Transactionドメイン
 **優先度**: 高
@@ -111,10 +100,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
 3. `internal/domain/transaction/repository/transaction_repository.go`
    - 取引リポジトリインターフェース
 
-4. `internal/domain/transaction/event/transaction_events.go`
-   - TransactionCreatedイベント
-   - TransactionUpdatedイベント
-   - TransactionDeletedイベント
 
 ### 5. Categoryドメイン
 **優先度**: 中
@@ -134,9 +119,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
 4. `internal/domain/category/repository/category_repository.go`
    - カテゴリリポジトリインターフェース
 
-5. `internal/domain/category/event/category_events.go`
-   - CategoryCreatedイベント
-   - CategoryUpdatedイベント
 
 ### 6. Budgetドメイン
 **優先度**: 中
@@ -157,9 +139,6 @@ FinanceTrackerのドメイン層をクリーンアーキテクチャに基づい
 4. `internal/domain/budget/repository/budget_repository.go`
    - 予算リポジトリインターフェース
 
-5. `internal/domain/budget/event/budget_events.go`
-   - BudgetUpdatedイベント
-   - BudgetExceededイベント
 
 ## 実装原則
 
@@ -206,9 +185,6 @@ internal/domain/
 ├── common/
 │   ├── base_entity.go
 │   ├── errors.go
-│   ├── event/
-│   │   ├── domain_event.go
-│   │   └── event_publisher.go
 │   ├── value/
 │   │   ├── money.go
 │   │   ├── email.go
@@ -222,10 +198,8 @@ internal/domain/
 │   ├── value/
 │   │   ├── user_id.go
 │   │   └── auth0_id.go
-│   ├── repository/
-│   │   └── user_repository.go
-│   └── event/
-│       └── user_events.go
+│   └── repository/
+│       └── user_repository.go
 ├── account/
 │   ├── entity/
 │   │   ├── account.go
@@ -234,60 +208,51 @@ internal/domain/
 │   │   ├── account_type.go
 │   │   ├── account_name.go
 │   │   └── balance.go
-│   ├── repository/
-│   │   └── account_repository.go
-│   └── event/
-│       └── account_events.go
+│   └── repository/
+│       └── account_repository.go
 ├── transaction/
 │   ├── entity/
 │   │   └── transaction.go
 │   ├── value/
 │   │   └── transaction_type.go
-│   ├── repository/
-│   │   └── transaction_repository.go
-│   └── event/
-│       └── transaction_events.go
+│   └── repository/
+│       └── transaction_repository.go
 ├── category/
 │   ├── entity/
 │   │   ├── category.go
 │   │   └── category_master.go
 │   ├── value/
 │   │   └── category_name.go
-│   ├── repository/
-│   │   └── category_repository.go
-│   └── event/
-│       └── category_events.go
+│   └── repository/
+│       └── category_repository.go
 └── budget/
     ├── entity/
     │   ├── budget.go
     │   └── budget_suggestion.go
     ├── value/
     │   └── suggestion_status.go
-    ├── repository/
-    │   └── budget_repository.go
-    └── event/
-        └── budget_events.go
+    └── repository/
+        └── budget_repository.go
 ```
 
 ## 実装スケジュール（推定）
 
-1. **Day 1**: 共通ドメイン要素（5-6時間）
+1. **Day 1**: 共通ドメイン要素（4-5時間）
    - base_entity.go
    - 値オブジェクト（money, email, hex_color, time）
    - base_repository.go
    - errors.go
-   - ドメインイベント基盤（domain_event.go, event_publisher.go）
 
-2. **Day 2**: User & Accountドメイン（5-6時間）
-   - Userエンティティと関連要素（イベント含む）
-   - Accountエンティティと関連要素（AccountMovement、イベント含む）
+2. **Day 2**: User & Accountドメイン（4-5時間）
+   - Userエンティティと関連要素
+   - Accountエンティティと関連要素（AccountMovement含む）
 
-3. **Day 3**: Transaction & Categoryドメイン（5-6時間）
-   - Transactionエンティティと関連要素（イベント含む）
-   - Categoryエンティティと関連要素（CategoryMaster、イベント含む）
+3. **Day 3**: Transaction & Categoryドメイン（4-5時間）
+   - Transactionエンティティと関連要素
+   - Categoryエンティティと関連要素（CategoryMaster含む）
 
-4. **Day 4**: Budgetドメイン & テスト（5-6時間）
-   - Budgetエンティティと関連要素（BudgetSuggestion、イベント含む）
+4. **Day 4**: Budgetドメイン & テスト（4-5時間）
+   - Budgetエンティティと関連要素（BudgetSuggestion含む）
    - 全体的なテスト実装
 
 ## 成功基準
@@ -302,6 +267,10 @@ internal/domain/
 3. **保守性**
    - 明確な責務分離
    - 拡張しやすい設計
+
+4. **シンプルさ**
+   - YAGNI原則に従った実装
+   - 過度な抽象化の回避
 
 ## 注意事項
 
@@ -320,3 +289,17 @@ internal/domain/
 4. **ドメイン設計書との整合性**
    - `docs/requirements/domain-design.md`のビジネスルールを必ず反映
    - エンティティの振る舞いや値オブジェクトの詳細は設計書を参照
+
+## YAGNIに基づく除外事項
+
+以下の機能は現時点では実装しません（将来必要になった際に追加）：
+
+1. **ドメインイベント**
+   - 集約間の連携は当面アプリケーション層で直接実装
+   - イベント駆動アーキテクチャは複雑性に見合うメリットが現時点では不明
+
+2. **複雑な集約境界**
+   - 単純なエンティティ関係から開始
+   - 実際の運用で問題が発生してから最適化
+
+この原則により、開発速度を向上し、実際の要求に基づいて段階的に複雑性を追加します。
