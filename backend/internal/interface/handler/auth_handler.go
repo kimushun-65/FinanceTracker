@@ -5,6 +5,7 @@ import (
 
 	"financetracker/internal/application/service"
 	"financetracker/internal/infrastructure/auth0"
+
 	"github.com/gin-gonic/gin"
 )
 
