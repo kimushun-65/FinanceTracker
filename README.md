@@ -25,19 +25,133 @@ FinSight は、個人の財務管理を簡単かつ効率的に行うための�
 - **フレームワーク**: Gin (Web), GORM (ORM)
 - **データベース**: PostgreSQL 15+
 - **認証**: Auth0 (Google OAuth)
-- **キャッシュ**: Redis
+- **マイグレーション**: Atlas
 
 ### フロントエンド
 
-- **Web**: React 18+ with TypeScript
+- **Web**: Next.js 14+ with TypeScript
 - **状態管理**: Redux Toolkit
 - **UI ライブラリ**: Material-UI
 
 ### インフラストラクチャ
 
-- **コンテナ**: Docker
+- **コンテナ**: Docker/Docker Compose
 - **CI/CD**: GitHub Actions
-- **モニタリング**: cloudwatch
+- **クラウド**: AWS CDK
+- **モニタリング**: CloudWatch
+
+## 🛠️ Makefileコマンド一覧
+
+### 基本操作
+| コマンド | 説明 |
+|---------|------|
+| `make help` | 利用可能なコマンド一覧を表示 |
+| `make setup` | 初期セットアップ（ビルド、DB作成、マイグレーション） |
+
+### Docker操作
+| コマンド | 説明 |
+|---------|------|
+| `make up` | すべてのサービスを起動 |
+| `make down` | すべてのサービスを停止 |
+| `make restart` | すべてのサービスを再起動 |
+| `make build` | すべてのサービスをビルド |
+| `make logs` | ログを表示（フォロー） |
+| `make ps` | サービスの状態を表示 |
+| `make clean` | ボリュームを含めて削除（データベースも削除） |
+
+### 開発環境
+| コマンド | 説明 |
+|---------|------|
+| `make dev` | 開発環境を起動（DB + Backend + Frontend） |
+| `make dev-logs` | 開発環境のログを表示 |
+| `make backend-up` | バックエンドのみ起動 |
+| `make backend-logs` | バックエンドのログを表示 |
+| `make backend-restart` | バックエンドを再起動 |
+| `make backend-shell` | バックエンドコンテナに入る |
+| `make pgadmin-up` | pgAdminを起動 |
+
+### データベース操作
+| コマンド | 説明 |
+|---------|------|
+| `make db-shell` | PostgreSQLコンテナに入る |
+| `make db-create` | データベースを作成 |
+| `make db-drop` | データベースを削除 |
+| `make db-reset` | データベースをリセット（削除して再作成） |
+
+### マイグレーション（Atlas）
+| コマンド | 説明 |
+|---------|------|
+| `make migrate-check` | スキーマ差分をチェック |
+| `make migrate-diff` | マイグレーション差分を生成 |
+| `make migrate-auto` | 自動でスキーマ差分をチェックし、必要に応じてマイグレーション生成・適用 |
+| `make migrate-apply` | マイグレーションを適用 |
+| `make migrate-status` | マイグレーション状態を確認 |
+| `make migrate-validate` | マイグレーションを検証 |
+| `make migrate-rollback` | マイグレーションをロールバック |
+| `make migrate-history` | マイグレーション履歴を表示 |
+| `make atlas-migrate-new` | 新しいマイグレーションファイルを手動作成 |
+| `make atlas-schema-inspect` | 現在のスキーマを確認 |
+
+### シードデータ
+| コマンド | 説明 |
+|---------|------|
+| `make seed` | シードデータを投入 |
+| `make seed-prod` | 本番環境にシードデータを投入（確認あり） |
+
+### テスト・品質管理
+| コマンド | 説明 |
+|---------|------|
+| `make test` | テスト実行 |
+| `make fmt` | コードフォーマット |
+| `make lint` | リント実行 |
+| `make ci-check` | GitHub Actions相当の全チェックを実行 |
+
+### 本番環境用
+| コマンド | 説明 |
+|---------|------|
+| `make migrate-prod-apply` | 本番環境にマイグレーションを適用（確認あり） |
+
+## 🚦 開発の始め方
+
+1. リポジトリをクローン
+```bash
+git clone https://github.com/your-org/financetracker.git
+cd financetracker
+```
+
+2. 環境変数の設定
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+# 必要に応じて.envファイルを編集
+```
+
+3. 初期セットアップと起動
+```bash
+make setup  # 初回のみ
+make dev    # 開発環境起動
+```
+
+4. アクセス
+- Backend API: http://localhost:8080
+- Frontend: http://localhost:3000
+- pgAdmin: http://localhost:5050
+  - Email: admin@financetracker.com
+  - Password: admin
+
+## 📁 プロジェクト構造
+```
+.
+├── backend/           # Goバックエンド（オニオンアーキテクチャ）
+│   ├── cmd/          # エントリポイント
+│   ├── internal/     # アプリケーション内部実装
+│   └── pkg/          # 共有パッケージ
+├── frontend/         # Next.jsフロントエンド
+├── cdk/              # AWS CDKインフラ
+├── docs/             # ドキュメント
+├── docker-compose.yml
+└── Makefile
+```
 
 ## 📋 機能一覧
 
