@@ -60,9 +60,9 @@ func main() {
 
 	// Start server
 	port := fmt.Sprintf(":%s", cfg.AppPort)
-	log.Info("Starting server on port", port)
+	log.Info("Starting server on port" + port)
 	if err := router.Run(port); err != nil {
-		log.Error("Failed to start server", err)
+		log.Error("Failed to start server: " + err.Error())
 		return
 	}
 }

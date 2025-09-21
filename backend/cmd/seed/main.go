@@ -4,6 +4,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"financetracker/pkg/config"
 	"financetracker/pkg/logger"
@@ -31,22 +32,52 @@ func main() {
 	cfg := config.Load()
 
 	// Connect to database
-	_, err := gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{})
 	if err != nil {
-		logger.Fatal("Failed to connect to database", err)
+		logger.Error("Failed to connect to database")
+		os.Exit(1)
 	}
 
 	logger.Info("Connected to database")
 
-	// TODO: Add seed data here
-	// For now, just a placeholder
+	// Seed data in order
 	logger.Info("Seeding database...")
 
-	// Example seed data structure (to be implemented)
-	// 1. Create default categories
-	// 2. Create demo accounts
-	// 3. Create sample transactions
-	// 4. Create sample budgets
+	// 1. Seed category masters
+	if err := seedCategoryMasters(db); err != nil {
+		logger.Error("Failed to seed category masters")
+		os.Exit(1)
+	}
+
+	// 2. Seed test users
+	if err := seedTestUsers(db); err != nil {
+		logger.Error("Failed to seed test users")
+		os.Exit(1)
+	}
+
+	// 3. Seed accounts
+	if err := seedAccounts(db); err != nil {
+		logger.Error("Failed to seed accounts")
+		os.Exit(1)
+	}
+
+	// 4. Seed categories (user-specific)
+	if err := seedCategories(db); err != nil {
+		logger.Error("Failed to seed categories")
+		os.Exit(1)
+	}
+
+	// 5. Seed transactions
+	if err := seedTransactions(db); err != nil {
+		logger.Error("Failed to seed transactions")
+		os.Exit(1)
+	}
+
+	// 6. Seed budgets
+	if err := seedBudgets(db); err != nil {
+		logger.Error("Failed to seed budgets")
+		os.Exit(1)
+	}
 
 	logger.Info("Database seeding completed successfully!")
 }
