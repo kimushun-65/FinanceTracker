@@ -11,6 +11,7 @@ import (
 // TransactionType represents the type of transaction.
 type TransactionType string
 
+// TransactionType constants define the types of financial transactions.
 const (
 	TransactionTypeIncome   TransactionType = "INCOME"
 	TransactionTypeExpense  TransactionType = "EXPENSE"

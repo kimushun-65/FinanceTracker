@@ -11,6 +11,7 @@ import (
 // PeriodType represents the budget period type.
 type PeriodType string
 
+// PeriodType constants define the budget period types for budget planning.
 const (
 	PeriodTypeMonthly PeriodType = "MONTHLY"
 	PeriodTypeYearly  PeriodType = "YEARLY"

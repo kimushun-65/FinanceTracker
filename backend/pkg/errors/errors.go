@@ -10,11 +10,11 @@ import (
 
 // AppError represents an application-specific error with HTTP status code and user-friendly message.
 type AppError struct {
-	Code       string `json:"code"`                 // Error code for client identification
-	Message    string `json:"message"`              // User-friendly error message
-	Detail     string `json:"detail,omitempty"`     // Detailed error information (optional)
-	StatusCode int    `json:"-"`                    // HTTP status code
-	Internal   error  `json:"-"`                    // Internal error for logging
+	Code       string `json:"code"`             // Error code for client identification
+	Message    string `json:"message"`          // User-friendly error message
+	Detail     string `json:"detail,omitempty"` // Detailed error information (optional)
+	StatusCode int    `json:"-"`                // HTTP status code
+	Internal   error  `json:"-"`                // Internal error for logging
 }
 
 // Error implements the error interface.
@@ -216,14 +216,14 @@ func Wrap(err error, message string) error {
 	if err == nil {
 		return nil
 	}
-	
+
 	if appErr := GetAppError(err); appErr != nil {
 		// If it's already an AppError, preserve its properties
 		wrapped := *appErr
 		wrapped.Message = fmt.Sprintf("%s: %s", message, appErr.Message)
 		return &wrapped
 	}
-	
+
 	// Otherwise create a new internal error
 	return NewInternalError(message, err)
 }

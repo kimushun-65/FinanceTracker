@@ -37,86 +37,118 @@ func main() {
 
 	// Get command
 	if len(os.Args) < 2 {
-		// Show usage based on environment
-		if cfg.AppEnv == "development" {
-			log.Fatal("Usage: migrate [apply|check|diff|validate|dev-setup]")
-		} else {
-			log.Fatal("Usage: migrate [apply|check|diff|validate]")
-		}
+		printUsage(cfg.AppEnv)
+		return
 	}
 
 	command := os.Args[1]
 
+	if err := runCommand(command, cfg, logger); err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+}
+
+// printUsage prints the usage message based on the environment
+func printUsage(appEnv string) {
+	if appEnv == "development" {
+		fmt.Println("Usage: migrate [apply|check|diff|validate|dev-setup]")
+	} else {
+		fmt.Println("Usage: migrate [apply|check|diff|validate]")
+	}
+	os.Exit(1)
+}
+
+// runCommand executes the specified command
+func runCommand(command string, cfg *config.Config, logger *logger.Logger) error {
 	switch command {
 	case "apply":
-		logger.Info("Applying Atlas migrations...")
-		
-		// First, try to apply migrations normally
-		err := runAtlasCommand("migrate", "apply", 
+		return runApplyCommand(logger)
+	case "check":
+		return runCheckCommand(logger)
+	case "diff":
+		return runDiffCommand(logger)
+	case "validate":
+		return runValidateCommand(logger)
+	case "dev-setup":
+		return runDevSetupCommand(cfg, logger)
+	default:
+		return fmt.Errorf("unknown command: %s", command)
+	}
+}
+
+// runApplyCommand applies Atlas migrations
+func runApplyCommand(logger *logger.Logger) error {
+	logger.Info("Applying Atlas migrations...")
+
+	// First, try to apply migrations normally
+	err := runAtlasCommand("migrate", "apply",
+		"--config", "file:///app/atlas.hcl",
+		"--env", "dev",
+		"--dir", "file:///app/cmd/migrate/migrations")
+
+	if err != nil {
+		// If it fails due to dirty database, try with baseline
+		logger.Info("Initial migration failed, trying with baseline...")
+		if err := runAtlasCommand("migrate", "apply",
 			"--config", "file:///app/atlas.hcl",
 			"--env", "dev",
-			"--dir", "file:///app/cmd/migrate/migrations")
-		
-		if err != nil {
-			// If it fails due to dirty database, try with baseline
-			logger.Info("Initial migration failed, trying with baseline...")
-			if err := runAtlasCommand("migrate", "apply", 
-				"--config", "file:///app/atlas.hcl",
-				"--env", "dev",
-				"--dir", "file:///app/cmd/migrate/migrations",
-				"--baseline", "20240101000000"); err != nil {
-				logger.Error("Failed to apply migrations with baseline")
-				os.Exit(1)
-			}
+			"--dir", "file:///app/cmd/migrate/migrations",
+			"--baseline", "20240101000000"); err != nil {
+			return fmt.Errorf("failed to apply migrations with baseline: %w", err)
 		}
-		logger.Info("Migrations applied successfully")
-
-	case "check":
-		logger.Info("Checking schema differences...")
-		if err := runAtlasCommand("schema", "diff", "--env", "dev", "--to", "file://schema.hcl"); err != nil {
-			logger.Error("Failed to check schema")
-			os.Exit(1)
-		}
-
-	case "diff":
-		logger.Info("Generating migration diff...")
-		// Get migration name from args or use timestamp
-		var migrationName string
-		if len(os.Args) > 2 {
-			migrationName = os.Args[2]
-		} else {
-			migrationName = fmt.Sprintf("migration_%s", time.Now().Format("20060102150405"))
-		}
-		
-		if err := runAtlasCommand("migrate", "diff", migrationName, "--env", "dev"); err != nil {
-			logger.Error("Failed to generate diff")
-			os.Exit(1)
-		}
-
-	case "validate":
-		logger.Info("Validating migrations...")
-		if err := runAtlasCommand("migrate", "validate", "--env", "dev"); err != nil {
-			logger.Error("Failed to validate migrations")
-			os.Exit(1)
-		}
-		logger.Info("Migrations validated successfully")
-
-	case "dev-setup":
-		// Development only: Use GORM AutoMigrate for quick setup
-		if cfg.AppEnv != "development" {
-			logger.Error("dev-setup command is only available in development environment")
-			os.Exit(1)
-		}
-		logger.Info("Running development setup with GORM AutoMigrate...")
-		if err := runGORMAutoMigration(cfg, logger); err != nil {
-			logger.Error("Failed to run development setup")
-			os.Exit(1)
-		}
-		logger.Info("Development setup completed successfully")
-
-	default:
-		log.Fatalf("Unknown command: %s", command)
 	}
+	logger.Info("Migrations applied successfully")
+	return nil
+}
+
+// runCheckCommand checks schema differences
+func runCheckCommand(logger *logger.Logger) error {
+	logger.Info("Checking schema differences...")
+	if err := runAtlasCommand("schema", "diff", "--env", "dev", "--to", "file://schema.hcl"); err != nil {
+		return fmt.Errorf("failed to check schema: %w", err)
+	}
+	return nil
+}
+
+// runDiffCommand generates migration diff
+func runDiffCommand(logger *logger.Logger) error {
+	logger.Info("Generating migration diff...")
+	// Get migration name from args or use timestamp
+	var migrationName string
+	if len(os.Args) > 2 {
+		migrationName = os.Args[2]
+	} else {
+		migrationName = fmt.Sprintf("migration_%s", time.Now().Format("20060102150405"))
+	}
+
+	if err := runAtlasCommand("migrate", "diff", migrationName, "--env", "dev"); err != nil {
+		return fmt.Errorf("failed to generate diff: %w", err)
+	}
+	return nil
+}
+
+// runValidateCommand validates migrations
+func runValidateCommand(logger *logger.Logger) error {
+	logger.Info("Validating migrations...")
+	if err := runAtlasCommand("migrate", "validate", "--env", "dev"); err != nil {
+		return fmt.Errorf("failed to validate migrations: %w", err)
+	}
+	logger.Info("Migrations validated successfully")
+	return nil
+}
+
+// runDevSetupCommand runs development setup with GORM AutoMigrate
+func runDevSetupCommand(cfg *config.Config, logger *logger.Logger) error {
+	if cfg.AppEnv != "development" {
+		return fmt.Errorf("dev-setup command is only available in development environment")
+	}
+	logger.Info("Running development setup with GORM AutoMigrate...")
+	if err := runGORMAutoMigration(cfg, logger); err != nil {
+		return fmt.Errorf("failed to run development setup: %w", err)
+	}
+	logger.Info("Development setup completed successfully")
+	return nil
 }
 
 // runAtlasCommand executes an Atlas CLI command
@@ -126,10 +158,10 @@ func runAtlasCommand(args ...string) error {
 	cmd.Dir = "/app"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	// Set environment to ensure Atlas can find the config
 	cmd.Env = append(os.Environ(), "ATLAS_CONFIG_PATH=/app/atlas.hcl")
-	
+
 	return cmd.Run()
 }
 
@@ -144,17 +176,17 @@ func runGORMAutoMigration(cfg *config.Config, logger *logger.Logger) error {
 	// Run migrations
 	logger.Info("Migrating database schema...")
 	logger.Warn("Using GORM AutoMigrate for development only. Production should use Atlas migrations.")
-	
+
 	// Migrate in the correct order to handle foreign key dependencies
 	if err := db.AutoMigrate(
 		// Base tables first (no foreign keys)
 		&model.User{},
 		&model.CategoryMaster{},
-		
+
 		// Tables with foreign keys to base tables
 		&model.Account{},
 		&model.Category{},
-		
+
 		// Tables with foreign keys to above tables
 		&model.Transaction{},
 		&model.Budget{},

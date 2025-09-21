@@ -9,16 +9,18 @@ import (
 // NotificationType represents the type of notification.
 type NotificationType string
 
+// NotificationType constants define the types of notifications that can be sent to users.
 const (
-	NotificationTypeBudgetExceeded  NotificationType = "BUDGET_EXCEEDED"
-	NotificationTypePaymentDue      NotificationType = "PAYMENT_DUE"
-	NotificationTypeLowBalance      NotificationType = "LOW_BALANCE"
-	NotificationTypeMonthlySummary  NotificationType = "MONTHLY_SUMMARY"
+	NotificationTypeBudgetExceeded NotificationType = "BUDGET_EXCEEDED"
+	NotificationTypePaymentDue     NotificationType = "PAYMENT_DUE"
+	NotificationTypeLowBalance     NotificationType = "LOW_BALANCE"
+	NotificationTypeMonthlySummary NotificationType = "MONTHLY_SUMMARY"
 )
 
 // NotificationChannel represents the notification delivery channel.
 type NotificationChannel string
 
+// NotificationChannel constants define the delivery channels for notifications.
 const (
 	NotificationChannelEmail NotificationChannel = "EMAIL"
 	NotificationChannelPush  NotificationChannel = "PUSH"

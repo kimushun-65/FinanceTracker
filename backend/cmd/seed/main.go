@@ -4,7 +4,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"financetracker/pkg/config"
 	"financetracker/pkg/logger"
@@ -35,7 +34,7 @@ func main() {
 	db, err := gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{})
 	if err != nil {
 		logger.Error("Failed to connect to database")
-		os.Exit(1)
+		return
 	}
 
 	logger.Info("Connected to database")
@@ -46,37 +45,37 @@ func main() {
 	// 1. Seed category masters
 	if err := seedCategoryMasters(db); err != nil {
 		logger.Error("Failed to seed category masters")
-		os.Exit(1)
+		return
 	}
 
 	// 2. Seed test users
 	if err := seedTestUsers(db); err != nil {
 		logger.Error("Failed to seed test users")
-		os.Exit(1)
+		return
 	}
 
 	// 3. Seed accounts
 	if err := seedAccounts(db); err != nil {
 		logger.Error("Failed to seed accounts")
-		os.Exit(1)
+		return
 	}
 
 	// 4. Seed categories (user-specific)
 	if err := seedCategories(db); err != nil {
 		logger.Error("Failed to seed categories")
-		os.Exit(1)
+		return
 	}
 
 	// 5. Seed transactions
 	if err := seedTransactions(db); err != nil {
 		logger.Error("Failed to seed transactions")
-		os.Exit(1)
+		return
 	}
 
 	// 6. Seed budgets
 	if err := seedBudgets(db); err != nil {
 		logger.Error("Failed to seed budgets")
-		os.Exit(1)
+		return
 	}
 
 	logger.Info("Database seeding completed successfully!")

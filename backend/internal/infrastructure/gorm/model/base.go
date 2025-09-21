@@ -10,9 +10,10 @@ import (
 
 // Base contains common columns for all models.
 type Base struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
-	CreatedAt time.Time `gorm:"not null"`
-	UpdatedAt time.Time `gorm:"not null"`
+	ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	CreatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 // BeforeCreate sets the ID if it's not already set.

@@ -29,6 +29,7 @@ func (AssetSnapshot) TableName() string {
 // ForecastMethod represents the forecasting method used.
 type ForecastMethod string
 
+// ForecastMethod constants define the methods used for asset forecasting.
 const (
 	ForecastMethodLinear      ForecastMethod = "LINEAR"
 	ForecastMethodExponential ForecastMethod = "EXPONENTIAL"

@@ -6,6 +6,7 @@ import "github.com/google/uuid"
 // CategoryType represents the type of category.
 type CategoryType string
 
+// CategoryType constants define the types of categories for transactions.
 const (
 	CategoryTypeIncome  CategoryType = "INCOME"
 	CategoryTypeExpense CategoryType = "EXPENSE"
@@ -32,10 +33,10 @@ func (CategoryMaster) TableName() string {
 // Category represents a user-specific category.
 type Category struct {
 	Base
-	UserID           uuid.UUID  `gorm:"type:uuid;not null;index"`
-	CategoryMasterID uuid.UUID  `gorm:"type:uuid;not null;index"`
-	CustomName       *string    `gorm:"type:varchar(100)"`
-	IsActive         bool       `gorm:"not null;default:true"`
+	UserID           uuid.UUID `gorm:"type:uuid;not null;index"`
+	CategoryMasterID uuid.UUID `gorm:"type:uuid;not null;index"`
+	CustomName       *string   `gorm:"type:varchar(100)"`
+	IsActive         bool      `gorm:"not null;default:true"`
 
 	// Relations
 	User           User           `gorm:"foreignKey:UserID"`

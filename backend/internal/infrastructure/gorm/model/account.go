@@ -9,6 +9,7 @@ import (
 // AccountType represents the type of account.
 type AccountType string
 
+// AccountType constants define the types of accounts supported in the system.
 const (
 	AccountTypeCash       AccountType = "CASH"
 	AccountTypeBank       AccountType = "BANK"

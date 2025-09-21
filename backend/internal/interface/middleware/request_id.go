@@ -11,7 +11,7 @@ func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Check if request ID exists in header
 		requestID := c.GetHeader("X-Request-ID")
-		
+
 		// Generate new ID if not provided
 		if requestID == "" {
 			requestID = uuid.New().String()
@@ -19,10 +19,10 @@ func RequestID() gin.HandlerFunc {
 
 		// Set request ID in context
 		c.Set("RequestID", requestID)
-		
+
 		// Set request ID in response header
 		c.Header("X-Request-ID", requestID)
-		
+
 		// Continue processing
 		c.Next()
 	}

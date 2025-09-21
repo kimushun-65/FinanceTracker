@@ -19,11 +19,11 @@ func seedCategories(db *gorm.DB) error {
 		return err
 	}
 
-	for _, user := range users {
-		for _, cm := range categoryMasters {
+	for i := range users {
+		for j := range categoryMasters {
 			category := model.Category{
-				UserID:           user.ID,
-				CategoryMasterID: cm.ID,
+				UserID:           users[i].ID,
+				CategoryMasterID: categoryMasters[j].ID,
 				IsActive:         true,
 			}
 
@@ -31,7 +31,7 @@ func seedCategories(db *gorm.DB) error {
 			err := db.Where("user_id = ? AND category_master_id = ?", category.UserID, category.CategoryMasterID).First(&existing).Error
 
 			if err == nil {
-				log.Printf("Category already exists for user: %s, master: %s\n", user.ID, cm.Name)
+				log.Printf("Category already exists for user: %s, master: %s\n", users[i].ID, categoryMasters[j].Name)
 				continue
 			}
 
@@ -43,7 +43,7 @@ func seedCategories(db *gorm.DB) error {
 				return err
 			}
 
-			log.Printf("Created category for user: %s, master: %s\n", user.ID, cm.Name)
+			log.Printf("Created category for user: %s, master: %s\n", users[i].ID, categoryMasters[j].Name)
 		}
 	}
 

@@ -22,12 +22,12 @@ func seedTestUsers(db *gorm.DB) error {
 		},
 	}
 
-	for _, user := range users {
+	for i := range users {
 		var existing model.User
-		err := db.Where("auth0_id = ?", user.Auth0ID).First(&existing).Error
+		err := db.Where("auth0_id = ?", users[i].Auth0ID).First(&existing).Error
 
 		if err == nil {
-			log.Printf("User already exists: %s (Auth0ID: %s)\n", user.Name, user.Auth0ID)
+			log.Printf("User already exists: %s (Auth0ID: %s)\n", users[i].Name, users[i].Auth0ID)
 			continue
 		}
 
@@ -35,11 +35,11 @@ func seedTestUsers(db *gorm.DB) error {
 			return err
 		}
 
-		if err := db.Create(&user).Error; err != nil {
+		if err := db.Create(&users[i]).Error; err != nil {
 			return err
 		}
 
-		log.Printf("Created user: %s (Auth0ID: %s)\n", user.Name, user.Auth0ID)
+		log.Printf("Created user: %s (Auth0ID: %s)\n", users[i].Name, users[i].Auth0ID)
 	}
 
 	return nil

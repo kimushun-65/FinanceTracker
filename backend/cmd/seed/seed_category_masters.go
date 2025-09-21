@@ -168,12 +168,12 @@ func seedCategoryMasters(db *gorm.DB) error {
 		},
 	}
 
-	for _, cm := range categoryMasters {
+	for i := range categoryMasters {
 		var existing model.CategoryMaster
-		err := db.Where("name = ? AND type = ?", cm.Name, cm.Type).First(&existing).Error
+		err := db.Where("name = ? AND type = ?", categoryMasters[i].Name, categoryMasters[i].Type).First(&existing).Error
 
 		if err == nil {
-			log.Printf("CategoryMaster already exists: %s (Type: %s)\n", cm.Name, cm.Type)
+			log.Printf("CategoryMaster already exists: %s (Type: %s)\n", categoryMasters[i].Name, categoryMasters[i].Type)
 			continue
 		}
 
@@ -181,11 +181,11 @@ func seedCategoryMasters(db *gorm.DB) error {
 			return err
 		}
 
-		if err := db.Create(&cm).Error; err != nil {
+		if err := db.Create(&categoryMasters[i]).Error; err != nil {
 			return err
 		}
 
-		log.Printf("Created category master: %s (Type: %s)\n", cm.Name, cm.Type)
+		log.Printf("Created category master: %s (Type: %s)\n", categoryMasters[i].Name, categoryMasters[i].Type)
 	}
 
 	return nil

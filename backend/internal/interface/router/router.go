@@ -54,11 +54,9 @@ func (r *Router) setupRoutes() {
 	{
 		// Public routes (no auth required)
 		public := v1.Group("")
-		{
-			public.GET("/", r.apiInfo)
-			// TODO: Add auth callback endpoints
-			// public.POST("/auth/callback", authHandler.Callback)
-		}
+		public.GET("/", r.apiInfo)
+		// TODO: Add auth callback endpoints
+		// public.POST("/auth/callback", authHandler.Callback)
 
 		// Protected routes (auth required)
 		protected := v1.Group("")
@@ -66,79 +64,61 @@ func (r *Router) setupRoutes() {
 		{
 			// User routes
 			users := protected.Group("/users")
-			{
-				users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
-				users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
-			}
+			users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
+			users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
 
 			// Account routes
 			accounts := protected.Group("/accounts")
-			{
-				accounts.GET("", r.notImplemented)                       // TODO: accountHandler.List
-				accounts.POST("", r.notImplemented)                      // TODO: accountHandler.Create
-				accounts.GET("/:id", r.notImplemented)                   // TODO: accountHandler.Get
-				accounts.PUT("/:id", r.notImplemented)                   // TODO: accountHandler.Update
-				accounts.DELETE("/:id", r.notImplemented)                // TODO: accountHandler.Delete
-				accounts.POST("/:id/movements", r.notImplemented)        // TODO: accountHandler.CreateMovement
-			}
+			accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
+			accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
+			accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
+			accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
+			accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
+			accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
 
 			// Transaction routes
 			transactions := protected.Group("/transactions")
-			{
-				transactions.GET("", r.notImplemented)                   // TODO: transactionHandler.List
-				transactions.POST("", r.notImplemented)                  // TODO: transactionHandler.Create
-				transactions.GET("/:id", r.notImplemented)               // TODO: transactionHandler.Get
-				transactions.PUT("/:id", r.notImplemented)               // TODO: transactionHandler.Update
-				transactions.DELETE("/:id", r.notImplemented)            // TODO: transactionHandler.Delete
-				transactions.GET("/summary/monthly", r.notImplemented)   // TODO: transactionHandler.MonthlySummary
-			}
+			transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
+			transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
+			transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
+			transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
+			transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
+			transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
 
 			// Category routes
 			categories := protected.Group("/categories")
-			{
-				categories.GET("", r.notImplemented)                     // TODO: categoryHandler.List
-				categories.PUT("/:id", r.notImplemented)                 // TODO: categoryHandler.Update
-				categories.DELETE("/:id", r.notImplemented)              // TODO: categoryHandler.Delete
-				categories.GET("/master", r.notImplemented)              // TODO: categoryHandler.ListMaster
-			}
+			categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
+			categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
+			categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
+			categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
 
 			// Budget routes
 			budgets := protected.Group("/budgets")
-			{
-				budgets.GET("", r.notImplemented)                        // TODO: budgetHandler.List
-				budgets.POST("", r.notImplemented)                       // TODO: budgetHandler.Create
-				budgets.GET("/:id", r.notImplemented)                    // TODO: budgetHandler.Get
-				budgets.PUT("/:id", r.notImplemented)                    // TODO: budgetHandler.Update
-				budgets.DELETE("/:id", r.notImplemented)                 // TODO: budgetHandler.Delete
-				budgets.GET("/current", r.notImplemented)                // TODO: budgetHandler.GetCurrent
-			}
+			budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
+			budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
+			budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
+			budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
+			budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
+			budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
 
 			// Budget suggestion routes
 			suggestions := protected.Group("/budget-suggestions")
-			{
-				suggestions.GET("", r.notImplemented)                    // TODO: suggestionHandler.List
-				suggestions.POST("/generate", r.notImplemented)          // TODO: suggestionHandler.Generate
-			}
+			suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
+			suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
 
 			// Report routes
 			reports := protected.Group("/reports")
-			{
-				reports.GET("/assets/snapshots", r.notImplemented)       // TODO: reportHandler.AssetSnapshots
-				reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
-			}
+			reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
+			reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
 
 			// Summary routes
 			summary := protected.Group("/summary")
-			{
-				summary.GET("/monthly", r.notImplemented)                // TODO: summaryHandler.Monthly
-			}
+			summary.GET("/monthly", r.notImplemented) // TODO: summaryHandler.Monthly
 
 			// Notification settings
 			notifications := protected.Group("/notifications")
-			{
-				notifications.GET("/settings", r.notImplemented)         // TODO: notificationHandler.GetSettings
-				notifications.PUT("/settings", r.notImplemented)         // TODO: notificationHandler.UpdateSettings
-			}
+			notifications.GET("/settings", r.notImplemented) // TODO: notificationHandler.GetSettings
+			notifications.PUT("/settings", r.notImplemented) // TODO: notificationHandler.UpdateSettings
 		}
 	}
 

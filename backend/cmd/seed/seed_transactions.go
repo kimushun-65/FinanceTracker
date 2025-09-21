@@ -154,14 +154,14 @@ func seedTransactions(db *gorm.DB) error {
 		},
 	}
 
-	for _, transaction := range transactions {
+	for i := range transactions {
 		// 同じ日付・金額・カテゴリのトランザクションがあるか確認
 		var existing model.Transaction
 		err := db.Where("user_id = ? AND date = ? AND amount = ? AND category_id = ?",
-			transaction.UserID, transaction.Date, transaction.Amount, transaction.CategoryID).First(&existing).Error
+			transactions[i].UserID, transactions[i].Date, transactions[i].Amount, transactions[i].CategoryID).First(&existing).Error
 
 		if err == nil {
-			log.Printf("Transaction already exists: %v on %s\n", transaction.Amount, transaction.Date.Format("2006-01-02"))
+			log.Printf("Transaction already exists: %v on %s\n", transactions[i].Amount, transactions[i].Date.Format("2006-01-02"))
 			continue
 		}
 
@@ -169,11 +169,11 @@ func seedTransactions(db *gorm.DB) error {
 			return err
 		}
 
-		if err := db.Create(&transaction).Error; err != nil {
+		if err := db.Create(&transactions[i]).Error; err != nil {
 			return err
 		}
 
-		log.Printf("Created transaction: %v on %s (%s)\n", transaction.Amount, transaction.Date.Format("2006-01-02"), *transaction.Description)
+		log.Printf("Created transaction: %v on %s (%s)\n", transactions[i].Amount, transactions[i].Date.Format("2006-01-02"), *transactions[i].Description)
 	}
 
 	return nil

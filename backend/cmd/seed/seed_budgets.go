@@ -34,36 +34,36 @@ func seedBudgets(db *gorm.DB) error {
 	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
 	budgetData := map[string]int64{
-		"食費":   40000,
-		"外食費":  15000,
-		"住居費":  85000,
-		"光熱費":  20000,
-		"通信費":  15000,
-		"交通費":  10000,
-		"娯楽費":  20000,
-		"日用品":  10000,
-		"衣服費":  15000,
-		"美容費":  5000,
-		"医療費":  10000,
-		"教育費":  30000,
-		"保険料":  25000,
-		"貯金":   50000,
-		"投資":   30000,
+		"食費":  40000,
+		"外食費": 15000,
+		"住居費": 85000,
+		"光熱費": 20000,
+		"通信費": 15000,
+		"交通費": 10000,
+		"娯楽費": 20000,
+		"日用品": 10000,
+		"衣服費": 15000,
+		"美容費": 5000,
+		"医療費": 10000,
+		"教育費": 30000,
+		"保険料": 25000,
+		"貯金":  50000,
+		"投資":  30000,
 	}
 
-	for _, category := range categories {
-		if category.CategoryMaster.Type != model.CategoryTypeExpense {
+	for i := range categories {
+		if categories[i].CategoryMaster.Type != model.CategoryTypeExpense {
 			continue
 		}
 
-		amount, hasBudget := budgetData[category.CategoryMaster.Name]
+		amount, hasBudget := budgetData[categories[i].CategoryMaster.Name]
 		if !hasBudget {
 			continue
 		}
 
 		budget := model.Budget{
 			UserID:     user.ID,
-			CategoryID: category.ID,
+			CategoryID: categories[i].ID,
 			Amount:     decimal.NewFromInt(amount),
 			PeriodType: model.PeriodTypeMonthly,
 			StartDate:  startOfMonth,
@@ -75,7 +75,7 @@ func seedBudgets(db *gorm.DB) error {
 			budget.UserID, budget.CategoryID, true).First(&existing).Error
 
 		if err == nil {
-			log.Printf("Active budget already exists for category: %s\n", category.CategoryMaster.Name)
+			log.Printf("Active budget already exists for category: %s\n", categories[i].CategoryMaster.Name)
 			continue
 		}
 
@@ -87,7 +87,7 @@ func seedBudgets(db *gorm.DB) error {
 			return err
 		}
 
-		log.Printf("Created budget for category: %s, amount: %d\n", category.CategoryMaster.Name, amount)
+		log.Printf("Created budget for category: %s, amount: %d\n", categories[i].CategoryMaster.Name, amount)
 	}
 
 	return nil

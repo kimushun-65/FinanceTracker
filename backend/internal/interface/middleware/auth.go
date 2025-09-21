@@ -44,7 +44,10 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 		// Extract token from Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.Error(errors.NewUnauthorizedError("Missing authorization header"))
+			if err := c.Error(errors.NewUnauthorizedError("Missing authorization header")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -52,7 +55,10 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 		// Check Bearer prefix
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			c.Error(errors.NewUnauthorizedError("Invalid authorization header format"))
+			if err := c.Error(errors.NewUnauthorizedError("Invalid authorization header format")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -82,7 +88,10 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.Error(errors.NewUnauthorizedError("Invalid token"))
+			if err := c.Error(errors.NewUnauthorizedError("Invalid token")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -90,14 +99,20 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 		// Extract and validate claims
 		claims, ok := token.Claims.(*Auth0Claims)
 		if !ok {
-			c.Error(errors.NewUnauthorizedError("Invalid token claims"))
+			if err := c.Error(errors.NewUnauthorizedError("Invalid token claims")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
 
 		// Verify issuer
 		if claims.Issuer != expectedIssuer {
-			c.Error(errors.NewUnauthorizedError("Invalid token issuer"))
+			if err := c.Error(errors.NewUnauthorizedError("Invalid token issuer")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -111,14 +126,20 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 			}
 		}
 		if !audValid {
-			c.Error(errors.NewUnauthorizedError("Invalid token audience"))
+			if err := c.Error(errors.NewUnauthorizedError("Invalid token audience")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
 
 		// Check token expiration
 		if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
-			c.Error(errors.NewUnauthorizedError("Token has expired"))
+			if err := c.Error(errors.NewUnauthorizedError("Token has expired")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -126,7 +147,10 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 		// Extract user ID from subject
 		userID := claims.Subject
 		if userID == "" {
-			c.Error(errors.NewUnauthorizedError("Missing user ID in token"))
+			if err := c.Error(errors.NewUnauthorizedError("Missing user ID in token")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -153,7 +177,7 @@ func fetchPublicKey(jwksURL, kid string) (interface{}, error) {
 	defer cancel()
 
 	// Create request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, jwksURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, jwksURL, http.NoBody)
 	if err != nil {
 		return nil, errors.NewInternalError("Failed to create JWKS request", err)
 	}
@@ -163,7 +187,11 @@ func fetchPublicKey(jwksURL, kid string) (interface{}, error) {
 	if err != nil {
 		return nil, errors.NewExternalServiceError("Auth0", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Log error but don't return it
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.NewExternalServiceError("Auth0", nil)
@@ -194,7 +222,7 @@ func fetchPublicKey(jwksURL, kid string) (interface{}, error) {
 
 // parseRSAPublicKeyFromJWK parses RSA public key from JWK.
 // This is a simplified placeholder - use a proper JWT library in production.
-func parseRSAPublicKeyFromJWK(jwk map[string]interface{}) (interface{}, error) {
+func parseRSAPublicKeyFromJWK(_ map[string]interface{}) (interface{}, error) {
 	// TODO: Implement proper JWK to RSA public key conversion
 	// This would typically use a library like github.com/lestrrat-go/jwx
 	return nil, errors.NewNotImplementedError("JWK parsing")
@@ -206,7 +234,10 @@ func RequirePermission(permission string) gin.HandlerFunc {
 		// Get permissions from context
 		permissions, exists := c.Get("Permissions")
 		if !exists {
-			c.Error(errors.NewForbiddenError("No permissions found"))
+			if err := c.Error(errors.NewForbiddenError("No permissions found")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -214,7 +245,10 @@ func RequirePermission(permission string) gin.HandlerFunc {
 		// Check if user has the required permission
 		userPermissions, ok := permissions.([]string)
 		if !ok {
-			c.Error(errors.NewInternalError("Invalid permissions format", nil))
+			if err := c.Error(errors.NewInternalError("Invalid permissions format", nil)); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}
@@ -228,7 +262,10 @@ func RequirePermission(permission string) gin.HandlerFunc {
 		}
 
 		if !hasPermission {
-			c.Error(errors.NewForbiddenError("Insufficient permissions"))
+			if err := c.Error(errors.NewForbiddenError("Insufficient permissions")); err != nil {
+				c.Abort()
+				return
+			}
 			c.Abort()
 			return
 		}

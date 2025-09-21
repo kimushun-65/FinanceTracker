@@ -15,10 +15,10 @@ func seedAccounts(db *gorm.DB) error {
 		return err
 	}
 
-	for _, user := range users {
+	for i := range users {
 		accounts := []model.Account{
 			{
-				UserID:   user.ID,
+				UserID:   users[i].ID,
 				Name:     "現金",
 				Type:     model.AccountTypeCash,
 				Balance:  decimal.NewFromInt(50000),
@@ -26,7 +26,7 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
-				UserID:   user.ID,
+				UserID:   users[i].ID,
 				Name:     "みずほ銀行",
 				Type:     model.AccountTypeBank,
 				Balance:  decimal.NewFromInt(1500000),
@@ -34,7 +34,7 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
-				UserID:   user.ID,
+				UserID:   users[i].ID,
 				Name:     "楽天カード",
 				Type:     model.AccountTypeCreditCard,
 				Balance:  decimal.NewFromInt(-80000),
@@ -42,7 +42,7 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
-				UserID:   user.ID,
+				UserID:   users[i].ID,
 				Name:     "SBI証券",
 				Type:     model.AccountTypeInvestment,
 				Balance:  decimal.NewFromInt(3000000),
@@ -51,12 +51,12 @@ func seedAccounts(db *gorm.DB) error {
 			},
 		}
 
-		for _, account := range accounts {
+		for j := range accounts {
 			var existing model.Account
-			err := db.Where("user_id = ? AND name = ?", account.UserID, account.Name).First(&existing).Error
+			err := db.Where("user_id = ? AND name = ?", accounts[j].UserID, accounts[j].Name).First(&existing).Error
 
 			if err == nil {
-				log.Printf("Account already exists: %s (UserID: %s)\n", account.Name, account.UserID)
+				log.Printf("Account already exists: %s (UserID: %s)\n", accounts[j].Name, accounts[j].UserID)
 				continue
 			}
 
@@ -64,11 +64,11 @@ func seedAccounts(db *gorm.DB) error {
 				return err
 			}
 
-			if err := db.Create(&account).Error; err != nil {
+			if err := db.Create(&accounts[j]).Error; err != nil {
 				return err
 			}
 
-			log.Printf("Created account: %s (UserID: %s)\n", account.Name, account.UserID)
+			log.Printf("Created account: %s (UserID: %s)\n", accounts[j].Name, accounts[j].UserID)
 		}
 	}
 
