@@ -2,6 +2,7 @@ package value
 
 import (
 	"financetracker/internal/domain/common"
+
 	"github.com/google/uuid"
 )
 
