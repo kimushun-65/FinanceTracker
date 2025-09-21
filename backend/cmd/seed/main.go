@@ -1,3 +1,5 @@
+// Package main provides the database seeding functionality for the FinanceTracker application.
+// It initializes sample data for development and testing purposes.
 package main
 
 import (
@@ -19,7 +21,11 @@ func main() {
 
 	// Initialize logger
 	logger := logger.New()
-	defer logger.Sync()
+	defer func() {
+		if err := logger.Sync(); err != nil {
+			log.Printf("Failed to sync logger: %v", err)
+		}
+	}()
 
 	// Load configuration
 	cfg := config.Load()

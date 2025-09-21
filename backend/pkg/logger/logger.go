@@ -1,3 +1,5 @@
+// Package logger provides a structured logging wrapper around zap logger.
+// It supports different log levels and output formats configured via environment variables.
 package logger
 
 import (
@@ -15,7 +17,6 @@ type Logger struct {
 // New creates a new logger instance
 func New() *Logger {
 	config := zap.NewProductionConfig()
-	
 	// Set log level from environment
 	logLevel := os.Getenv("LOG_LEVEL")
 	switch logLevel {

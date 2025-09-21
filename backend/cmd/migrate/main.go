@@ -1,3 +1,5 @@
+// Package main provides the database migration command-line tool for the FinanceTracker application.
+// It supports various migration operations like apply, check, diff, auto, and validate.
 package main
 
 import (

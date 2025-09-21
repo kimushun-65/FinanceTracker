@@ -171,7 +171,7 @@ jobs:
           GOTOOLCHAIN: go1.23.0
         run: |
           go fmt ./...
-          go install golang.org/x/tools/cmd/goimports@latest
+          go install golang.org/x/tools/cmd/goimports@v0.26.0
           goimports -w .
 
           if [ -n "$(git diff --name-only)" ]; then

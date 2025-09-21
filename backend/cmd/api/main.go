@@ -1,8 +1,10 @@
+// Package main is the entry point for the FinanceTracker API server.
+// It sets up the HTTP server with all necessary middleware and routes.
 package main
 
 import (
 	"fmt"
-	"log"
+	stdlog "log"
 
 	"financetracker/pkg/config"
 	"financetracker/pkg/logger"
@@ -14,12 +16,17 @@ import (
 func main() {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
+		stdlog.Println("No .env file found")
 	}
 
 	// Initialize logger
 	log := logger.New()
-	defer log.Sync()
+	defer func() {
+		if err := log.Sync(); err != nil {
+			// Use standard log since our logger might not be available
+			stdlog.Printf("Failed to sync logger: %v", err)
+		}
+	}()
 
 	// Load configuration
 	cfg := config.Load()
@@ -44,20 +51,18 @@ func main() {
 
 	// API routes
 	api := router.Group("/api")
-	{
-		api.GET("/", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"message": "Welcome to FinanceTracker API",
-				"version": "1.0.0",
-			})
+	api.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Welcome to FinanceTracker API",
+			"version": "1.0.0",
 		})
-	}
+	})
 
 	// Start server
 	port := fmt.Sprintf(":%s", cfg.AppPort)
 	log.Info("Starting server on port", port)
-	
 	if err := router.Run(port); err != nil {
-		log.Fatal("Failed to start server", err)
+		log.Error("Failed to start server", err)
+		return
 	}
 }

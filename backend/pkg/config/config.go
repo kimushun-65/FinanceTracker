@@ -1,9 +1,12 @@
+// Package config provides configuration management for the FinanceTracker application.
+// It loads configuration from environment variables with sensible defaults.
 package config
 
 import (
 	"os"
 )
 
+// Config holds all configuration values for the application.
 type Config struct {
 	// App
 	AppEnv  string
@@ -37,6 +40,7 @@ type Config struct {
 	AtlasDatabaseURL string
 }
 
+// Load creates and returns a new Config instance with values from environment variables.
 func Load() *Config {
 	return &Config{
 		// App
