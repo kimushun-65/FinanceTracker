@@ -67,7 +67,7 @@ func NewWithHandlers(cfg *config.Config, logger *logger.Logger, handlers *Handle
 func (r *Router) setupRoutes() {
 	// ヘルスチェックエンドポイント（認証不要）
 	r.engine.GET("/health", r.healthCheck)
-	
+
 	// Swagger UIエンドポイント
 	r.engine.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
