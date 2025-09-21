@@ -61,9 +61,10 @@ migrate-auto: ## 自動でスキーマ差分をチェックし、必要に応じ
 	@echo "=== Running auto migration ==="
 	docker-compose run --rm migrate go run cmd/migrate/main.go auto
 
-migrate-apply: ## マイグレーションを適用
-	@echo "=== Applying migrations ==="
+migrate-apply: ## Atlasマイグレーションを適用
+	@echo "=== Applying Atlas migrations ==="
 	docker-compose run --rm migrate go run cmd/migrate/main.go apply
+
 
 migrate-status: ## マイグレーション状態を確認（実際のDB）
 	@echo "=== Migration status (actual database) ==="
@@ -77,7 +78,7 @@ migrate-validate: ## マイグレーションを検証
 
 migrate-hash: ## マイグレーションのハッシュを再計算（ファイル編集後に必要）
 	@echo "=== Recalculating migration hash ==="
-	docker-compose run --rm migrate atlas migrate hash --dir file://cmd/migrate/migrations
+	docker-compose run --rm migrate sh -c "cd /app && atlas migrate hash --dir file://cmd/migrate/migrations"
 
 # Atlas CLIの直接実行（必要に応じて）
 atlas-migrate-new: ## 新しいマイグレーションファイルを手動作成
@@ -189,12 +190,22 @@ db-reset: ## データベースをリセット（削除して再作成）
 setup: ## 初期セットアップ（ビルド、DB作成、マイグレーション）
 	@echo "=== Starting initial setup ==="
 	@make build
-	@make up
+	@make up -d
 	@echo "Waiting for database to be ready..."
 	@sleep 15
-	@make db-create
 	@make migrate-apply
+	@make seed
 	@echo "=== Setup completed ==="
 	@echo "Backend:    http://localhost:8080"
 	@echo "Frontend:   http://localhost:3000"
 	@echo "pgAdmin:    http://localhost:5050"
+
+migrate-gorm: ## GORMでマイグレーションを実行（緊急時のみ）
+	@echo "=== Running GORM migration ==="
+	docker-compose run --rm migrate go run cmd/migrate/main.go gorm
+
+migrate-init: ## 初期スキーマからAtlasマイグレーションを生成
+	@echo "=== Generating initial migration from schema.hcl ==="
+	docker-compose run --rm migrate atlas migrate diff initial \
+		--env dev \
+		--to file://cmd/migrate/schema.hcl

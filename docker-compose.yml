@@ -34,6 +34,7 @@ services:
       - "5432:5432"
     volumes:
       - ./db_data:/var/lib/postgresql/data
+      - ./backend/db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -51,8 +52,8 @@ services:
     ports:
       - "5050:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@financetracker.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: kimushun1226.634@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: pass
     depends_on:
       - db
     networks:
@@ -69,7 +70,7 @@ services:
     volumes:
       - ./backend:/app
     working_dir: /app
-    command: go run cmd/migrate/main.go apply
+    command: go run cmd/migrate/main.go apply  # Use 'dev-setup' for initial development
     depends_on:
       db:
         condition: service_healthy
