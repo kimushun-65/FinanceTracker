@@ -7,7 +7,7 @@ AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築し�
 ## 進捗サマリー
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
-- **Phase 2: ドメイン層実装** - 未着手
+- **Phase 2: ドメイン層実装** - 75%完了（Asset/Notification未実装）
 - **Phase 3: アプリケーション層実装** - 未着手
 - **Phase 4: インフラストラクチャ層実装** - 40%完了（GORMモデル定義済み、DB接続未実装）
 - **Phase 5: HTTPインターフェース層実装** - 30%完了（ルーティング・ミドルウェア実装済み、ハンドラー未実装）
@@ -78,6 +78,8 @@ backend/
 │   │   ├── transaction/
 │   │   ├── category/
 │   │   ├── budget/
+│   │   ├── asset/               # 追加予定
+│   │   ├── notification/        # 追加予定
 │   │   └── common/              ✓
 │   ├── application/             # アプリケーション層 ✓
 │   ├── infrastructure/          # インフラストラクチャ層
@@ -122,37 +124,59 @@ backend/
 
 ## Phase 2: ドメイン層実装
 ### 2.1 共通ドメイン要素
-- [ ] base_entity.go（UUID, timestamps）
-- [ ] 値オブジェクト実装
-  - [ ] money.go（金額）
-  - [ ] email.go（メールアドレス）
-  - [ ] hex_color.go（カラーコード）
-- [ ] base_repository.go（リポジトリインターフェース）
-- [ ] ドメインエラー定義
+- [x] base_entity.go（UUID, timestamps）
+- [x] 値オブジェクト実装
+  - [x] money.go（金額）
+  - [x] email.go（メールアドレス）
+  - [x] hex_color.go（カラーコード）
+  - [x] time.go（時刻関連）
+- [x] ドメインエラー定義（errors.go）
 
 ### 2.2 各ドメインエンティティ実装
-- [ ] User エンティティ
-  - [ ] entity/user.go
-  - [ ] value/user_id.go
-  - [ ] value/auth0_id.go
-  - [ ] repository/user_repository.go
-- [ ] Account エンティティ
-  - [ ] entity/account.go
-  - [ ] value/account_type.go
-  - [ ] value/balance.go
-  - [ ] repository/account_repository.go
-- [ ] Transaction エンティティ
-  - [ ] entity/transaction.go
-  - [ ] value/transaction_type.go
-  - [ ] repository/transaction_repository.go
-- [ ] Category エンティティ
-  - [ ] entity/category.go
-  - [ ] entity/category_master.go
-  - [ ] repository/category_repository.go
-- [ ] Budget エンティティ
-  - [ ] entity/budget.go
-  - [ ] entity/budget_suggestion.go
-  - [ ] repository/budget_repository.go
+- [x] User エンティティ
+  - [x] entity/user.go
+  - [x] value/user_id.go
+  - [x] value/auth0_id.go
+  - [x] repository/user_repository.go
+- [x] Account エンティティ
+  - [x] entity/account.go
+  - [x] entity/account_movement.go
+  - [x] value/account_type.go（資産口座のみ対応）
+  - [x] value/balance.go
+  - [x] value/account_name.go
+  - [x] repository/account_repository.go
+  - [x] repository/account_movement_repository.go
+- [x] Transaction エンティティ
+  - [x] entity/transaction.go（Transfer機能は要件外のため実装なし）
+  - [x] value/transaction_type.go（income/expenseのみ）
+  - [x] value/description.go
+  - [x] repository/transaction_repository.go
+- [x] Category エンティティ
+  - [x] entity/category.go
+  - [x] entity/category_master.go
+  - [x] value/category_name.go
+  - [x] value/category_type.go
+  - [x] repository/category_repository.go
+  - [x] repository/category_master_repository.go
+- [x] Budget エンティティ
+  - [x] entity/budget.go
+  - [x] entity/budget_suggestion.go
+  - [x] value/period_type.go
+  - [x] value/suggestion_status.go
+  - [x] repository/budget_repository.go
+  - [x] repository/budget_suggestion_repository.go
+- [ ] AssetSnapshot エンティティ（資産管理コンテキスト）
+  - [ ] entity/asset_snapshot.go
+  - [ ] value/account_breakdown.go（口座別内訳）
+  - [ ] repository/asset_snapshot_repository.go
+- [ ] AssetForecast エンティティ（資産予測管理）
+  - [ ] entity/asset_forecast.go
+  - [ ] value/forecast_method.go
+  - [ ] value/assumptions.go
+  - [ ] repository/asset_forecast_repository.go
+- [ ] NotificationSettings エンティティ（通知管理コンテキスト）
+  - [ ] entity/notification_settings.go
+  - [ ] repository/notification_settings_repository.go
 
 ## Phase 3: アプリケーション層実装
 ### 3.1 DTOの定義
@@ -161,7 +185,8 @@ backend/
 - [ ] transaction_dto.go
 - [ ] category_dto.go
 - [ ] budget_dto.go
-- [ ] report_dto.go
+- [ ] asset_dto.go（AssetSnapshot, AssetForecast）
+- [ ] notification_dto.go（NotificationSettings）
 
 ### 3.2 ユースケース実装
 - [ ] ユーザー管理
@@ -178,8 +203,14 @@ backend/
 - [ ] 予算管理
   - [ ] budget_service.go
   - [ ] budget_suggestion_service.go
+- [ ] 資産管理
+  - [ ] asset_snapshot_service.go
+  - [ ] asset_forecast_service.go
+  - [ ] asset_analysis_service.go
+- [ ] 通知管理
+  - [ ] notification_settings_service.go
+  - [ ] notification_sender_service.go
 - [ ] レポート生成
-  - [ ] report_service.go
   - [ ] summary_service.go
   - [ ] dashboard_service.go
 
@@ -206,9 +237,15 @@ backend/
 - [ ] base_repository.go（共通処理）
 - [ ] user_repository.go
 - [ ] account_repository.go
+- [ ] account_movement_repository.go
 - [ ] transaction_repository.go
 - [ ] category_repository.go
+- [ ] category_master_repository.go
 - [ ] budget_repository.go
+- [ ] budget_suggestion_repository.go
+- [ ] asset_snapshot_repository.go
+- [ ] asset_forecast_repository.go
+- [ ] notification_settings_repository.go
 
 ### 4.4 外部サービス連携
 - [ ] Auth0認証サービス
@@ -226,6 +263,7 @@ backend/
   - [x] カテゴリ管理: CRUD /categories, GET /categories/masters
   - [x] 予算管理: CRUD /budgets, GET /budgets/suggestions
   - [x] レポート: GET /reports/summary, /reports/dashboard
+  - [x] 資産管理: GET /assets/snapshots, GET /assets/forecasts
   - [x] 通知設定: CRUD /notification-settings
 
 ### 5.2 ハンドラー実装
@@ -234,6 +272,7 @@ backend/
 - [ ] transaction_handler.go（CRUD /transactions）
 - [ ] category_handler.go（CRUD /categories）
 - [ ] budget_handler.go（CRUD /budgets）
+- [ ] asset_handler.go（GET /assets/snapshots, /assets/forecasts）
 - [ ] report_handler.go（GET /reports/*）
 - [ ] notification_handler.go（CRUD /notification-settings）
 
@@ -311,17 +350,19 @@ backend/
   - マイグレーションの自動生成と適用（make atlas-migrate-apply）
   - スキーマのバージョン管理（backend/cmd/migrate/migrations/）
 - アーキテクチャ検証スクリプト（scripts/check-architecture.sh）でクリーンアーキテクチャ準拠を確認
+- Reportテーブル/エンティティは実装しない（レポートは既存データの集計表示のみ）
 
 ## 次のステップ
-1. **ドメイン層の実装**（Phase 2）
-   - エンティティ、値オブジェクト、リポジトリインターフェースの定義
-   - ビジネスロジックの実装
+1. **ドメイン層の残り実装**（Phase 2完了）
+   - AssetSnapshot/AssetForecastエンティティ実装
+   - NotificationSettingsエンティティ実装
+   - 関連する値オブジェクトとリポジトリインターフェース
 2. **アプリケーション層の実装**（Phase 3）
    - ユースケース（サービス）の実装
-   - DTOの定義
+   - DTOの定義（Asset/Notification含む）
 3. **リポジトリ実装**（Phase 4の残り）
    - データベース接続管理
-   - 各エンティティのリポジトリ実装
+   - 各エンティティのリポジトリ実装（Asset/Notification含む）
 4. **APIハンドラー実装**（Phase 5の残り）
    - 各エンドポイントの実装
-   - リクエスト/レスポンスの処理
+   - Asset/Notification関連のエンドポイント含む
