@@ -153,7 +153,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		EmailVerified: userInfo.EmailVerified,
 		Picture:       userInfo.Picture,
 	}
-	
+
 	tokenClaimsDTO := &dto.TokenClaims{
 		Subject: claims.Subject,
 		Roles:   claims.Roles,
