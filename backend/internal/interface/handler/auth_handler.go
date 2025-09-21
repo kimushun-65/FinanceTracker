@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"financetracker/internal/application/dto"
 	"financetracker/internal/application/service"
 	"financetracker/internal/infrastructure/auth0"
 
@@ -144,8 +145,22 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		return
 	}
 
+	// Auth0の型からDTOに変換
+	userInfoDTO := &dto.UserInfo{
+		Sub:           userInfo.Sub,
+		Name:          userInfo.Name,
+		Email:         userInfo.Email,
+		EmailVerified: userInfo.EmailVerified,
+		Picture:       userInfo.Picture,
+	}
+	
+	tokenClaimsDTO := &dto.TokenClaims{
+		Subject: claims.Subject,
+		Roles:   claims.Roles,
+	}
+
 	// データベースとユーザーを同期
-	user, err := h.authService.SyncUser(c.Request.Context(), userInfo, claims)
+	user, err := h.authService.SyncUser(c.Request.Context(), userInfoDTO, tokenClaimsDTO)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "failed to sync user",

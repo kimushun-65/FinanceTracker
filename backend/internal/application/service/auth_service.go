@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"financetracker/internal/application/dto"
 	"financetracker/internal/domain/common"
 	"financetracker/internal/domain/common/value"
 	"financetracker/internal/domain/user/entity"
 	"financetracker/internal/domain/user/repository"
 	userValue "financetracker/internal/domain/user/value"
-	"financetracker/internal/infrastructure/auth0"
 )
 
 // AuthService 認証関連のビジネスロジックを担当するサービス
@@ -26,7 +26,7 @@ func NewAuthService(userRepo repository.UserRepository) *AuthService {
 }
 
 // SyncUser Auth0ユーザー情報をデータベースと同期
-func (s *AuthService) SyncUser(ctx context.Context, userInfo *auth0.UserInfo, claims *auth0.TokenClaims) (*entity.User, error) {
+func (s *AuthService) SyncUser(ctx context.Context, userInfo *dto.UserInfo, claims *dto.TokenClaims) (*entity.User, error) {
 	// 必要な値オブジェクトを作成
 	auth0IDValue, err := userValue.NewAuth0ID(userInfo.Sub)
 	if err != nil {
