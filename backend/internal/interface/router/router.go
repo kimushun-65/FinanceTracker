@@ -63,101 +63,114 @@ func NewWithHandlers(cfg *config.Config, logger *logger.Logger, handlers *Handle
 
 // setupRoutes configures all API routes.
 func (r *Router) setupRoutes() {
-	// Health check endpoint (no auth required)
+	// ヘルスチェックエンドポイント（認証不要）
 	r.engine.GET("/health", r.healthCheck)
 
-	// API v1 routes
+	// API v1 ルート
 	v1 := r.engine.Group("/api/v1")
 	{
-		// Public routes (no auth required)
+		// 公開ルート（認証不要）
 		public := v1.Group("")
 		public.GET("/", r.apiInfo)
 
-		// Auth routes (no auth required)
-		auth := public.Group("/auth")
-		if r.handlers != nil && r.handlers.AuthHandler != nil {
-			auth.GET("/login", r.handlers.AuthHandler.Login)
-			auth.GET("/callback", r.handlers.AuthHandler.Callback)
-			auth.POST("/logout", r.handlers.AuthHandler.Logout)
-		} else {
-			auth.GET("/login", r.notImplemented)    // TODO: authHandler.Login
-			auth.GET("/callback", r.notImplemented) // TODO: authHandler.Callback
-			auth.POST("/logout", r.notImplemented)  // TODO: authHandler.Logout
-		}
+		// ドメイン別ルーターを初期化
+		authRouter := NewAuthRouter(r.handlers)
 
-		// Protected routes (auth required)
+		// 公開ルートを登録
+		authRouter.RegisterRoutes(public)
+
+		// 認証が必要なルート
 		protected := v1.Group("")
 		protected.Use(middleware.Auth(r.cfg))
 		{
-			// Auth user info (requires auth)
-			if r.handlers != nil && r.handlers.AuthHandler != nil {
-				protected.GET("/auth/user", r.handlers.AuthHandler.GetCurrentUser)
-			} else {
-				protected.GET("/auth/user", r.notImplemented) // TODO: authHandler.GetCurrentUser
-			}
+			// 認証が必要なルートを登録
+			authRouter.RegisterProtectedRoutes(protected)
 
-			// User routes
-			users := protected.Group("/users")
-			users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
-			users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
-
-			// Account routes
-			accounts := protected.Group("/accounts")
-			accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
-			accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
-			accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
-			accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
-			accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
-			accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
-
-			// Transaction routes
-			transactions := protected.Group("/transactions")
-			transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
-			transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
-			transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
-			transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
-			transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
-			transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
-
-			// Category routes
-			categories := protected.Group("/categories")
-			categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
-			categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
-			categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
-			categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
-
-			// Budget routes
-			budgets := protected.Group("/budgets")
-			budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
-			budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
-			budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
-			budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
-			budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
-			budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
-
-			// Budget suggestion routes
-			suggestions := protected.Group("/budget-suggestions")
-			suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
-			suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
-
-			// Report routes
-			reports := protected.Group("/reports")
-			reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
-			reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
-
-			// Summary routes
-			summary := protected.Group("/summary")
-			summary.GET("/monthly", r.notImplemented) // TODO: summaryHandler.Monthly
-
-			// Notification settings
-			notifications := protected.Group("/notifications")
-			notifications.GET("/settings", r.notImplemented) // TODO: notificationHandler.GetSettings
-			notifications.PUT("/settings", r.notImplemented) // TODO: notificationHandler.UpdateSettings
+			// その他のルート（TODO: 各ドメインのルーターに分離）
+			r.registerUserRoutes(protected)
+			r.registerAccountRoutes(protected)
+			r.registerTransactionRoutes(protected)
+			r.registerCategoryRoutes(protected)
+			r.registerBudgetRoutes(protected)
+			r.registerReportRoutes(protected)
+			r.registerNotificationRoutes(protected)
 		}
 	}
 
 	// 404 handler
 	r.engine.NoRoute(r.notFound)
+}
+
+// ユーザールート（TODO: 専用ファイルに分離）
+func (r *Router) registerUserRoutes(group *gin.RouterGroup) {
+	users := group.Group("/users")
+	users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
+	users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
+}
+
+// アカウントルート（TODO: 専用ファイルに分離）
+func (r *Router) registerAccountRoutes(group *gin.RouterGroup) {
+	accounts := group.Group("/accounts")
+	accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
+	accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
+	accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
+	accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
+	accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
+	accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+}
+
+// トランザクションルート（TODO: 専用ファイルに分離）
+func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
+	transactions := group.Group("/transactions")
+	transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
+	transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
+	transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
+	transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
+	transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
+	transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
+}
+
+// カテゴリールート（TODO: 専用ファイルに分離）
+func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
+	categories := group.Group("/categories")
+	categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
+	categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
+	categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
+	categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
+}
+
+// 予算ルート（TODO: 専用ファイルに分離）
+func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
+	budgets := group.Group("/budgets")
+	budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
+	budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
+	budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
+	budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
+	budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
+	budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
+
+	// 予算提案ルート
+	suggestions := group.Group("/budget-suggestions")
+	suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
+	suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
+}
+
+// レポートルート（TODO: 専用ファイルに分離）
+func (r *Router) registerReportRoutes(group *gin.RouterGroup) {
+	reports := group.Group("/reports")
+	reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
+	reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
+
+	// サマリールート
+	summary := group.Group("/summary")
+	summary.GET("/monthly", r.notImplemented) // TODO: summaryHandler.Monthly
+}
+
+// 通知設定ルート（TODO: 専用ファイルに分離）
+func (r *Router) registerNotificationRoutes(group *gin.RouterGroup) {
+	notifications := group.Group("/notifications")
+	notifications.GET("/settings", r.notImplemented) // TODO: notificationHandler.GetSettings
+	notifications.PUT("/settings", r.notImplemented) // TODO: notificationHandler.UpdateSettings
 }
 
 // Engine returns the underlying Gin engine.
