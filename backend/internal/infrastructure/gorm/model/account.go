@@ -2,6 +2,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -30,11 +32,31 @@ type Account struct {
 	IsActive bool            `gorm:"not null;default:true"`
 
 	// Relations
-	User         User          `gorm:"foreignKey:UserID"`
-	Transactions []Transaction `gorm:"foreignKey:AccountID;constraint:OnDelete:RESTRICT"`
+	User         User              `gorm:"foreignKey:UserID"`
+	Transactions []Transaction     `gorm:"foreignKey:AccountID;constraint:OnDelete:RESTRICT"`
+	Movements    []AccountMovement `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
 }
 
 // TableName specifies the table name for Account.
 func (Account) TableName() string {
 	return "accounts"
+}
+
+// AccountMovement represents a movement in an account (deposit/withdrawal).
+type AccountMovement struct {
+	Base
+	UserID     uuid.UUID       `gorm:"type:uuid;not null;index"`
+	AccountID  uuid.UUID       `gorm:"type:uuid;not null;index"`
+	Amount     decimal.Decimal `gorm:"type:decimal(15,2);not null"`
+	OccurredAt time.Time       `gorm:"not null;index"`
+	Note       string          `gorm:"type:varchar(255)"`
+
+	// Relations
+	User    User    `gorm:"foreignKey:UserID"`
+	Account Account `gorm:"foreignKey:AccountID"`
+}
+
+// TableName specifies the table name for AccountMovement.
+func (AccountMovement) TableName() string {
+	return "account_movements"
 }
