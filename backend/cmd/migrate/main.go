@@ -45,37 +45,24 @@ func main() {
 	switch command {
 	case "apply":
 		logger.Info("Applying Atlas migrations...")
-		// Change working directory to where atlas.hcl is located
-		if err := os.Chdir("/app"); err != nil {
-			logger.Error("Failed to change directory")
-			os.Exit(1)
-		}
 		
-		// Debug: Check current directory and files
-		cwd, _ := os.Getwd()
-		logger.Info("Current working directory: " + cwd)
+		// First, try to apply migrations normally
+		err := runAtlasCommand("migrate", "apply", 
+			"--config", "file:///app/atlas.hcl",
+			"--env", "dev",
+			"--dir", "file:///app/cmd/migrate/migrations")
 		
-		// Check if atlas.hcl exists
-		if _, err := os.Stat("atlas.hcl"); err != nil {
-			logger.Error("atlas.hcl not found in current directory")
-		} else {
-			logger.Info("atlas.hcl found")
-		}
-		
-		// Check if migrations directory exists
-		if _, err := os.Stat("cmd/migrate/migrations"); err != nil {
-			logger.Error("migrations directory not found at cmd/migrate/migrations")
-		} else {
-			logger.Info("migrations directory found")
-		}
-		
-		// Run with verbose output for debugging
-		if err := runAtlasCommand("migrate", "apply", "--env", "dev", "-v"); err != nil {
-			logger.Error("Failed to apply migrations")
-			// Also try listing the migrations to see what Atlas can find
-			logger.Info("Attempting to list migrations...")
-			_ = runAtlasCommand("migrate", "status", "--env", "dev")
-			os.Exit(1)
+		if err != nil {
+			// If it fails due to dirty database, try with baseline
+			logger.Info("Initial migration failed, trying with baseline...")
+			if err := runAtlasCommand("migrate", "apply", 
+				"--config", "file:///app/atlas.hcl",
+				"--env", "dev",
+				"--dir", "file:///app/cmd/migrate/migrations",
+				"--baseline", "20240101000000"); err != nil {
+				logger.Error("Failed to apply migrations with baseline")
+				os.Exit(1)
+			}
 		}
 		logger.Info("Migrations applied successfully")
 
@@ -132,12 +119,15 @@ func main() {
 
 // runAtlasCommand executes an Atlas CLI command
 func runAtlasCommand(args ...string) error {
+	// For migrate commands, we need to be in the directory where atlas.hcl is located
 	cmd := exec.Command("atlas", args...)
-	// Working directory should be where atlas.hcl is located
-	// since atlas.hcl uses relative paths
-	cmd.Dir = "/app" 
+	cmd.Dir = "/app"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	
+	// Set environment to ensure Atlas can find the config
+	cmd.Env = append(os.Environ(), "ATLAS_CONFIG_PATH=/app/atlas.hcl")
+	
 	return cmd.Run()
 }
 

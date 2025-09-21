@@ -10,5 +10,5 @@ env "dev" {
 
 env "prod" {
   url = env("DATABASE_URL")
-  dir = "file://cmd/migrate/migrations"
+  dir = "file:///app/cmd/migrate/migrations"
 }
