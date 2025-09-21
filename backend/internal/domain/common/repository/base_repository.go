@@ -34,8 +34,8 @@ func NewPagination(page, pageSize int) *Pagination {
 
 // Sort ソートのパラメータ
 type Sort struct {
-	Field string `json:"field"`     // ソートフィールド
-	Order string `json:"order"`     // ソート順（asc/desc）
+	Field string `json:"field"` // ソートフィールド
+	Order string `json:"order"` // ソート順（asc/desc）
 }
 
 // NewSort 新しいSortインスタンスを作成
@@ -74,7 +74,7 @@ type PagedResult[T any] struct {
 // NewPagedResult 新しいPagedResultインスタンスを作成
 func NewPagedResult[T any](items []T, totalCount int64, pagination *Pagination) *PagedResult[T] {
 	totalPages := int((totalCount + int64(pagination.PageSize) - 1) / int64(pagination.PageSize))
-	
+
 	return &PagedResult[T]{
 		Items:      items,
 		TotalCount: totalCount,
@@ -90,13 +90,13 @@ func NewPagedResult[T any](items []T, totalCount int64, pagination *Pagination) 
 type BaseRepository[T any] interface {
 	// Save エンティティを保存（新規作成または更新）
 	Save(ctx context.Context, entity T) error
-	
+
 	// FindByID IDでエンティティを検索
 	FindByID(ctx context.Context, id uuid.UUID) (T, error)
-	
+
 	// Delete エンティティを削除
 	Delete(ctx context.Context, id uuid.UUID) error
-	
+
 	// Exists エンティティが存在するかチェック
 	Exists(ctx context.Context, id uuid.UUID) (bool, error)
 }
@@ -105,16 +105,16 @@ type BaseRepository[T any] interface {
 // ユーザーに属するエンティティ用（Account, Transaction, Category, Budget等）
 type UserScopedRepository[T any] interface {
 	BaseRepository[T]
-	
+
 	// FindByUserID ユーザーIDで関連エンティティを検索
 	FindByUserID(ctx context.Context, userID uuid.UUID, pagination *Pagination, sorts ...*Sort) (*PagedResult[T], error)
-	
+
 	// FindByUserIDAndID ユーザーIDとエンティティIDで検索
 	FindByUserIDAndID(ctx context.Context, userID, entityID uuid.UUID) (T, error)
-	
+
 	// DeleteByUserIDAndID ユーザーIDとエンティティIDで削除
 	DeleteByUserIDAndID(ctx context.Context, userID, entityID uuid.UUID) error
-	
+
 	// CountByUserID ユーザーのエンティティ数をカウント
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 }
@@ -129,7 +129,7 @@ type Transactional interface {
 type SearchFilter interface {
 	// ToMap フィルター条件をマップ形式で取得
 	ToMap() map[string]any
-	
+
 	// IsEmpty フィルターが空かどうかを判定
 	IsEmpty() bool
 }

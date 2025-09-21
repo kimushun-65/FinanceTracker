@@ -50,7 +50,7 @@ func (m Money) Currency() string {
 // Add 加算 - 同じ通貨のみ計算可能
 func (m Money) Add(other Money) (*Money, error) {
 	if m.currency != other.currency {
-		return nil, common.NewValidationError("currency", other.currency, 
+		return nil, common.NewValidationError("currency", other.currency,
 			fmt.Sprintf("cannot add different currencies: %s and %s", m.currency, other.currency))
 	}
 

@@ -18,7 +18,7 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]
 // NewEmail 新しいEmailインスタンスを作成
 func NewEmail(value string) (*Email, error) {
 	email := strings.TrimSpace(value)
-	
+
 	if err := validateEmail(email); err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func validateEmail(email string) error {
 	// ドメイン部分の追加チェック
 	parts := strings.Split(email, "@")
 	domain := parts[1]
-	
+
 	// ドメインが空でないかチェック
 	if domain == "" {
 		return common.NewValidationError("email", email, "email domain cannot be empty")

@@ -34,9 +34,9 @@ func NewTime(hour, minute int) (*Time, error) {
 // NewTimeFromString HH:mm形式の文字列からTimeインスタンスを作成
 func NewTimeFromString(timeStr string) (*Time, error) {
 	timeStr = strings.TrimSpace(timeStr)
-	
+
 	if !timeRegex.MatchString(timeStr) {
-		return nil, common.NewValidationError("time", timeStr, 
+		return nil, common.NewValidationError("time", timeStr,
 			"time must be in HH:mm format (e.g., 09:30, 14:15)")
 	}
 
@@ -89,18 +89,18 @@ func (t Time) ToGoTime(date time.Time) time.Time {
 // AddMinutes 指定した分数を加算（日をまたぐ場合は0時から継続）
 func (t Time) AddMinutes(minutes int) *Time {
 	totalMinutes := t.hour*60 + t.minute + minutes
-	
+
 	// 負の値の場合は前日からの計算
 	for totalMinutes < 0 {
 		totalMinutes += 24 * 60 // 1日分を加算
 	}
-	
+
 	// 24時間を超える場合は翌日への繰り越し
 	totalMinutes = totalMinutes % (24 * 60)
-	
+
 	newHour := totalMinutes / 60
 	newMinute := totalMinutes % 60
-	
+
 	return &Time{
 		hour:   newHour,
 		minute: newMinute,
@@ -136,7 +136,7 @@ func (t Time) Equals(other Time) bool {
 func (t Time) IsBusinessHours() bool {
 	businessStart := Time{hour: 9, minute: 0}
 	businessEnd := Time{hour: 18, minute: 0}
-	
+
 	return !t.IsBefore(businessStart) && t.IsBefore(businessEnd)
 }
 
@@ -166,10 +166,10 @@ func validateTime(hour, minute int) error {
 	if hour < 0 || hour > 23 {
 		return common.NewValidationError("hour", hour, "hour must be between 0 and 23")
 	}
-	
+
 	if minute < 0 || minute > 59 {
 		return common.NewValidationError("minute", minute, "minute must be between 0 and 59")
 	}
-	
+
 	return nil
 }

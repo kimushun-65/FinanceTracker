@@ -27,7 +27,7 @@ var hexColorRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
 // NewHexColor 新しいHexColorインスタンスを作成
 func NewHexColor(value string) (*HexColor, error) {
 	color := strings.TrimSpace(value)
-	
+
 	if err := validateHexColor(color); err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func NewHexColor(value string) (*HexColor, error) {
 // NewHexColorFromRGB RGB値からHexColorを作成
 func NewHexColorFromRGB(r, g, b int) (*HexColor, error) {
 	if r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 {
-		return nil, common.NewValidationError("rgb", fmt.Sprintf("R:%d G:%d B:%d", r, g, b), 
+		return nil, common.NewValidationError("rgb", fmt.Sprintf("R:%d G:%d B:%d", r, g, b),
 			"RGB values must be between 0 and 255")
 	}
 
@@ -59,18 +59,18 @@ func (h HexColor) Value() string {
 func (h HexColor) ToRGB() (RGB, error) {
 	// #を除去
 	hex := h.value[1:]
-	
+
 	// RGBそれぞれの16進数を10進数に変換
 	r, err := strconv.ParseInt(hex[0:2], 16, 64)
 	if err != nil {
 		return RGB{}, common.NewValidationError("hex_color", h.value, "failed to parse red component")
 	}
-	
+
 	g, err := strconv.ParseInt(hex[2:4], 16, 64)
 	if err != nil {
 		return RGB{}, common.NewValidationError("hex_color", h.value, "failed to parse green component")
 	}
-	
+
 	b, err := strconv.ParseInt(hex[4:6], 16, 64)
 	if err != nil {
 		return RGB{}, common.NewValidationError("hex_color", h.value, "failed to parse blue component")
@@ -85,7 +85,7 @@ func (h HexColor) ToRGB() (RGB, error) {
 
 // Equals 色の同一性判定（大文字小文字は区別しない）
 func (h HexColor) Equals(other HexColor) bool {
-	return strings.ToUpper(h.value) == strings.ToUpper(other.value)
+	return strings.EqualFold(h.value, other.value)
 }
 
 // String 文字列表現
@@ -99,7 +99,7 @@ func (h HexColor) IsLight() bool {
 	if err != nil {
 		return false
 	}
-	
+
 	// 輝度計算（簡易版）
 	// 輝度 = 0.299*R + 0.587*G + 0.114*B
 	luminance := 0.299*float64(rgb.R) + 0.587*float64(rgb.G) + 0.114*float64(rgb.B)
@@ -123,7 +123,7 @@ func validateHexColor(color string) error {
 
 	// フォーマットチェック
 	if !hexColorRegex.MatchString(color) {
-		return common.NewValidationError("hex_color", color, 
+		return common.NewValidationError("hex_color", color,
 			"hex color must be in format #RRGGBB (e.g., #3B82F6)")
 	}
 
