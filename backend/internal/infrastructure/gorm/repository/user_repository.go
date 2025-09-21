@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"financetracker/internal/domain/common"
-	commonRepo "financetracker/internal/domain/common/repository"
 	"financetracker/internal/domain/common/value"
 	"financetracker/internal/domain/user/entity"
 	userValue "financetracker/internal/domain/user/value"
@@ -123,47 +122,6 @@ func (r *UserRepository) Exists(ctx context.Context, id uuid.UUID) (bool, error)
 	}
 
 	return count > 0, nil
-}
-
-// FindNewUsers 指定された日数以内に登録された新規ユーザーを検索
-func (r *UserRepository) FindNewUsers(ctx context.Context, withinDays int, pagination *commonRepo.Pagination) (*commonRepo.PagedResult[*entity.User], error) {
-	var models []UserModel
-	var totalCount int64
-
-	query := r.db.WithContext(ctx).Model(&UserModel{})
-
-	// 日付フィルターを追加
-	if withinDays > 0 {
-		fromDate := time.Now().AddDate(0, 0, -withinDays)
-		query = query.Where("created_at >= ?", fromDate)
-	}
-
-	// 合計レコード数をカウント
-	if err := query.Count(&totalCount).Error; err != nil {
-		return nil, err
-	}
-
-	// ページネーションを適用
-	if pagination != nil {
-		query = query.Offset(pagination.Offset).Limit(pagination.PageSize)
-	}
-
-	// レコードを取得
-	if err := query.Order("created_at DESC").Find(&models).Error; err != nil {
-		return nil, err
-	}
-
-	// ドメインエンティティに変換
-	users := make([]*entity.User, 0, len(models))
-	for _, model := range models {
-		user, err := r.toDomain(&model)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-
-	return commonRepo.NewPagedResult(users, totalCount, pagination), nil
 }
 
 // toModel ドメインエンティティをデータベースモデルに変換
