@@ -1,0 +1,125 @@
+# golangci-lint configuration
+# https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - govet
+    - ineffassign
+    - misspell
+    - unconvert
+    - gosec
+    - gocyclo
+    - dupl
+    - goconst
+    - gocritic
+    - typecheck
+    - revive
+    - staticcheck
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  misspell:
+    locale: US
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+
+issues:
+  exclude-rules:
+    # Exclude test files from some linters
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+    
+    # Exclude vendor directory
+    - path: vendor/
+      linters:
+        - gofmt
+        - goimports
+        - govet
+        - typecheck
+        - staticcheck
+        - ineffassign
+        - misspell
+        - unconvert
+        - gosec
+        - gocyclo
+        - dupl
+        - goconst
+        - gocritic
+        - revive
+    
+    # Exclude tmp directory
+    - path: tmp/
+      linters:
+        - gofmt
+        - goimports
+        - govet
+        - typecheck
+        - staticcheck
+        - ineffassign
+        - misspell
+        - unconvert
+        - gosec
+        - gocyclo
+        - dupl
+        - goconst
+        - gocritic
+        - revive
+    
+    # Exclude scripts directory
+    - path: scripts/
+      linters:
+        - gofmt
+        - goimports
+        - govet
+        - typecheck
+        - staticcheck
+        - ineffassign
+        - misspell
+        - unconvert
+        - gosec
+        - gocyclo
+        - dupl
+        - goconst
+        - gocritic
+        - revive
+    
+    # Exclude deprecated warnings in dependencies
+    - linters:
+        - staticcheck
+      text: "SA1019:"
+
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 0
+
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+
+  # Don't exclude issues about comments
+  exclude-use-default: false

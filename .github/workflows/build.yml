@@ -1,0 +1,361 @@
+# =============================================================================
+# CI/CD Pipeline - Build and Test Workflow
+# =============================================================================
+# 概要:
+#   このワークフローは、コードの品質を保証するための継続的インテグレーション（CI）
+#   パイプラインです。プルリクエストやmainブランチへのプッシュ時に実行されます。
+#
+# 主な機能:
+#   1. 変更検出: 変更されたコンポーネント（フロントエンド/バックエンド）のみテスト
+#   2. フロントエンド検証: TypeScript型チェック、ESLint、ビルドテスト
+#   3. バックエンド検証: フォーマット、Lint、ビルド、アーキテクチャチェック
+#   4. 並列処理: 各チェックを並列実行して高速化
+#
+# 実行タイミング:
+#   - mainブランチへのプッシュ時
+#   - mainブランチへのプルリクエスト時
+#   - 対象: frontend/, backend/, ワークフロー設定ファイルの変更時のみ
+# =============================================================================
+
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/build.yml"
+      - ".golangci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - ".github/workflows/build.yml"
+      - ".golangci.yml"
+
+# Environment variables for consistency
+env:
+  NODE_VERSION_LTS: "20.x"
+  NODE_VERSION_CURRENT: "22.x"
+  GO_VERSION: "1.23.x"
+  GOLANGCI_LINT_VERSION: "v1.64.8"
+
+# Cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==================== Change Detection ====================
+  # 変更検出ジョブ: どのコンポーネントが変更されたかを検出
+  # これにより、変更がない部分のテストをスキップして実行時間を短縮
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      any: ${{ steps.filter.outputs.frontend == 'true' || steps.filter.outputs.backend == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/build.yml'
+            backend:
+              - 'backend/**'
+              - '.golangci.yml'
+              - '.github/workflows/build.yml'
+
+  # ==================== Frontend Jobs ====================
+  # フロントエンドチェック: TypeScript/React/Next.jsアプリケーションの検証
+  # 複数のNode.jsバージョンと検証タイプを並列実行
+  frontend-checks:
+    name: Frontend - ${{ matrix.check }} (Node ${{ matrix.node-version }})
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    strategy:
+      matrix:
+        node-version: ["20.x", "22.x"]
+        check: ["lint", "type-check", "build"]
+      fail-fast: false # Continue other checks even if one fails
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Cache Next.js build
+        if: matrix.check == 'build'
+        uses: actions/cache@v4
+        with:
+          path: |
+            frontend/.next/cache
+            frontend/node_modules/.cache
+          key: ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('frontend/package-lock.json') }}-${{ hashFiles('frontend/**/*.ts', 'frontend/**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('frontend/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-${{ matrix.node-version }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ${{ matrix.check }}
+        run: |
+          case "${{ matrix.check }}" in
+            "lint")
+              echo "::group::ESLint Output"
+              npm run lint || (echo "::error::Lint failed" && exit 1)
+              echo "::endgroup::"
+              ;;
+            "type-check")
+              echo "::group::TypeScript Output"
+              npx tsc --noEmit || (echo "::error::Type check failed" && exit 1)
+              echo "::endgroup::"
+              ;;
+            "build")
+              echo "::group::Build Output"
+              npm run build || (echo "::error::Build failed" && exit 1)
+              echo "::endgroup::"
+              ;;
+          esac
+
+      - name: Upload build artifacts
+        if: matrix.check == 'build' && matrix.node-version == env.NODE_VERSION_LTS
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: frontend/.next/
+          retention-days: 1
+
+  # ==================== Backend Jobs ====================
+  # バックエンドフォーマットチェック: Goコードの整形状態を検証
+  # go fmtとgoimportsを使用してコードスタイルの一貫性を保証
+  backend-format:
+    name: Backend - Format Check
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: backend/go.sum
+
+      - name: Check formatting
+        env:
+          GOTOOLCHAIN: go1.23.0
+        run: |
+          go fmt ./...
+          go install golang.org/x/tools/cmd/goimports@v0.26.0
+          goimports -w .
+
+          if [ -n "$(git diff --name-only)" ]; then
+            echo "::error::Code formatting required. Run 'go fmt ./...' and 'goimports -w .' locally."
+            echo "::group::Files needing formatting"
+            git diff --name-only
+            echo "::endgroup::"
+            echo "::group::Diff"
+            git diff
+            echo "::endgroup::"
+            exit 1
+          fi
+
+  # バックエンドLintチェック: 静的解析によるコード品質検証
+  # golangci-lintとgo vetを使用して潜在的な問題を検出
+  backend-lint:
+    name: Backend - Lint
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: backend
+          args: --timeout=5m
+          skip-cache: false
+
+      - name: Run go vet
+        working-directory: backend
+        env:
+          GOTOOLCHAIN: go1.23.0
+        run: |
+          echo "::group::go vet output"
+          go vet ./... || (echo "::error::go vet failed" && exit 1)
+          echo "::endgroup::"
+
+  # バックエンドビルド
+  backend-build:
+    name: Backend - Build and Test
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+          cache-dependency-path: backend/go.sum
+
+      - name: Download dependencies
+        env:
+          GOTOOLCHAIN: go1.23.0
+        run: go mod download
+
+      - name: Build
+        env:
+          GOTOOLCHAIN: go1.23.0
+        run: |
+          echo "::group::Build output"
+          go build -v ./...
+          echo "::endgroup::"
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-${{ github.sha }}
+          path: backend/coverage.out
+          retention-days: 1
+
+  # ==================== Architecture Check ====================
+  # アーキテクチャチェック: オニオンアーキテクチャの依存関係検証
+  # 各層が適切な依存方向（内側から外側）を保っているかを確認
+  backend-architecture:
+    name: Backend - Architecture Check
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Check Onion Architecture
+        env:
+          GOTOOLCHAIN: go1.23.0
+        run: |
+          chmod +x ./scripts/check-architecture.sh
+          echo "::group::Architecture check output"
+          ./scripts/check-architecture.sh || (echo "::error::Architecture violations detected" && exit 1)
+          echo "::endgroup::"
+
+  # ==================== Summary Job ====================
+  # 統合ステータスチェック: 全ジョブの実行結果を集約
+  # GitHub Actions Summaryに結果を出力してPRページで確認可能に
+  ci-status:
+    name: CI Status
+    needs:
+      - changes
+      - frontend-checks
+      - backend-format
+      - backend-lint
+      - backend-build
+      - backend-architecture
+    if: always() && needs.changes.outputs.any == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Frontend Status
+        if: needs.changes.outputs.frontend == 'true'
+        run: |
+          if [[ "${{ needs.frontend-checks.result }}" != "success" ]]; then
+            echo "::error::Frontend checks failed"
+            exit 1
+          fi
+          echo "✅ Frontend checks passed"
+
+      - name: Check Backend Status
+        if: needs.changes.outputs.backend == 'true'
+        run: |
+          failed=false
+          if [[ "${{ needs.backend-format.result }}" != "success" ]]; then
+            echo "::error::Backend formatting check failed"
+            failed=true
+          fi
+          if [[ "${{ needs.backend-lint.result }}" != "success" ]]; then
+            echo "::error::Backend lint check failed"
+            failed=true
+          fi
+          if [[ "${{ needs.backend-build.result }}" != "success" ]]; then
+            echo "::error::Backend build/test failed"
+            failed=true
+          fi
+          if [[ "${{ needs.backend-architecture.result }}" != "success" ]]; then
+            echo "::error::Backend architecture check failed"
+            failed=true
+          fi
+
+          if [[ "$failed" == "true" ]]; then
+            exit 1
+          fi
+          echo "✅ Backend checks passed"
+
+      - name: Summary
+        run: |
+          echo "## CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.changes.outputs.frontend }}" == "true" ]]; then
+            echo "### Frontend" >> $GITHUB_STEP_SUMMARY
+            echo "- Lint: ${{ needs.frontend-checks.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Type Check: ${{ needs.frontend-checks.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Build: ${{ needs.frontend-checks.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.changes.outputs.backend }}" == "true" ]]; then
+            echo "### Backend" >> $GITHUB_STEP_SUMMARY
+            echo "- Format: ${{ needs.backend-format.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Lint: ${{ needs.backend-lint.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Build/Test: ${{ needs.backend-build.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Architecture: ${{ needs.backend-architecture.result }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All CI checks completed successfully!" >> $GITHUB_STEP_SUMMARY

@@ -4,8 +4,11 @@
 .vscode/
 
 # Environment variables
+.env
 backend/.env
+frontend/.env
 frontend/.env.local
+frontend/.env.production
 
 # Database data
 db_data/
@@ -14,6 +17,9 @@ db_data/
 backend/bin/
 backend/api
 backend/seed
+backend/migrate
+backend/tmp/
+backend/bootstrap
 
 # Go modules cache (Docker volume)
 go_modules/

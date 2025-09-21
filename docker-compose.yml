@@ -1,0 +1,103 @@
+services:
+  # Backend (Go + Gin + GORM)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financetracker_backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - go_modules:/go/pkg/mod
+    working_dir: /app
+    command: air
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - financetracker_network
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: financetracker_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=financetracker_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - financetracker_network
+
+  # pgAdmin - PostgreSQL GUI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: financetracker_pgadmin
+    platform: linux/amd64
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@financetracker.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+    networks:
+      - financetracker_network
+
+  # Migration container (Atlas + GORM AutoMigrate)
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: financetracker_migrate
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    command: go run cmd/migrate/main.go apply
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - financetracker_network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: financetracker_frontend
+    env_file:
+      - ./frontend/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - financetracker_network
+
+volumes:
+  go_modules:
+    driver: local
+
+networks:
+  financetracker_network:
+    driver: bridge
