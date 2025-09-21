@@ -26,14 +26,12 @@ on:
       - "frontend/**"
       - "backend/**"
       - ".github/workflows/build.yml"
-      - ".golangci.yml"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
       - "backend/**"
       - ".github/workflows/build.yml"
-      - ".golangci.yml"
 
 # Environment variables for consistency
 env:
@@ -69,7 +67,6 @@ jobs:
               - '.github/workflows/build.yml'
             backend:
               - 'backend/**'
-              - '.golangci.yml'
               - '.github/workflows/build.yml'
 
   # ==================== Frontend Jobs ====================
@@ -205,7 +202,7 @@ jobs:
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: backend
-          args: --timeout=5m
+          args: --no-config --timeout=5m
           skip-cache: false
 
       - name: Run go vet
