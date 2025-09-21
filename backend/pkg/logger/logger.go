@@ -11,7 +11,7 @@ import (
 
 // Logger is a wrapper around zap.Logger
 type Logger struct {
-	*zap.SugaredLogger
+	*zap.Logger
 }
 
 // New creates a new logger instance
@@ -45,19 +45,19 @@ func New() *Logger {
 		panic(err)
 	}
 
-	return &Logger{logger.Sugar()}
+	return &Logger{logger}
 }
 
 // WithFields adds structured fields to the logger
 func (l *Logger) WithFields(fields map[string]interface{}) *Logger {
-	var args []interface{}
+	zapFields := make([]zap.Field, 0, len(fields))
 	for k, v := range fields {
-		args = append(args, k, v)
+		zapFields = append(zapFields, zap.Any(k, v))
 	}
-	return &Logger{l.With(args...)}
+	return &Logger{l.With(zapFields...)}
 }
 
 // Sync flushes any buffered log entries
 func (l *Logger) Sync() error {
-	return l.SugaredLogger.Sync()
+	return l.Logger.Sync()
 }

@@ -28,9 +28,12 @@ type Config struct {
 	Auth0Audience     string
 
 	// CORS
-	CORSAllowedOrigins string
+	AllowedOrigins string
 	CORSAllowedMethods string
 	CORSAllowedHeaders string
+	
+	// Environment
+	Environment string
 
 	// Logging
 	LogLevel  string
@@ -63,9 +66,12 @@ func Load() *Config {
 		Auth0Audience:     getEnv("AUTH0_AUDIENCE", ""),
 
 		// CORS
-		CORSAllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
+		AllowedOrigins: getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),
 		CORSAllowedMethods: getEnv("CORS_ALLOWED_METHODS", "GET,POST,PUT,DELETE,OPTIONS"),
 		CORSAllowedHeaders: getEnv("CORS_ALLOWED_HEADERS", "Content-Type,Authorization"),
+		
+		// Environment
+		Environment: getEnv("APP_ENV", "development"),
 
 		// Logging
 		LogLevel:  getEnv("LOG_LEVEL", "debug"),
