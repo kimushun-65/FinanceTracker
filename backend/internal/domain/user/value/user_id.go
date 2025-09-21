@@ -1,8 +1,8 @@
 package value
 
 import (
-	"github.com/google/uuid"
 	"financetracker/internal/domain/common"
+	"github.com/google/uuid"
 )
 
 // UserID ユーザーIDを表現する値オブジェクト
@@ -23,7 +23,7 @@ func NewUserIDFromString(idStr string) (*UserID, error) {
 	if err != nil {
 		return nil, common.NewValidationError("user_id", idStr, "invalid user ID format")
 	}
-	
+
 	return &UserID{
 		value: id,
 	}, nil

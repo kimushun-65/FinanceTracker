@@ -87,7 +87,6 @@ func (u User) GetDisplayName() string {
 	return u.email.GetLocalPart()
 }
 
-
 // validateUserName ユーザー名のバリデーション
 func validateUserName(name string) error {
 	name = strings.TrimSpace(name)

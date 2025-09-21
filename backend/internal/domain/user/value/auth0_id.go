@@ -3,7 +3,7 @@ package value
 import (
 	"regexp"
 	"strings"
-	
+
 	"financetracker/internal/domain/common"
 )
 
@@ -19,7 +19,7 @@ var auth0IDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+\|[a-zA-Z0-9_-]+$`)
 // NewAuth0ID 新しいAuth0IDインスタンスを作成
 func NewAuth0ID(value string) (*Auth0ID, error) {
 	auth0ID := strings.TrimSpace(value)
-	
+
 	if err := validateAuth0ID(auth0ID); err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func validateAuth0ID(auth0ID string) error {
 
 	// フォーマットチェック
 	if !auth0IDRegex.MatchString(auth0ID) {
-		return common.NewValidationError("auth0_id", auth0ID, 
+		return common.NewValidationError("auth0_id", auth0ID,
 			"Auth0 user ID must be in format 'provider|user_id' (e.g., auth0|123456, google-oauth2|abcdef)")
 	}
 
