@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"financetracker/internal/infrastructure/gorm/model"
 
 	"github.com/shopspring/decimal"
@@ -51,24 +49,18 @@ func seedAccounts(db *gorm.DB) error {
 			},
 		}
 
-		for j := range accounts {
-			var existing model.Account
-			err := db.Where("user_id = ? AND name = ?", accounts[j].UserID, accounts[j].Name).First(&existing).Error
-
-			if err == nil {
-				log.Printf("Account already exists: %s (UserID: %s)\n", accounts[j].Name, accounts[j].UserID)
-				continue
-			}
-
-			if err != gorm.ErrRecordNotFound {
-				return err
-			}
-
-			if err := db.Create(&accounts[j]).Error; err != nil {
-				return err
-			}
-
-			log.Printf("Created account: %s (UserID: %s)\n", accounts[j].Name, accounts[j].UserID)
+		err := seedWithDuplicateCheck(
+			db,
+			accounts,
+			func(item model.Account) *gorm.DB {
+				return db.Where("user_id = ? AND name = ?", item.UserID, item.Name)
+			},
+			func(item model.Account) string {
+				return "account: " + item.Name + " (UserID: " + item.UserID.String() + ")"
+			},
+		)
+		if err != nil {
+			return err
 		}
 	}
 

@@ -59,9 +59,8 @@ func run() int {
 func printUsage(appEnv string) {
 	if appEnv == "development" {
 		log.Fatal("Usage: migrate [apply|check|diff|validate|dev-setup]")
-	} else {
-		log.Fatal("Usage: migrate [apply|check|diff|validate]")
 	}
+	log.Fatal("Usage: migrate [apply|check|diff|validate]")
 }
 
 // runCommand executes the specified command

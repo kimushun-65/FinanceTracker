@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"financetracker/internal/infrastructure/gorm/model"
 
 	"gorm.io/gorm"
@@ -168,24 +166,18 @@ func seedCategoryMasters(db *gorm.DB) error {
 		},
 	}
 
-	for i := range categoryMasters {
-		var existing model.CategoryMaster
-		err := db.Where("name = ? AND type = ?", categoryMasters[i].Name, categoryMasters[i].Type).First(&existing).Error
-
-		if err == nil {
-			log.Printf("CategoryMaster already exists: %s (Type: %s)\n", categoryMasters[i].Name, categoryMasters[i].Type)
-			continue
-		}
-
-		if err != gorm.ErrRecordNotFound {
-			return err
-		}
-
-		if err := db.Create(&categoryMasters[i]).Error; err != nil {
-			return err
-		}
-
-		log.Printf("Created category master: %s (Type: %s)\n", categoryMasters[i].Name, categoryMasters[i].Type)
+	err := seedWithDuplicateCheck(
+		db,
+		categoryMasters,
+		func(item model.CategoryMaster) *gorm.DB {
+			return db.Where("name = ? AND type = ?", item.Name, item.Type)
+		},
+		func(item model.CategoryMaster) string {
+			return "category master: " + item.Name + " (Type: " + string(item.Type) + ")"
+		},
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil
