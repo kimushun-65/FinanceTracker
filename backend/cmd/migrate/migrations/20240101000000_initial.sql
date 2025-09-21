@@ -1,3 +1,12 @@
+-- Create trigger function for updating timestamps
+CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create "users" table
 CREATE TABLE "public"."users" (
   "id" uuid NOT NULL DEFAULT gen_random_uuid(),

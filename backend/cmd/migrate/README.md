@@ -1,99 +1,83 @@
-# データベースマイグレーション管理
+# データベースマイグレーションガイド
 
-このディレクトリはFinanceTrackerのデータベースマイグレーションを管理します。
+## 概要
+このプロジェクトでは、本番環境のデータベースマイグレーションには **Atlas** を使用し、開発の利便性のために **GORM AutoMigrate** を使用しています。
 
 ## マイグレーション戦略
 
-### 開発環境・本番環境共通
-- **Atlas Migration**: 正式なマイグレーション管理
-- コマンド: `make migrate-apply`
-- 利点: バージョン管理、ロールバック可能、環境間の一貫性
-
-### 緊急時のオプション
-- **GORM AutoMigration**: デバッグや緊急時のみ
-- コマンド: `make migrate-gorm`
-- 注意: 本番環境では使用しない
-
-## ディレクトリ構造
-
-```
-cmd/migrate/
-├── main.go          # マイグレーション実行エントリポイント
-├── schema.hcl       # Atlasスキーマ定義
-├── migrations/      # Atlasマイグレーションファイル
-│   └── atlas.sum    # マイグレーション整合性チェックファイル
-└── README.md        # このファイル
-```
-
-## 使用方法
-
-### 初回セットアップ
-
-1. **データベースとマイグレーション**
-```bash
-make setup  # DB作成、マイグレーション適用、シードデータ投入
-```
-
-2. **マイグレーションファイルの確認**
-```bash
-make migrate-status  # 適用状態を確認
-```
-
-### スキーマ変更時のワークフロー
-
-1. **schema.hclを編集**
-```bash
-vim cmd/migrate/schema.hcl  # スキーマ定義を変更
-```
-
-2. **差分確認**
-```bash
-make migrate-check  # 現在のDBとの差分を確認
-```
-
-3. **新しいマイグレーション作成**
-```bash
-make atlas-migrate-new  # 対話的に名前を指定
-# または
-make migrate-diff  # タイムスタンプで自動生成
-```
-
-4. **マイグレーション適用**
-```bash
-make migrate-apply  # 新しいマイグレーションを適用
-```
-
-### データベースリセット
+### 本番環境・ステージング環境（Atlas）
+Atlasは本番環境における主要なマイグレーションツールです：
 
 ```bash
-make db-reset      # DB削除→作成→マイグレーション
-make seed          # シードデータ投入
+# マイグレーションの適用
+make migrate
+
+# または直接実行
+go run cmd/migrate/main.go apply
+
+# マイグレーションステータスの確認
+go run cmd/migrate/main.go check
+
+# 新しいマイグレーションの生成
+go run cmd/migrate/main.go diff マイグレーション名
+
+# マイグレーションの検証
+go run cmd/migrate/main.go validate
 ```
 
-## スキーマ定義
+### 開発環境のみ（GORM AutoMigrate）
+素早い開発セットアップのために、GORM AutoMigrateが利用可能です：
 
-スキーマは以下の2箇所で管理されています：
+```bash
+# 開発環境の初期セットアップ（開発環境でのみ実行可能）
+go run cmd/migrate/main.go dev-setup
+```
 
-1. **GORMモデル** (`internal/infrastructure/gorm/model/`)
-   - 開発時のプライマリ定義
-   - Go構造体でスキーマを表現
+**⚠️ 警告**: `dev-setup`コマンドについて：
+- `APP_ENV=development`の場合のみ動作します
+- 本番環境では絶対に使用しないでください
+- トリガーは管理しません（Atlasが管理）
+- プロトタイピング専用です
 
-2. **Atlas HCL** (`cmd/migrate/schema.hcl`)
-   - 本番用のスキーマ定義
-   - HCL形式でスキーマを記述
+## ベストプラクティス
+
+1. **スキーマ変更**: 必ずAtlasマイグレーションを使用
+   - `schema.hcl`を編集して理想の状態を定義
+   - `make atlas-diff name=マイグレーション名`を実行してマイグレーションを生成
+   - 生成されたSQLファイルをレビュー
+   - マイグレーションファイルと更新された`atlas.sum`の両方をコミット
+
+2. **開発ワークフロー**:
+   - 初期のデータベースセットアップには`dev-setup`を使用
+   - スキーマ変更にはAtlasマイグレーションを使用
+   - スキーマバージョン管理にGORM AutoMigrateを頼らない
+
+3. **本番環境へのデプロイ**:
+   - 必ず`make migrate`またはAtlas applyを使用
+   - 本番環境では`dev-setup`を使用しない
+   - ステージング環境で必ずマイグレーションをテスト
+
+## マイグレーションファイル
+
+- `schema.hcl`: 理想のデータベーススキーマ（信頼できる情報源）
+- `migrations/`: Atlasマイグレーションファイル
+- `atlas.sum`: マイグレーション整合性のためのチェックサムファイル
+
+## 環境変数
+
+- `APP_ENV`: 利用可能なコマンドを制御（developmentでdev-setupが有効）
+- `DATABASE_URL`: データベース接続文字列
+- `atlas.hcl`内のAtlas設定
 
 ## トラブルシューティング
 
-### マイグレーションエラー
-- `make migrate-validate` でマイグレーションの妥当性を確認
-- `make migrate-history` で適用履歴を確認
+### "trigger_set_timestamp() does not exist"エラー
+トリガーが参照されているが関数が存在しない場合に発生します。
+解決策：初期マイグレーションにトリガー関数定義が含まれていることを確認してください。
 
-### スキーマ不整合
-- `make migrate-check` で現在のDBとスキーマの差分を確認
-- 必要に応じて `make db-reset` でクリーンな状態に戻す
+### "connected database is not clean"エラー
+既存のデータベースにマイグレーションを適用しようとした際に発生します。
+解決策：`--baseline`フラグを使用するか、データベースを最初にクリーンアップしてください。
 
-## 注意事項
-
-- 開発環境ではGORM AutoMigrationを使用するため、破壊的変更（カラム削除等）は自動適用されません
-- 本番環境への移行前に必ずAtlasマイグレーションファイルを生成してください
-- マイグレーションファイルは一度適用されたら編集しないでください
+### チェックサムエラー
+`atlas migrate hash --dir file://migrations`を実行してチェックサムを再生成してください。

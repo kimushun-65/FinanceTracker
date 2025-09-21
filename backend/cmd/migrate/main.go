@@ -37,7 +37,12 @@ func main() {
 
 	// Get command
 	if len(os.Args) < 2 {
-		log.Fatal("Usage: migrate [apply|check|diff|auto|validate|gorm]")
+		// Show usage based on environment
+		if cfg.AppEnv == "development" {
+			log.Fatal("Usage: migrate [apply|check|diff|validate|dev-setup]")
+		} else {
+			log.Fatal("Usage: migrate [apply|check|diff|validate]")
+		}
 	}
 
 	command := os.Args[1]
@@ -88,14 +93,6 @@ func main() {
 			os.Exit(1)
 		}
 
-	case "auto":
-		logger.Info("Running auto migration with GORM...")
-		if err := runGORMAutoMigration(cfg, logger); err != nil {
-			logger.Error("Failed to run auto migration")
-			os.Exit(1)
-		}
-		logger.Info("Auto migration completed successfully")
-
 	case "validate":
 		logger.Info("Validating migrations...")
 		if err := runAtlasCommand("migrate", "validate", "--env", "dev"); err != nil {
@@ -104,13 +101,18 @@ func main() {
 		}
 		logger.Info("Migrations validated successfully")
 
-	case "gorm":
-		logger.Info("Running GORM auto migration...")
-		if err := runGORMAutoMigration(cfg, logger); err != nil {
-			logger.Error("Failed to run GORM auto migration")
+	case "dev-setup":
+		// Development only: Use GORM AutoMigrate for quick setup
+		if cfg.AppEnv != "development" {
+			logger.Error("dev-setup command is only available in development environment")
 			os.Exit(1)
 		}
-		logger.Info("GORM auto migration completed successfully")
+		logger.Info("Running development setup with GORM AutoMigrate...")
+		if err := runGORMAutoMigration(cfg, logger); err != nil {
+			logger.Error("Failed to run development setup")
+			os.Exit(1)
+		}
+		logger.Info("Development setup completed successfully")
 
 	default:
 		log.Fatalf("Unknown command: %s", command)
@@ -141,21 +143,7 @@ func runGORMAutoMigration(cfg *config.Config, logger *logger.Logger) error {
 
 	// Run migrations
 	logger.Info("Migrating database schema...")
-	
-	// First create the trigger function
-	logger.Info("Creating trigger function...")
-	triggerFunctionSQL := `
-		CREATE OR REPLACE FUNCTION trigger_set_timestamp()
-		RETURNS TRIGGER AS $$
-		BEGIN
-			NEW.updated_at = CURRENT_TIMESTAMP;
-			RETURN NEW;
-		END;
-		$$ LANGUAGE plpgsql;
-	`
-	if err := db.Exec(triggerFunctionSQL).Error; err != nil {
-		return fmt.Errorf("failed to create trigger function: %w", err)
-	}
+	logger.Warn("Using GORM AutoMigrate for development only. Production should use Atlas migrations.")
 	
 	// Migrate in the correct order to handle foreign key dependencies
 	if err := db.AutoMigrate(
@@ -178,26 +166,8 @@ func runGORMAutoMigration(cfg *config.Config, logger *logger.Logger) error {
 		return fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	// Create updated_at triggers for all tables
-	tables := []string{
-		"users", "accounts", "category_masters", "categories",
-		"transactions", "budgets", "budget_suggestions",
-		"asset_snapshots", "asset_forecasts", "notification_settings",
-	}
-
-	for _, table := range tables {
-		triggerSQL := fmt.Sprintf(`
-			CREATE TRIGGER update_%s_updated_at 
-			BEFORE UPDATE ON %s 
-			FOR EACH ROW 
-			EXECUTE FUNCTION trigger_set_timestamp();
-		`, table, table)
-		
-		if err := db.Exec(triggerSQL).Error; err != nil {
-			// Ignore error if trigger already exists
-			logger.Info(fmt.Sprintf("Trigger for %s might already exist", table))
-		}
-	}
+	// Note: Triggers are managed by Atlas migrations, not GORM AutoMigrate
+	logger.Info("Note: Database triggers should be managed through Atlas migrations")
 
 	// Add composite unique indexes
 	if err := db.Exec(`
