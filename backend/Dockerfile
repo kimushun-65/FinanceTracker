@@ -16,8 +16,8 @@ RUN curl -sSf https://atlasgo.sh | sh
 # golangci-lintのインストール (v1.64.8)
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.8
 
-# airのインストール (ホットリロード用)
-RUN go install github.com/air-verse/air@latest
+# airのインストール (ホットリロード用) - v1.61.1を指定（Go 1.23対応）
+RUN go install github.com/air-verse/air@v1.61.1
 
 # タイムゾーン設定
 ENV TZ=Asia/Tokyo
