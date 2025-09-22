@@ -19,6 +19,9 @@ type Handlers struct {
 		Callback(*gin.Context)
 		Logout(*gin.Context)
 		GetCurrentUser(*gin.Context)
+		CheckAuth(*gin.Context)
+		SetToken(*gin.Context)
+		RemoveToken(*gin.Context)
 	}
 }
 

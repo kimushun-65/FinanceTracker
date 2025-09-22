@@ -18,6 +18,9 @@ const (
 	RouteAuthCallback    = "/auth/callback"
 	RouteAuthLogout      = "/auth/logout"
 	RouteAuthCurrentUser = "/auth/user"
+	RouteAuthCheck       = "/auth/check"
+	RouteAuthSetToken    = "/auth/token"
+	RouteAuthRemoveToken = "/auth/token"
 
 	// ユーザー関連
 	RouteUserMe       = "/users/me"

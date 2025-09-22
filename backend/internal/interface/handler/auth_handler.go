@@ -173,6 +173,107 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 	})
 }
 
+// CheckAuth 認証状態をチェック
+// @Summary 認証状態チェック
+// @Description HttpOnlyクッキーからトークンを読み取り、認証状態を確認します
+// @Tags auth
+// @Success 200 {object} map[string]interface{} "認証成功"
+// @Failure 401 {object} map[string]interface{} "認証失敗"
+// @Router /auth/check [get]
+func (h *AuthHandler) CheckAuth(c *gin.Context) {
+	// HttpOnlyクッキーからアクセストークンを取得
+	accessToken, err := c.Cookie("access_token")
+	if err != nil || accessToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"authenticated": false,
+			"error":         "no access token found",
+		})
+		return
+	}
+
+	// Auth0でトークンを検証
+	userInfo, err := h.auth0Client.GetUserInfo(c.Request.Context(), accessToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"authenticated": false,
+			"error":         "invalid token",
+		})
+		return
+	}
+
+	// 認証成功
+	c.JSON(http.StatusOK, gin.H{
+		"authenticated": true,
+		"user": gin.H{
+			"sub":     userInfo.Sub,
+			"name":    userInfo.Name,
+			"email":   userInfo.Email,
+			"picture": userInfo.Picture,
+		},
+	})
+}
+
+// SetToken HttpOnlyクッキーにトークンを設定
+// @Summary トークン設定
+// @Description Auth0トークンをHttpOnlyクッキーに保存します
+// @Tags auth
+// @Param request body map[string]string true "トークンリクエスト"
+// @Success 200 {object} map[string]interface{} "トークン設定成功"
+// @Failure 400 {object} map[string]interface{} "リクエストエラー"
+// @Router /auth/token [post]
+func (h *AuthHandler) SetToken(c *gin.Context) {
+	var request struct {
+		Token string `json:"token" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid request body",
+		})
+		return
+	}
+
+	// HttpOnlyクッキーを設定
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie(
+		"access_token", // name
+		request.Token,  // value
+		60*60*24*7,     // maxAge (7 days)
+		"/",            // path
+		"",             // domain
+		true,           // secure (HTTPS only)
+		true,           // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+	})
+}
+
+// RemoveToken HttpOnlyクッキーからトークンを削除
+// @Summary トークン削除
+// @Description HttpOnlyクッキーからアクセストークンを削除します
+// @Tags auth
+// @Success 200 {object} map[string]interface{} "トークン削除成功"
+// @Router /auth/token [delete]
+func (h *AuthHandler) RemoveToken(c *gin.Context) {
+	// クッキーを削除
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie(
+		"access_token", // name
+		"",             // value
+		-1,             // maxAge (expired)
+		"/",            // path
+		"",             // domain
+		true,           // secure
+		true,           // httpOnly
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+	})
+}
+
 // RefreshToken トークンをリフレッシュ
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	// このエンドポイントはトークンリフレッシュを処理

@@ -25,6 +25,9 @@ func (ar *AuthRouter) RegisterRoutes(group *gin.RouterGroup) {
 			public.GET("/login", ar.handlers.AuthHandler.Login)
 			public.GET("/callback", ar.handlers.AuthHandler.Callback)
 			public.POST("/logout", ar.handlers.AuthHandler.Logout)
+			public.GET("/check", ar.handlers.AuthHandler.CheckAuth)
+			public.POST("/token", ar.handlers.AuthHandler.SetToken)
+			public.DELETE("/token", ar.handlers.AuthHandler.RemoveToken)
 		}
 	}
 }

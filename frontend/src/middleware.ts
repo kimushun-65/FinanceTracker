@@ -33,15 +33,15 @@ function isPublicPath(pathname: string): boolean {
 }
 
 /**
- * Get authentication token from cookies
+ * Check if access token exists in cookies (simplified check for middleware)
  */
-function getAuthToken(request: NextRequest): string | null {
-  return request.cookies.get('access_token')?.value || null;
+function hasAccessToken(request: NextRequest): boolean {
+  const token = request.cookies.get('access_token');
+  return !!(token && token.value && token.value.length > 10);
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = getAuthToken(request);
 
   // Skip processing for static files, Next.js internal paths, and API routes
   if (
@@ -54,17 +54,16 @@ export function middleware(request: NextRequest) {
 
   // Skip authentication check for public paths
   if (isPublicPath(pathname)) {
-    // Redirect to dashboard if already logged in and accessing home page
-    if (pathname === '/' && token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+    // Note: Removed automatic redirect from / to /dashboard to prevent loops
+    // Let the frontend handle the login flow
     return NextResponse.next();
   }
 
   // Handle protected paths
   if (isProtectedPath(pathname)) {
-    // Redirect to home page if no token
-    if (!token) {
+    // Check if access token exists in cookies
+    const hasToken = hasAccessToken(request);
+    if (!hasToken) {
       const url = new URL('/', request.url);
       // Add query parameter to return to original URL after login
       url.searchParams.set('returnTo', pathname);
@@ -72,6 +71,7 @@ export function middleware(request: NextRequest) {
     }
 
     // Continue processing if token exists
+    // Note: Actual token validation will be done by individual page components
     return NextResponse.next();
   }
 

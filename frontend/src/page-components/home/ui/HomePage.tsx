@@ -11,6 +11,7 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('Auth0 authentication detected, redirecting to dashboard');
       router.push('/dashboard');
     }
   }, [isAuthenticated, router]);

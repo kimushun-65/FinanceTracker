@@ -1,25 +1,16 @@
 'use client';
 
 import React from 'react';
-import { ProtectedRoute } from '../../../widgets/auth';
 import { AppLayout } from '../../../widgets/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui';
 import { useAuthWithCookie } from '../../../shared/lib/auth';
 
 export const DashboardContainer: React.FC = () => {
-  const { isAuthenticated, isLoading, user, hasTokenInCookie } = useAuthWithCookie();
-
-  if (isLoading) {
-    return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
-      </div>
-    );
-  }
+  // Auth0認証とCookieの同期（ダッシュボードでトークン管理）
+  useAuthWithCookie();
 
   return (
-    <ProtectedRoute>
-      <AppLayout title='Dashboard'>
+    <AppLayout title='Dashboard'>
           <div className='mb-8'>
             <h2 className='mb-2 text-3xl font-bold text-gray-900'>Dashboard</h2>
             <p className='text-gray-600'>
@@ -227,7 +218,6 @@ export const DashboardContainer: React.FC = () => {
               </CardContent>
             </Card>
           </div>
-      </AppLayout>
-    </ProtectedRoute>
+    </AppLayout>
   );
 };
