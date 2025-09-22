@@ -8,7 +8,8 @@ import { tokenManager } from './token';
  * Auth0認証とHttpOnlyクッキー管理を統合するカスタムフック
  */
 export const useAuthWithCookie = () => {
-  const { isAuthenticated, getAccessTokenSilently, user, isLoading } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently, user, isLoading } =
+    useAuth0();
   const [backendAuthStatus, setBackendAuthStatus] = useState<{
     authenticated: boolean;
     user?: any;

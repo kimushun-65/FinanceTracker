@@ -7,7 +7,7 @@ export const useLogout = () => {
   const logoutUser = () => {
     // Cookieからトークンを削除
     tokenManager.removeToken();
-    
+
     logout({
       logoutParams: {
         returnTo: window.location.origin,

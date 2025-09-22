@@ -24,11 +24,11 @@ export const tokenManager = {
         method: 'GET',
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         return { authenticated: false };
       }
-      
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -49,16 +49,4 @@ export const tokenManager = {
       return false;
     }
   },
-
-  // Deprecated: Use checkAuth instead
-  getToken: (): null => {
-    console.warn('getToken is deprecated. Use checkAuth instead.');
-    return null;
-  },
-
-  // Deprecated: Use checkAuth instead
-  hasToken: (): boolean => {
-    console.warn('hasToken is deprecated. Use checkAuth instead.');
-    return false;
-  }
 };
