@@ -1,11 +1,11 @@
-import { Auth0Client } from '@auth0/auth0-react';
+import { API_BASE_URL } from '../config';
 
 interface ApiClientConfig {
   baseUrl: string;
   getAccessToken: () => Promise<string>;
 }
 
-class ApiClient {
+export class ApiClient {
   private baseUrl: string;
   private getAccessToken: () => Promise<string>;
 
@@ -16,16 +16,16 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     try {
       const token = await this.getAccessToken();
-      
+
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         ...options,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           ...options.headers,
         },
       });
@@ -52,14 +52,14 @@ class ApiClient {
     });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
