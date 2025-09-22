@@ -269,7 +269,7 @@ func parseRSAPublicKeyFromJWK(jwk map[string]interface{}) (interface{}, error) {
 
 	// Convert to big integers
 	n := new(big.Int).SetBytes(nBytes)
-	
+
 	// Convert exponent bytes to int
 	var e int
 	for _, b := range eBytes {

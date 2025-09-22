@@ -8,7 +8,7 @@ export const LogoutButton: React.FC = () => {
     <button
       onClick={logout}
       disabled={isLoading}
-      className='rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700 disabled:opacity-50'
+      className='rounded bg-slate-800 px-4 py-2 text-white transition-colors hover:bg-slate-700 disabled:opacity-50'
     >
       {isLoading ? 'Logging out...' : 'Log Out'}
     </button>

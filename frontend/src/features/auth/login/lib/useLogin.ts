@@ -4,7 +4,11 @@ export const useLogin = () => {
   const { loginWithRedirect, isLoading } = useAuth0();
 
   const login = () => {
-    loginWithRedirect();
+    loginWithRedirect({
+      authorizationParams: {
+        connection: 'google-oauth2', // Googleログインを強制
+      },
+    });
   };
 
   return {

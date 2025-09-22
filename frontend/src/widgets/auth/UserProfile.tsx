@@ -13,19 +13,16 @@ export const UserProfile: React.FC = () => {
   }
 
   return (
-    <div className='rounded-lg border bg-white p-4 shadow-sm'>
-      <div className='flex items-center space-x-4'>
-        {user.picture && (
-          <img
-            src={user.picture}
-            alt={user.name || 'User'}
-            className='h-12 w-12 rounded-full'
-          />
-        )}
-        <div>
-          <h3 className='font-semibold'>{user.name}</h3>
-          <p className='text-sm text-gray-600'>{user.email}</p>
-        </div>
+    <div className='flex items-center space-x-2'>
+      {user.picture && (
+        <img
+          src={user.picture}
+          alt={user.name || 'User'}
+          className='h-8 w-8 rounded-full'
+        />
+      )}
+      <div className='hidden sm:block'>
+        <p className='text-sm font-medium text-gray-900'>{user.name}</p>
       </div>
     </div>
   );
