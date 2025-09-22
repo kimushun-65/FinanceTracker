@@ -43,7 +43,7 @@ module.exports = {
           },
           {
             from: 'widgets',
-            allow: ['shared', 'entities', 'features'],
+            allow: ['shared', 'entities', 'features', 'widgets'],
           },
           {
             from: 'page-components',
