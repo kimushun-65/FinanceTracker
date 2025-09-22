@@ -1,50 +1,18 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React from 'react';
 import { ProtectedRoute } from '../../../widgets/auth';
 import { AppLayout } from '../../../widgets/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui';
+import { useAuthWithCookie } from '../../../shared/lib/auth';
 
-export const DashboardPage: React.FC = () => {
-  const { isAuthenticated, isLoading, error, getAccessTokenSilently } =
-    useAuth0();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      getAccessTokenSilently()
-        .then((token) => {
-          console.log(
-            'Successfully got token:',
-            token.substring(0, 20) + '...',
-          );
-        })
-        .catch((err) => {
-          console.error('Failed to get token:', err);
-        });
-    }
-  }, [isAuthenticated, getAccessTokenSilently]);
+export const DashboardContainer: React.FC = () => {
+  const { isAuthenticated, isLoading, user, hasTokenInCookie } = useAuthWithCookie();
 
   if (isLoading) {
     return (
       <div className='flex min-h-screen items-center justify-center'>
         <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='flex min-h-screen items-center justify-center'>
-        <div className='text-center'>
-          <h2 className='mb-2 text-2xl font-bold text-red-600'>
-            Authentication Error
-          </h2>
-          <p className='text-gray-600'>{error.message}</p>
-          <pre className='mt-4 rounded bg-gray-100 p-4 text-left text-sm'>
-            {JSON.stringify(error, null, 2)}
-          </pre>
-        </div>
       </div>
     );
   }
