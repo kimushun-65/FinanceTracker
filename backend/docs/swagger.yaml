@@ -1,0 +1,133 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact:
+    email: support@financetracker.local
+    name: API Support
+  description: Finance management REST API with Auth0 authentication
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: FinanceTracker API
+  version: "1.0"
+paths:
+  /:
+    get:
+      description: APIの基本情報を返します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: API情報
+          schema:
+            additionalProperties: true
+            type: object
+      summary: API情報
+      tags:
+      - system
+  /auth/callback:
+    get:
+      description: Auth0からの認証コールバックを処理し、ユーザー情報を保存します
+      parameters:
+      - description: 認証コード
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: CSRF防止用のstate
+        in: query
+        name: state
+        required: true
+        type: string
+      responses:
+        "200":
+          description: ユーザー情報とトークン
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: リクエストエラー
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 認証エラー
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 内部エラー
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Auth0コールバック
+      tags:
+      - auth
+  /auth/login:
+    get:
+      description: Auth0のログインページへリダイレクトします
+      responses:
+        "307":
+          description: Auth0ログインページへリダイレクト
+          schema:
+            type: string
+      summary: Auth0ログイン
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: ユーザーをログアウトし、Auth0のログアウトページへリダイレクトします
+      responses:
+        "307":
+          description: Auth0ログアウトページへリダイレクト
+          schema:
+            type: string
+      summary: ログアウト
+      tags:
+      - auth
+  /auth/user:
+    get:
+      description: 認証済みユーザーの情報を取得します
+      responses:
+        "200":
+          description: ユーザー情報
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 認証エラー
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 内部エラー
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: 現在のユーザー情報取得
+      tags:
+      - auth
+  /health:
+    get:
+      description: APIの稼働状態を確認します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ヘルスチェック結果
+          schema:
+            additionalProperties: true
+            type: object
+      summary: ヘルスチェック
+      tags:
+      - system
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

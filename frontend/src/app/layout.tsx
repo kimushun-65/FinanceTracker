@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from './provider/AuthProvider';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,12 +19,24 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/image/logo_1/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/image/logo_1/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      {
+        url: '/image/logo_1/favicon-16x16.png',
+        sizes: '16x16',
+        type: 'image/png',
+      },
+      {
+        url: '/image/logo_1/favicon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
       { url: '/image/logo_1/favicon.ico', sizes: '48x48' },
     ],
     apple: [
-      { url: '/image/logo_1/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      {
+        url: '/image/logo_1/apple-touch-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
     ],
   },
 };
@@ -38,7 +51,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

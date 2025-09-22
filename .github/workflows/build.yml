@@ -37,7 +37,7 @@ on:
 env:
   NODE_VERSION_LTS: "20.x"
   NODE_VERSION_CURRENT: "22.x"
-  GO_VERSION: "1.23.x"
+  GO_VERSION: "1.24.x"
   GOLANGCI_LINT_VERSION: "v1.64.8"
 
 # Cancel previous runs
@@ -165,7 +165,7 @@ jobs:
 
       - name: Check formatting
         env:
-          GOTOOLCHAIN: go1.23.0
+          GOTOOLCHAIN: go1.24.0
         run: |
           go fmt ./...
           go install golang.org/x/tools/cmd/goimports@v0.26.0
@@ -208,7 +208,7 @@ jobs:
       - name: Run go vet
         working-directory: backend
         env:
-          GOTOOLCHAIN: go1.23.0
+          GOTOOLCHAIN: go1.24.0
         run: |
           echo "::group::go vet output"
           go vet ./... || (echo "::error::go vet failed" && exit 1)
@@ -236,12 +236,12 @@ jobs:
 
       - name: Download dependencies
         env:
-          GOTOOLCHAIN: go1.23.0
+          GOTOOLCHAIN: go1.24.0
         run: go mod download
 
       - name: Build
         env:
-          GOTOOLCHAIN: go1.23.0
+          GOTOOLCHAIN: go1.24.0
         run: |
           echo "::group::Build output"
           go build -v ./...
@@ -276,7 +276,7 @@ jobs:
 
       - name: Check Onion Architecture
         env:
-          GOTOOLCHAIN: go1.23.0
+          GOTOOLCHAIN: go1.24.0
         run: |
           chmod +x ./scripts/check-architecture.sh
           echo "::group::Architecture check output"

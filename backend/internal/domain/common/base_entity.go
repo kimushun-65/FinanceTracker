@@ -47,3 +47,12 @@ func (e BaseEntity) GetUpdatedAt() time.Time {
 func (e BaseEntity) Equals(other BaseEntity) bool {
 	return e.ID == other.ID
 }
+
+// ReconstructBaseEntity 既存のデータからBaseEntityを再構築（リポジトリから取得時に使用）
+func ReconstructBaseEntity(id uuid.UUID, createdAt, updatedAt time.Time) BaseEntity {
+	return BaseEntity{
+		ID:        id,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}
+}

@@ -26,6 +26,7 @@ type Config struct {
 	Auth0ClientID     string
 	Auth0ClientSecret string
 	Auth0Audience     string
+	Auth0CallbackURL  string
 
 	// CORS
 	AllowedOrigins     string
@@ -64,6 +65,7 @@ func Load() *Config {
 		Auth0ClientID:     getEnv("AUTH0_CLIENT_ID", ""),
 		Auth0ClientSecret: getEnv("AUTH0_CLIENT_SECRET", ""),
 		Auth0Audience:     getEnv("AUTH0_AUDIENCE", ""),
+		Auth0CallbackURL:  getEnv("AUTH0_CALLBACK_URL", ""),
 
 		// CORS
 		AllowedOrigins:     getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"),

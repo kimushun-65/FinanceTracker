@@ -8,17 +8,38 @@ import (
 	"financetracker/pkg/logger"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
+
+// Handlers contains all HTTP handlers
+type Handlers struct {
+	AuthHandler interface {
+		Login(*gin.Context)
+		Callback(*gin.Context)
+		Logout(*gin.Context)
+		GetCurrentUser(*gin.Context)
+		CheckAuth(*gin.Context)
+		SetToken(*gin.Context)
+		RemoveToken(*gin.Context)
+	}
+}
 
 // Router represents the HTTP router with its dependencies.
 type Router struct {
-	engine *gin.Engine
-	cfg    *config.Config
-	logger *logger.Logger
+	engine   *gin.Engine
+	cfg      *config.Config
+	logger   *logger.Logger
+	handlers *Handlers
 }
 
 // New creates a new router instance with all routes configured.
 func New(cfg *config.Config, logger *logger.Logger) *Router {
+	return NewWithHandlers(cfg, logger, nil)
+}
+
+// NewWithHandlers creates a new router instance with handlers.
+func NewWithHandlers(cfg *config.Config, logger *logger.Logger, handlers *Handlers) *Router {
 	// Set Gin mode based on environment
 	gin.SetMode(cfg.GinMode)
 
@@ -33,9 +54,10 @@ func New(cfg *config.Config, logger *logger.Logger) *Router {
 	engine.Use(middleware.CORS(cfg))
 
 	router := &Router{
-		engine: engine,
-		cfg:    cfg,
-		logger: logger,
+		engine:   engine,
+		cfg:      cfg,
+		logger:   logger,
+		handlers: handlers,
 	}
 
 	// Setup routes
@@ -46,84 +68,117 @@ func New(cfg *config.Config, logger *logger.Logger) *Router {
 
 // setupRoutes configures all API routes.
 func (r *Router) setupRoutes() {
-	// Health check endpoint (no auth required)
+	// ヘルスチェックエンドポイント（認証不要）
 	r.engine.GET("/health", r.healthCheck)
 
-	// API v1 routes
+	// Swagger UIエンドポイント
+	r.engine.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// API v1 ルート
 	v1 := r.engine.Group("/api/v1")
 	{
-		// Public routes (no auth required)
+		// 公開ルート（認証不要）
 		public := v1.Group("")
 		public.GET("/", r.apiInfo)
-		// TODO: Add auth callback endpoints
-		// public.POST("/auth/callback", authHandler.Callback)
 
-		// Protected routes (auth required)
+		// ドメイン別ルーターを初期化
+		authRouter := NewAuthRouter(r.handlers)
+
+		// 公開ルートを登録
+		authRouter.RegisterRoutes(public)
+
+		// 認証が必要なルート
 		protected := v1.Group("")
 		protected.Use(middleware.Auth(r.cfg))
 		{
-			// User routes
-			users := protected.Group("/users")
-			users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
-			users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
+			// 認証が必要なルートを登録
+			authRouter.RegisterProtectedRoutes(protected)
 
-			// Account routes
-			accounts := protected.Group("/accounts")
-			accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
-			accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
-			accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
-			accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
-			accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
-			accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
-
-			// Transaction routes
-			transactions := protected.Group("/transactions")
-			transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
-			transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
-			transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
-			transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
-			transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
-			transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
-
-			// Category routes
-			categories := protected.Group("/categories")
-			categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
-			categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
-			categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
-			categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
-
-			// Budget routes
-			budgets := protected.Group("/budgets")
-			budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
-			budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
-			budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
-			budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
-			budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
-			budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
-
-			// Budget suggestion routes
-			suggestions := protected.Group("/budget-suggestions")
-			suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
-			suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
-
-			// Report routes
-			reports := protected.Group("/reports")
-			reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
-			reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
-
-			// Summary routes
-			summary := protected.Group("/summary")
-			summary.GET("/monthly", r.notImplemented) // TODO: summaryHandler.Monthly
-
-			// Notification settings
-			notifications := protected.Group("/notifications")
-			notifications.GET("/settings", r.notImplemented) // TODO: notificationHandler.GetSettings
-			notifications.PUT("/settings", r.notImplemented) // TODO: notificationHandler.UpdateSettings
+			// その他のルート（TODO: 各ドメインのルーターに分離）
+			r.registerUserRoutes(protected)
+			r.registerAccountRoutes(protected)
+			r.registerTransactionRoutes(protected)
+			r.registerCategoryRoutes(protected)
+			r.registerBudgetRoutes(protected)
+			r.registerReportRoutes(protected)
+			r.registerNotificationRoutes(protected)
 		}
 	}
 
 	// 404 handler
 	r.engine.NoRoute(r.notFound)
+}
+
+// ユーザールート（TODO: 専用ファイルに分離）
+func (r *Router) registerUserRoutes(group *gin.RouterGroup) {
+	users := group.Group("/users")
+	users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
+	users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
+}
+
+// アカウントルート（TODO: 専用ファイルに分離）
+func (r *Router) registerAccountRoutes(group *gin.RouterGroup) {
+	accounts := group.Group("/accounts")
+	accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
+	accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
+	accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
+	accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
+	accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
+	accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+}
+
+// トランザクションルート（TODO: 専用ファイルに分離）
+func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
+	transactions := group.Group("/transactions")
+	transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
+	transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
+	transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
+	transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
+	transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
+	transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
+}
+
+// カテゴリールート（TODO: 専用ファイルに分離）
+func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
+	categories := group.Group("/categories")
+	categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
+	categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
+	categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
+	categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
+}
+
+// 予算ルート（TODO: 専用ファイルに分離）
+func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
+	budgets := group.Group("/budgets")
+	budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
+	budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
+	budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
+	budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
+	budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
+	budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
+
+	// 予算提案ルート
+	suggestions := group.Group("/budget-suggestions")
+	suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
+	suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
+}
+
+// レポートルート（TODO: 専用ファイルに分離）
+func (r *Router) registerReportRoutes(group *gin.RouterGroup) {
+	reports := group.Group("/reports")
+	reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
+	reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
+
+	// サマリールート
+	summary := group.Group("/summary")
+	summary.GET("/monthly", r.notImplemented) // TODO: summaryHandler.Monthly
+}
+
+// 通知設定ルート（TODO: 専用ファイルに分離）
+func (r *Router) registerNotificationRoutes(group *gin.RouterGroup) {
+	notifications := group.Group("/notifications")
+	notifications.GET("/settings", r.notImplemented) // TODO: notificationHandler.GetSettings
+	notifications.PUT("/settings", r.notImplemented) // TODO: notificationHandler.UpdateSettings
 }
 
 // Engine returns the underlying Gin engine.
@@ -140,6 +195,13 @@ func (r *Router) Run() error {
 
 // Handler functions
 
+// healthCheck ヘルスチェックエンドポイント
+// @Summary ヘルスチェック
+// @Description APIの稼働状態を確認します
+// @Tags system
+// @Produce json
+// @Success 200 {object} map[string]interface{} "ヘルスチェック結果"
+// @Router /health [get]
 func (r *Router) healthCheck(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"status": "healthy",
@@ -147,11 +209,18 @@ func (r *Router) healthCheck(c *gin.Context) {
 	})
 }
 
+// apiInfo API情報エンドポイント
+// @Summary API情報
+// @Description APIの基本情報を返します
+// @Tags system
+// @Produce json
+// @Success 200 {object} map[string]interface{} "API情報"
+// @Router / [get]
 func (r *Router) apiInfo(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "Welcome to FinanceTracker API",
 		"version": "1.0.0",
-		"docs":    "/api/v1/docs", // TODO: Add Swagger docs
+		"docs":    "/docs/index.html",
 	})
 }
 

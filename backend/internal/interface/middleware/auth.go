@@ -3,7 +3,10 @@ package middleware
 
 import (
 	"context"
+	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -235,11 +238,51 @@ func fetchPublicKey(jwksURL, kid string) (interface{}, error) {
 }
 
 // parseRSAPublicKeyFromJWK parses RSA public key from JWK.
-// This is a simplified placeholder - use a proper JWT library in production.
-func parseRSAPublicKeyFromJWK(_ map[string]interface{}) (interface{}, error) {
-	// TODO: Implement proper JWK to RSA public key conversion
-	// This would typically use a library like github.com/lestrrat-go/jwx
-	return nil, errors.NewNotImplementedError("JWK parsing")
+func parseRSAPublicKeyFromJWK(jwk map[string]interface{}) (interface{}, error) {
+	// Extract the key type
+	kty, ok := jwk["kty"].(string)
+	if !ok || kty != "RSA" {
+		return nil, errors.NewUnauthorizedError("Invalid key type")
+	}
+
+	// Extract modulus (n) and exponent (e)
+	nStr, ok := jwk["n"].(string)
+	if !ok {
+		return nil, errors.NewUnauthorizedError("Missing modulus")
+	}
+
+	eStr, ok := jwk["e"].(string)
+	if !ok {
+		return nil, errors.NewUnauthorizedError("Missing exponent")
+	}
+
+	// Decode base64url encoded values
+	nBytes, err := base64.RawURLEncoding.DecodeString(nStr)
+	if err != nil {
+		return nil, errors.NewUnauthorizedError("Invalid modulus encoding")
+	}
+
+	eBytes, err := base64.RawURLEncoding.DecodeString(eStr)
+	if err != nil {
+		return nil, errors.NewUnauthorizedError("Invalid exponent encoding")
+	}
+
+	// Convert to big integers
+	n := new(big.Int).SetBytes(nBytes)
+
+	// Convert exponent bytes to int
+	var e int
+	for _, b := range eBytes {
+		e = e<<8 + int(b)
+	}
+
+	// Create RSA public key
+	pubKey := &rsa.PublicKey{
+		N: n,
+		E: e,
+	}
+
+	return pubKey, nil
 }
 
 // RequirePermission returns a middleware that checks for specific permissions.
