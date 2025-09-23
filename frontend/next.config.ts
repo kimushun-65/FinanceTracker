@@ -1,7 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // SSRモードで動作させるため、output: 'export'を削除
+  output: 'export',
+  distDir: 'out',
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
