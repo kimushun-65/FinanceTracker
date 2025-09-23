@@ -1,8 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // output: 'export', // Auth0を使用するためコメントアウト
-  // distDir: 'out',
+  // SSRモードで動作させるため、output: 'export'を削除
 };
 
 export default nextConfig;
