@@ -5,11 +5,9 @@ frontend:
       commands:
         - cd frontend
         - npm ci
-        - npm install -g @aws-amplify/cli
     build:
       commands:
         - npm run build
-        - npm run start &
   artifacts:
     baseDirectory: frontend
     files:
