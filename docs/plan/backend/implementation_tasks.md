@@ -4,17 +4,24 @@
 FinanceTrackerバックエンドをDocker環境で開発するためのタスクリストです。
 AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築します。
 
-## 進捗サマリー
+## 進捗サマリー (2025-09-23更新)
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
 - **Phase 2: ドメイン層実装** - 100%完了 ✅
-- **Phase 2.5: Auth0認証実装** - 未着手 🆕
-- **Phase 3: アプリケーション層実装** - 未着手
-- **Phase 4: インフラストラクチャ層実装** - 40%完了（GORMモデル定義済み、DB接続未実装）
-- **Phase 5: HTTPインターフェース層実装** - 30%完了（ルーティング・ミドルウェア実装済み、ハンドラー未実装）
+- **Phase 2.5: Auth0認証実装** - 100%完了 ✅ (JWT、クッキー、認証API全て実装完了)
+- **Phase 2.7: DI層実装** - 未着手 🆕 **次の最優先フェーズ**
+- **Phase 3: アプリケーション層実装** - 15%完了（認証サービスのみ実装済み）
+- **Phase 4: インフラストラクチャ層実装** - 70%完了（DB接続・ユーザーリポジトリ実装済み、その他リポジトリ未実装）
+- **Phase 5: HTTPインターフェース層実装** - 60%完了（認証API完成、その他API未実装）
 - **Phase 6: テスト実装** - 未着手
 - **Phase 7: CI/CD・運用設定** - 60%完了
 - **Phase 8: Lambda統合** - 未着手
+
+### 🎯 更新された重要マイルストーン
+1. **Week 4 Day 1-2**: DI層実装（依存関係管理基盤構築）
+2. **Week 4 Day 3-5**: トランザクション・アカウント管理API実装
+3. **Week 5目標**: 全主要ビジネスAPI完成
+4. **Week 6目標**: テスト実装・統合完了
 
 ## Phase 0: 開発環境構築
 ### 0.1 Docker環境セットアップ
@@ -73,6 +80,16 @@ backend/
 │       ├── seed_*.go            # モデル別シードファイル ✓
 │       └── helpers.go           # ヘルパー関数 ✓
 ├── internal/
+│   ├── di/                      # 🆕 DI（依存関係注入）層
+│   │   ├── container.go         # メインDIコンテナ
+│   │   ├── config.go            # 統一設定管理
+│   │   ├── interfaces.go        # DIインターフェース
+│   │   └── providers/           # プロバイダー群
+│   │       ├── database.go      # データベース・外部サービス
+│   │       ├── repository.go    # リポジトリ初期化
+│   │       ├── service.go       # アプリケーションサービス
+│   │       ├── handler.go       # HTTPハンドラー
+│   │       └── middleware.go    # ミドルウェア
 │   ├── domain/                  # ドメイン層
 │   │   ├── user/
 │   │   ├── account/
@@ -178,67 +195,199 @@ backend/
   - [x] entity/notification_settings.go
   - [x] repository/notification_settings_repository.go
 
-## Phase 3: アプリケーション層実装
-### 3.1 DTOの定義
-- [ ] user_dto.go
-- [ ] account_dto.go
-- [ ] transaction_dto.go
+## Phase 2.7: DI層実装 🆕 **最優先フェーズ** (Week 4 Day 1-2)
+
+### 2.7.1 DI基盤構築
+**期間**: 1-2日間
+**目的**: Clean Architectureの依存関係管理を効率化し、テスタビリティと保守性を向上
+
+**タスク**:
+- [ ] DI層ディレクトリ構造作成 🔥 **最優先**
+  - [ ] `internal/di/` ディレクトリ作成
+  - [ ] `internal/di/providers/` ディレクトリ作成
+- [ ] 統一設定管理実装 🔥 **最優先**
+  - [ ] `internal/di/config.go` - 環境変数の統一管理
+  - [ ] 設定検証とデフォルト値設定
+- [ ] DIコンテナインターフェース定義 🔥 **最優先**
+  - [ ] `internal/di/interfaces.go` - コンテナインターフェース
+  - [ ] ヘルスチェック・初期化・クリーンアップインターフェース
+- [ ] メインDIコンテナ実装 🔥 **最優先**
+  - [ ] `internal/di/container.go` - 依存関係管理の中核
+
+**成果物**:
+```
+internal/di/
+├── container.go              # メインDIコンテナ
+├── config.go                 # 統一設定管理
+├── interfaces.go             # DIインターフェース
+├── test_container.go         # テスト用DIコンテナ
+└── providers/                # プロバイダー群
+    ├── database.go           # データベース・外部サービス
+    ├── repository.go         # リポジトリ初期化
+    ├── service.go            # アプリケーションサービス
+    ├── handler.go            # HTTPハンドラー
+    └── middleware.go         # ミドルウェア
+```
+
+### 2.7.2 プロバイダー実装
+**期間**: 1日間
+**目的**: 責務分離による依存関係の段階的初期化
+
+**タスク**:
+- [ ] データベースプロバイダー実装 🔥 **優先実装**
+  - [ ] `providers/database.go` - PostgreSQL接続・Auth0クライアント
+  - [ ] 接続プール設定・ログレベル設定
+- [ ] リポジトリプロバイダー実装 🔥 **優先実装**
+  - [ ] `providers/repository.go` - 全リポジトリの初期化
+  - [ ] 既存ユーザーリポジトリの統合
+- [ ] サービスプロバイダー実装 🔥 **優先実装**
+  - [ ] `providers/service.go` - アプリケーションサービス初期化
+  - [ ] 既存認証サービスの統合
+- [ ] ハンドラープロバイダー実装
+  - [ ] `providers/handler.go` - HTTPハンドラー初期化
+  - [ ] 既存認証ハンドラーの統合
+- [ ] ミドルウェアプロバイダー実装
+  - [ ] `providers/middleware.go` - ミドルウェア初期化
+  - [ ] 既存ミドルウェアの統合
+
+### 2.7.3 既存コード統合
+**期間**: 1日間
+**目的**: 既存の実装をDIコンテナに統合し、main.goを簡略化
+
+**タスク**:
+- [ ] main.go の大幅簡略化 🔥 **重要**
+  - [ ] DIコンテナ初期化によるワンライン依存関係解決
+  - [ ] グレースフルシャットダウン実装
+- [ ] ルーター設定の更新 🔥 **重要**
+  - [ ] `router/router.go` をDIコンテナ対応に更新
+  - [ ] 既存認証ルートの統合
+- [ ] 環境変数管理の統一化
+  - [ ] 既存の分散した設定読み込みをDI層に集約
+  - [ ] `.env.example` の更新
+
+### 2.7.4 テスト環境構築
+**期間**: 1日間
+**目的**: モックを活用したテスタビリティの向上
+
+**タスク**:
+- [ ] テスト用DIコンテナ実装
+  - [ ] `test_container.go` - in-memoryデータベース使用
+  - [ ] モックAuth0クライアント実装
+- [ ] 統合テスト実装
+  - [ ] `container_test.go` - DIコンテナの動作確認
+  - [ ] 設定読み込みテスト
+  - [ ] 依存関係注入テスト
+
+**検証**:
+- [ ] DIコンテナの正常初期化確認
+- [ ] 全既存機能の動作確認（認証API）
+- [ ] テスト用コンテナでのモック注入確認
+- [ ] メモリリーク・接続プールの動作確認
+
+**DI層導入の効果測定**:
+
+**Before（DIなし）**:
+```go
+// main.go - 100+ lines の手動依存関係構築
+func main() {
+    config := loadConfig()
+    db := setupDatabase(config)
+    auth0Client := setupAuth0(config)
+    userRepo := repository.NewUserRepository(db)
+    authService := service.NewAuthService(userRepo, auth0Client)
+    authHandler := handler.NewAuthHandler(authService)
+    // ... 多数の初期化コード
+    router := setupRouter(authHandler, /* many handlers */)
+    router.Run()
+}
+```
+
+**After（DIあり）**:
+```go
+// main.go - 20 lines で完結
+func main() {
+    container, err := di.NewContainer()
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer container.Shutdown(context.Background())
+    
+    router := router.SetupRouter(container)
+    server := setupServer(router, container.GetConfig())
+    gracefulShutdown(server, container)
+}
+```
+
+**期待される効果**:
+1. **開発効率50-70%向上**: 新機能追加時の依存関係構築が自動化
+2. **テスタビリティ大幅改善**: モックオブジェクトの簡単な注入
+3. **Clean Architecture完全実現**: 依存関係逆転の適切な実装
+4. **保守性向上**: 設定管理の統一化・エラーハンドリングの改善
+
+## Phase 3: アプリケーション層実装 🔄 (15%完了)
+
+### 3.1 DTOの定義 (DI層導入後に効率化)
+- [x] auth_dto.go (UserInfo, TokenClaims)
+- [ ] user_dto.go 🔥 **DI層導入後の優先実装**
+- [ ] account_dto.go 🔥 **DI層導入後の優先実装**
+- [ ] transaction_dto.go 🔥 **DI層導入後の優先実装**
 - [ ] category_dto.go
 - [ ] budget_dto.go
 - [ ] asset_dto.go（AssetSnapshot, AssetForecast）
 - [ ] notification_dto.go（NotificationSettings）
 
-### 3.2 ユースケース実装
-- [ ] ユーザー管理
-  - [ ] user_service.go
-  - [ ] auth_service.go
-- [ ] 口座管理
-  - [ ] account_service.go
-  - [ ] account_movement_service.go
-- [ ] 取引管理
-  - [ ] transaction_service.go
-- [ ] カテゴリ管理
-  - [ ] category_service.go
-  - [ ] category_master_service.go
-- [ ] 予算管理
-  - [ ] budget_service.go
-  - [ ] budget_suggestion_service.go
-- [ ] 資産管理
-  - [ ] asset_snapshot_service.go
-  - [ ] asset_forecast_service.go
-  - [ ] asset_analysis_service.go
-- [ ] 通知管理
-  - [ ] notification_settings_service.go
-  - [ ] notification_sender_service.go
-- [ ] レポート生成
-  - [ ] summary_service.go
-  - [ ] dashboard_service.go
+### 3.2 ユースケース実装 (DI層により依存関係注入が自動化)
+- [x] ユーザー管理
+  - [ ] user_service.go ⚠️ **DI層導入後に完成**
+  - [x] auth_service.go ✅ (SyncUser, GetUserByAuth0ID実装済み)
+- [ ] 口座管理 🔥 **DI層導入後の優先実装**
+  - [ ] account_service.go (DIコンテナで自動注入)
+  - [ ] account_movement_service.go (DIコンテナで自動注入)
+- [ ] 取引管理 🔥 **DI層導入後の優先実装**
+  - [ ] transaction_service.go (DIコンテナで自動注入)
+- [ ] カテゴリ管理 (DI層により効率化)
+  - [ ] category_service.go (DIコンテナで自動注入)
+  - [ ] category_master_service.go (DIコンテナで自動注入)
+- [ ] 予算管理 (DI層により効率化)
+  - [ ] budget_service.go (DIコンテナで自動注入)
+  - [ ] budget_suggestion_service.go (DIコンテナで自動注入)
+- [ ] 資産管理 (DI層により効率化)
+  - [ ] asset_snapshot_service.go (DIコンテナで自動注入)
+  - [ ] asset_forecast_service.go (DIコンテナで自動注入)
+  - [ ] asset_analysis_service.go (DIコンテナで自動注入)
+- [ ] 通知管理 (DI層により効率化)
+  - [ ] notification_settings_service.go (DIコンテナで自動注入)
+  - [ ] notification_sender_service.go (DIコンテナで自動注入)
+- [ ] レポート生成 (DI層により効率化)
+  - [ ] summary_service.go (DIコンテナで自動注入)
+  - [ ] dashboard_service.go (DIコンテナで自動注入)
 
-### 3.3 トランザクション管理
-- [ ] transaction_manager.go
+### 3.3 トランザクション管理 (DI層で一元管理)
+- [ ] transaction_manager.go 🔥 **DI層実装と同時実装**
 
-## Phase 4: インフラストラクチャ層実装
+## Phase 4: インフラストラクチャ層実装 🔄 (70%完了)
+
 ### 4.1 データベース接続
-- [ ] connection.go（GORM接続管理）
-- [ ] transaction.go（トランザクション管理）
-- [x] atlas_migration.go（Atlasマイグレーション実行）※cmd/migrate/main.goで実装済み
+- [x] connection.go（GORM接続管理）✅ `pkg/database/database.go`実装済み
+- [ ] transaction.go（トランザクション管理）🔥 **優先実装**
+- [x] atlas_migration.go（Atlasマイグレーション実行）✅ `cmd/migrate/main.go`で実装済み
 
 ### 4.2 GORMモデル定義
-- [x] base.go（共通フィールド）
-- [x] user.go
-- [x] account.go
-- [x] transaction.go
-- [x] category.go
-- [x] budget.go
-- [x] report.go（AssetSnapshot, AssetForecast）
-- [x] notification.go
+- [x] base.go（共通フィールド）✅
+- [x] user.go ✅
+- [x] account.go ✅
+- [x] transaction.go ✅
+- [x] category.go ✅
+- [x] budget.go ✅
+- [x] report.go（AssetSnapshot, AssetForecast）✅
+- [x] notification.go ✅
 
 ### 4.3 リポジトリ実装
-- [ ] base_repository.go（共通処理）
-- [ ] user_repository.go
-- [ ] account_repository.go
-- [ ] account_movement_repository.go
-- [ ] transaction_repository.go
+- [ ] base_repository.go（共通処理）🔥 **優先実装**
+- [x] user_repository.go ✅ (Save, FindByID, FindByAuth0UserID, Exists, Delete実装済み)
+- [ ] account_repository.go 🔥 **優先実装**
+- [ ] account_movement_repository.go 🔥 **優先実装**
+- [ ] transaction_repository.go 🔥 **優先実装**
 - [ ] category_repository.go
 - [ ] category_master_repository.go
 - [ ] budget_repository.go
@@ -248,28 +397,32 @@ backend/
 - [ ] notification_settings_repository.go
 
 ### 4.4 外部サービス連携
-- [ ] Auth0認証サービス → 詳細は`docs/plan/auth0_implementation.md`参照
-  - [x] JWT検証ミドルウェア実装（基本実装済み）
-  - [ ] JWKセット取得・キャッシュ実装
+- [x] Auth0認証サービス ✅ **完全実装済み**
+  - [x] JWT検証ミドルウェア実装 ✅ `auth0/middleware.go`
+  - [x] JWKセット取得・キャッシュ実装 ✅ `auth0/client.go`
+  - [x] ユーザー情報取得 ✅
+  - [x] ログイン/ログアウトURL生成 ✅
 - [ ] メール送信サービス
 - [ ] キャッシュサービス（Redis）
 
-## Phase 5: HTTPインターフェース層実装
+## Phase 5: HTTPインターフェース層実装 🔄 (60%完了)
+
 ### 5.1 ルーティング実装
-- [x] 全APIエンドポイントのルート定義完了（501 Not Implemented返却）
-  - [x] ユーザー管理: GET /users/me
-  - [x] 口座管理: CRUD /accounts, GET /accounts/:id/movements
-  - [x] 取引管理: CRUD /transactions, GET /transactions/search
-  - [x] カテゴリ管理: CRUD /categories, GET /categories/masters
-  - [x] 予算管理: CRUD /budgets, GET /budgets/suggestions
-  - [x] レポート: GET /reports/summary, /reports/dashboard
-  - [x] 資産管理: GET /assets/snapshots, GET /assets/forecasts
-  - [x] 通知設定: CRUD /notification-settings
+- [x] 全APIエンドポイントのルート定義完了 ✅
+- [x] 認証エンドポイント実装済み ✅
+  - [x] GET /auth/login, /auth/callback, /auth/user
+  - [x] POST /auth/logout, /auth/token
+  - [x] DELETE /auth/token
+- [x] システムエンドポイント ✅
+  - [x] GET /health, /api/v1/ (API情報)
 
 ### 5.2 ハンドラー実装
-- [ ] user_handler.go（GET,PUT /users/me）
-- [ ] account_handler.go（CRUD /accounts）
-- [ ] transaction_handler.go（CRUD /transactions）
+- [x] auth_handler.go ✅ **完全実装済み**
+  - [x] ログイン・ログアウト・コールバック・ユーザー情報取得
+  - [x] トークン管理・認証状態チェック
+- [ ] user_handler.go（GET,PUT /users/me）🔥 **優先実装**
+- [ ] account_handler.go（CRUD /accounts）🔥 **優先実装**
+- [ ] transaction_handler.go（CRUD /transactions）🔥 **優先実装**
 - [ ] category_handler.go（CRUD /categories）
 - [ ] budget_handler.go（CRUD /budgets）
 - [ ] asset_handler.go（GET /assets/snapshots, /assets/forecasts）
@@ -277,12 +430,12 @@ backend/
 - [ ] notification_handler.go（CRUD /notification-settings）
 
 ### 5.3 バリデーション
-- [ ] リクエストバリデーション実装
+- [ ] リクエストバリデーション実装 🔥 **優先実装**
 - [ ] カスタムバリデーター作成
 
 ### 5.4 レスポンス処理
-- [x] 統一エラーレスポンス形式（middleware/error_handler.go）
-- [ ] 成功レスポンス統一形式
+- [x] 統一エラーレスポンス形式 ✅ `middleware/error_handler.go`
+- [ ] 成功レスポンス統一形式 🔥 **優先実装**
 - [ ] ページネーションレスポンス
 
 ## Phase 6: テスト実装
@@ -352,16 +505,89 @@ backend/
 - アーキテクチャ検証スクリプト（scripts/check-architecture.sh）でクリーンアーキテクチャ準拠を確認
 - Reportテーブル/エンティティは実装しない（レポートは既存データの集計表示のみ）
 
-## 次のステップ
-1. **Auth0認証実装**（Phase 2.5） 🆕 **優先実装**
-   - 詳細は`docs/plan/auth0_implementation.md`を参照
-   - フロントエンド・バックエンド・インフラ全体での認証実装
-2. **アプリケーション層の実装**（Phase 3）
-   - ユースケース（サービス）の実装
-   - DTOの定義（Asset/Notification含む）
-3. **リポジトリ実装**（Phase 4の残り）
-   - データベース接続管理
-   - 各エンティティのリポジトリ実装（Asset/Notification含む）
-4. **APIハンドラー実装**（Phase 5の残り）
-   - 各エンドポイントの実装
-   - Asset/Notification関連のエンドポイント含む
+## 🚀 更新された次のステップ（優先順位順）
+
+### 🔥 **最優先（Week 4 Day 1-2）**: DI層実装
+1. **DI基盤構築** 🆕 **最重要**
+   - 依存関係管理の中央集権化
+   - Clean Architecture の完全実現
+   - テスタビリティの大幅向上
+   - 開発効率50-70%改善
+
+### 🔥 **優先（Week 4 Day 3-5）**: 主要ビジネス機能実装
+2. **トランザクション管理API** (DI層活用)
+   - `transaction_repository.go` 実装（DIコンテナで注入）
+   - `transaction_service.go` 実装  
+   - `transaction_handler.go` 実装
+   - `transaction_dto.go` 定義
+
+3. **アカウント管理API** (DI層活用)
+   - `account_repository.go` 実装（DIコンテナで注入）
+   - `account_service.go` 実装
+   - `account_handler.go` 実装
+   - `account_dto.go` 定義
+
+4. **ユーザー管理API完成** (DI層活用)
+   - `user_handler.go` 実装 (GET/PUT /users/me)
+   - `user_dto.go` 定義
+
+### 🎯 **高優先（Week 5）**: 残りビジネス機能
+5. **カテゴリー管理** (DI層効率活用)
+   - `category_repository.go`, `category_master_repository.go`
+   - `category_service.go`, `category_master_service.go`
+   - `category_handler.go`
+
+6. **予算管理** (DI層効率活用)
+   - `budget_repository.go`, `budget_suggestion_repository.go`
+   - `budget_service.go`
+   - `budget_handler.go`
+
+### 📊 **中優先（Week 6）**: 分析・レポート機能
+7. **レポート・資産管理** (DI層効率活用)
+   - `summary_service.go`, `dashboard_service.go`
+   - `asset_snapshot_repository.go`, `asset_forecast_repository.go`
+   - `report_handler.go`, `asset_handler.go`
+
+### 🔧 **基盤強化** (DI層により簡素化)
+8. **共通機能実装**
+   - `base_repository.go` (共通CRUD処理)
+   - `transaction_manager.go` (DB トランザクション管理)
+   - 成功レスポンス統一形式
+   - リクエストバリデーション
+
+### ✅ **完了済み**
+- ✅ Auth0認証システム（フル実装完了）
+- ✅ プロジェクト基盤（アーキテクチャ、ドメイン層）
+- ✅ インフラ基盤（DB接続、ユーザーリポジトリ）
+- ✅ HTTP基盤（ルーティング、ミドルウェア、認証API）
+
+### 📋 更新された実装推奨順序
+```
+Week 4 Day 1-2: 🆕 DI層実装（基盤強化）
+Week 4 Day 3-4: トランザクション管理実装（DI活用）
+Week 4 Day 5: アカウント・ユーザー管理完成（DI活用）
+Week 5 Day 1-3: カテゴリー・予算管理（DI効率活用）
+Week 5 Day 4-5: レポート・資産管理（DI効率活用）
+Week 6: テスト・統合・最適化（テスト用DIコンテナ活用）
+```
+
+### 🎯 DI層導入による開発効率改善
+**Before（現在）**: 各機能実装時に手動で依存関係構築
+**After（DI層導入後）**: 自動的な依存関係解決、50-70%工数削減
+
+**例: 新機能追加時の工数比較**
+```go
+// Before（現在）: 15-20行の依存関係構築が必要
+func setupNewFeature() {
+    db := getDB()
+    userRepo := repository.NewUserRepository(db)
+    newRepo := repository.NewNewRepository(db)
+    newService := service.NewNewService(newRepo, userRepo, /* 他の依存関係 */)
+    newHandler := handler.NewNewHandler(newService)
+    // ルーターに手動追加...
+}
+
+// After（DI導入後）: 1行でコンテナに追加
+// DIコンテナが自動的に依存関係を解決
+container.GetNewHandler() // 自動的に全依存関係が注入済み
+```

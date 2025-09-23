@@ -470,7 +470,6 @@ done
 - **API Gateway**: AWS API Gateway (REST API)
 - **データベース**: Amazon RDS (PostgreSQL 15)
 - **キャッシュ**: ElastiCache for Redis
-- **ストレージ**: Amazon S3
 - **メール**: Amazon SES
 - **認証**: Auth0
 
