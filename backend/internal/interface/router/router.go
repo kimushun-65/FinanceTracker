@@ -34,6 +34,14 @@ type Handlers struct {
 		Update(*gin.Context)
 		Delete(*gin.Context)
 	}
+	TransactionHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		MonthlySummary(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -155,12 +163,21 @@ func (r *Router) registerAccountRoutes(group *gin.RouterGroup) {
 // トランザクションルート（TODO: 専用ファイルに分離）
 func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
 	transactions := group.Group("/transactions")
-	transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
-	transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
-	transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
-	transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
-	transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
-	transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
+	if r.handlers != nil && r.handlers.TransactionHandler != nil {
+		transactions.GET("", r.handlers.TransactionHandler.List)
+		transactions.POST("", r.handlers.TransactionHandler.Create)
+		transactions.GET("/:id", r.handlers.TransactionHandler.Get)
+		transactions.PUT("/:id", r.handlers.TransactionHandler.Update)
+		transactions.DELETE("/:id", r.handlers.TransactionHandler.Delete)
+		transactions.GET("/summary/monthly", r.handlers.TransactionHandler.MonthlySummary)
+	} else {
+		transactions.GET("", r.notImplemented)
+		transactions.POST("", r.notImplemented)
+		transactions.GET("/:id", r.notImplemented)
+		transactions.PUT("/:id", r.notImplemented)
+		transactions.DELETE("/:id", r.notImplemented)
+		transactions.GET("/summary/monthly", r.notImplemented)
+	}
 }
 
 // カテゴリールート（TODO: 専用ファイルに分離）
