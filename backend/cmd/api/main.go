@@ -41,7 +41,7 @@ func main() {
 	}
 
 	// Initialize logger
-	log := logger.New()
+	log := logger.NewLogger("api")
 	defer func() {
 		if err := log.Sync(); err != nil {
 			// Use standard log since our logger might not be available

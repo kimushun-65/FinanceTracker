@@ -29,7 +29,7 @@ func run() int {
 	}
 
 	// Initialize logger
-	logger := logger.New()
+	logger := logger.NewLogger("migrate")
 	defer func() {
 		if err := logger.Sync(); err != nil {
 			log.Printf("Failed to sync logger: %v", err)

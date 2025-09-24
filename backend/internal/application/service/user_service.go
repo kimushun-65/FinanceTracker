@@ -235,7 +235,7 @@ func (s *UserService) CreateUserFromAuth0(ctx context.Context, req *dto.CreateUs
 			zap.String("auth0ID", req.Auth0ID))
 		return nil, errors.NewValidationError("無効なAuth0IDです")
 	}
-	
+
 	// メールアドレスを作成
 	email, err := value.NewEmail(req.Email)
 	if err != nil {

@@ -14,11 +14,10 @@ type Logger struct {
 	*zap.Logger
 }
 
-
 // NewLogger creates a new logger instance with specified log level
 func NewLogger(logLevel string) *Logger {
 	config := zap.NewProductionConfig()
-	
+
 	// Set log level
 	switch logLevel {
 	case "debug":

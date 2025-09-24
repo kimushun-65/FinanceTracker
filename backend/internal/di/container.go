@@ -59,7 +59,6 @@ type Container struct {
 	// HTTPハンドラー
 	AuthHandler *handler.AuthHandler
 
-
 	// ロガー
 	Logger *loggerPkg.Logger
 }
@@ -101,7 +100,6 @@ func (c *Container) Close() error {
 	}
 	return nil
 }
-
 
 // initInfrastructure はインフラストラクチャの初期化を行う
 func (c *Container) initInfrastructure() error {
@@ -184,17 +182,17 @@ func (c *Container) setupAuth0() (*auth0.Client, error) {
 func (c *Container) initRepositories() {
 	// ユーザーリポジトリ
 	c.UserRepo = postgresRepo.NewUserRepository(c.DB)
-	
+
 	// アカウントリポジトリ
 	c.AccountRepo = postgresRepo.NewAccountRepository(c.DB)
-	
+
 	// 取引リポジトリ
 	c.TransactionRepo = postgresRepo.NewTransactionRepository(c.DB)
-	
+
 	// カテゴリリポジトリ
 	c.CategoryRepo = postgresRepo.NewCategoryRepository(c.DB)
 	c.CategoryMasterRepo = postgresRepo.NewCategoryMasterRepository(c.DB)
-	
+
 	// 予算リポジトリ
 	c.BudgetRepo = postgresRepo.NewBudgetRepository(c.DB)
 }
@@ -203,12 +201,12 @@ func (c *Container) initRepositories() {
 func (c *Container) initServices() {
 	// ロガーを初期化
 	c.Logger = loggerPkg.NewLogger(c.Config.Log.Level)
-	
+
 	// 認証サービス
 	c.AuthService = service.NewAuthService(
 		c.UserRepo,
 	)
-	
+
 	// ユーザーサービス
 	c.UserService = service.NewUserService(
 		c.UserRepo,
