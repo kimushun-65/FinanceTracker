@@ -31,6 +31,13 @@ type CreateUserRequest struct {
 	Name    string `json:"name" binding:"required,min=1,max=100"`
 }
 
+// CreateUserFromAuth0Request Auth0からのユーザー作成リクエスト
+type CreateUserFromAuth0Request struct {
+	Auth0ID string `json:"auth0_id" binding:"required"`
+	Email   string `json:"email" binding:"required,email"`
+	Name    string `json:"name" binding:"required,min=1,max=100"`
+}
+
 // UserFromDomain ドメインエンティティからDTOへの変換
 func UserFromDomain(user *userDomain.User) *UserResponse {
 	if user == nil {

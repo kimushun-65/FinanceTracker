@@ -123,8 +123,110 @@ func (s *UserService) UpdateUser(ctx context.Context, userID uuid.UUID, req *dto
 	return dto.UserFromDomain(user), nil
 }
 
+// GetUserByAuth0ID Auth0IDでユーザーを取得
+func (s *UserService) GetUserByAuth0ID(ctx context.Context, auth0ID string) (*dto.UserResponse, error) {
+	// Auth0IDの値オブジェクトを作成
+	auth0IDObj, err := userValue.NewAuth0ID(auth0ID)
+	if err != nil {
+		s.logger.Error("Auth0IDの作成に失敗しました",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return nil, errors.NewValidationError("無効なAuth0IDです")
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByAuth0UserID(ctx, *auth0IDObj)
+	if err != nil {
+		s.logger.Error("ユーザー取得エラー",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return nil, errors.NewInternalError("ユーザーの取得に失敗しました", err)
+	}
+
+	if user == nil {
+		return nil, nil
+	}
+
+	// DTOに変換して返却
+	return dto.UserFromDomain(user), nil
+}
+
+// UpdateUserByAuth0ID Auth0IDでユーザー情報を更新
+func (s *UserService) UpdateUserByAuth0ID(ctx context.Context, auth0ID string, req *dto.UpdateUserRequest) (*dto.UserResponse, error) {
+	// Auth0IDの値オブジェクトを作成
+	auth0IDObj, err := userValue.NewAuth0ID(auth0ID)
+	if err != nil {
+		s.logger.Error("Auth0IDの作成に失敗しました",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return nil, errors.NewValidationError("無効なAuth0IDです")
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByAuth0UserID(ctx, *auth0IDObj)
+	if err != nil {
+		s.logger.Error("ユーザー取得エラー",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return nil, errors.NewInternalError("ユーザーの取得に失敗しました", err)
+	}
+
+	if user == nil {
+		return nil, nil
+	}
+
+	// 更新フィールドの適用
+	if req.Name != nil {
+		name := *req.Name
+		if req.Email != nil {
+			// メールアドレスも更新する場合
+			email, err := value.NewEmail(*req.Email)
+			if err != nil {
+				s.logger.Error("メールアドレス作成エラー",
+					zap.Error(err),
+					zap.String("email", *req.Email))
+				return nil, errors.NewValidationError("無効なメールアドレスです")
+			}
+			if err := user.UpdateProfile(name, *email); err != nil {
+				s.logger.Error("プロファイル更新エラー", zap.Error(err))
+				return nil, errors.NewValidationError("プロファイルの更新に失敗しました")
+			}
+		} else {
+			// 名前のみ更新
+			if err := user.UpdateProfile(name, user.Email()); err != nil {
+				s.logger.Error("プロファイル更新エラー", zap.Error(err))
+				return nil, errors.NewValidationError("プロファイルの更新に失敗しました")
+			}
+		}
+	} else if req.Email != nil {
+		// メールアドレスのみ更新
+		email, err := value.NewEmail(*req.Email)
+		if err != nil {
+			s.logger.Error("メールアドレス作成エラー",
+				zap.Error(err),
+				zap.String("email", *req.Email))
+			return nil, errors.NewValidationError("無効なメールアドレスです")
+		}
+		if err := user.UpdateProfile(user.Name(), *email); err != nil {
+			s.logger.Error("プロファイル更新エラー", zap.Error(err))
+			return nil, errors.NewValidationError("プロファイルの更新に失敗しました")
+		}
+	}
+
+	// リポジトリに保存
+	if err := s.userRepo.Save(ctx, user); err != nil {
+		s.logger.Error("ユーザー保存エラー",
+			zap.Error(err),
+			zap.String("userId", user.ID.String()))
+		return nil, errors.NewInternalError("ユーザーの更新に失敗しました", err)
+	}
+
+	// DTOに変換して返却
+	return dto.UserFromDomain(user), nil
+}
+
 // CreateUserFromAuth0 Auth0からの情報でユーザーを作成（内部利用）
-func (s *UserService) CreateUserFromAuth0(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserResponse, error) {
+func (s *UserService) CreateUserFromAuth0(ctx context.Context, req *dto.CreateUserFromAuth0Request) (*dto.UserResponse, error) {
 	// Auth0IDを作成
 	auth0ID, err := userValue.NewAuth0ID(req.Auth0ID)
 	if err != nil {
@@ -133,7 +235,7 @@ func (s *UserService) CreateUserFromAuth0(ctx context.Context, req *dto.CreateUs
 			zap.String("auth0ID", req.Auth0ID))
 		return nil, errors.NewValidationError("無効なAuth0IDです")
 	}
-
+	
 	// メールアドレスを作成
 	email, err := value.NewEmail(req.Email)
 	if err != nil {
