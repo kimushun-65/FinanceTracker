@@ -437,7 +437,7 @@ func (h *TransactionHandler) Delete(c *gin.Context) {
 // @Security Bearer
 // @Param year query int true "年 (YYYY)"
 // @Param month query int true "月 (1-12)"
-// @Success 200 {object} dto.MonthlySummaryResponse
+// @Success 200 {object} dto.MonthlyTransactionSummary
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 500 {object} map[string]string
