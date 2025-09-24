@@ -190,7 +190,10 @@ func (s *BudgetService) UpdateBudget(ctx context.Context, userID, budgetID uuid.
 				zap.String("amount", req.Amount.String()))
 			return nil, errors.NewValidationError("無効な金額です")
 		}
-		budget.UpdateAmount(*money)
+		if err := budget.UpdateAmount(*money); err != nil {
+			s.logger.Error("金額更新エラー", zap.Error(err))
+			return nil, errors.NewValidationError("金額の更新に失敗しました")
+		}
 	}
 
 	if req.StartDate != nil || req.EndDate != nil {
