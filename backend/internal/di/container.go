@@ -59,6 +59,7 @@ type Container struct {
 	AccountService     *service.AccountService
 	TransactionService *service.TransactionService
 	CategoryService    *service.CategoryService
+	BudgetService      *service.BudgetService
 
 	// HTTPハンドラー
 	AuthHandler        *handler.AuthHandler
@@ -66,6 +67,7 @@ type Container struct {
 	AccountHandler     *handler.AccountHandler
 	TransactionHandler *handler.TransactionHandler
 	CategoryHandler    *handler.CategoryHandler
+	BudgetHandler      *handler.BudgetHandler
 
 	// 共有ロジックハンドラー
 	UserLogicHandler *appHandler.UserLogicHandler
@@ -242,6 +244,12 @@ func (c *Container) initServices() {
 		c.CategoryMasterRepo,
 		c.Logger,
 	)
+
+	// 予算サービス
+	c.BudgetService = service.NewBudgetService(
+		c.BudgetRepo,
+		c.Logger,
+	)
 }
 
 // initHandlers は全てのHTTPハンドラーを初期化する
@@ -282,6 +290,12 @@ func (c *Container) initHandlers() {
 	// カテゴリハンドラー
 	c.CategoryHandler = handler.NewCategoryHandler(
 		c.CategoryService,
+		c.Logger,
+	)
+
+	// 予算ハンドラー
+	c.BudgetHandler = handler.NewBudgetHandler(
+		c.BudgetService,
 		c.Logger,
 	)
 }

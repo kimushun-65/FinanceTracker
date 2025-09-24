@@ -50,6 +50,14 @@ type Handlers struct {
 		Delete(*gin.Context)
 		ListMaster(*gin.Context)
 	}
+	BudgetHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		GetCurrent(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -211,17 +219,27 @@ func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
 // 予算ルート（TODO: 専用ファイルに分離）
 func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
 	budgets := group.Group("/budgets")
-	budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
-	budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
-	budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
-	budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
-	budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
-	budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
+	if r.handlers != nil && r.handlers.BudgetHandler != nil {
+		// Note: /current must come before /:id to avoid route conflicts
+		budgets.GET("/current", r.handlers.BudgetHandler.GetCurrent)
+		budgets.GET("", r.handlers.BudgetHandler.List)
+		budgets.POST("", r.handlers.BudgetHandler.Create)
+		budgets.GET("/:id", r.handlers.BudgetHandler.Get)
+		budgets.PUT("/:id", r.handlers.BudgetHandler.Update)
+		budgets.DELETE("/:id", r.handlers.BudgetHandler.Delete)
+	} else {
+		budgets.GET("/current", r.notImplemented)
+		budgets.GET("", r.notImplemented)
+		budgets.POST("", r.notImplemented)
+		budgets.GET("/:id", r.notImplemented)
+		budgets.PUT("/:id", r.notImplemented)
+		budgets.DELETE("/:id", r.notImplemented)
+	}
 
-	// 予算提案ルート
+	// 予算提案ルート（未実装）
 	suggestions := group.Group("/budget-suggestions")
-	suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
-	suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
+	suggestions.GET("", r.notImplemented)
+	suggestions.POST("/generate", r.notImplemented)
 }
 
 // レポートルート（TODO: 専用ファイルに分離）
