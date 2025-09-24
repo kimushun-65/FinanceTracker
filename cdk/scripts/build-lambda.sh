@@ -32,16 +32,24 @@ for func in "${FUNCTIONS[@]}"; do
     
     # Check if source exists first
     if [[ -f "lambda/$func/main.go" ]]; then
+        # Copy source to backend temporary directory and build there
+        temp_dir="../backend/tmp/lambda/$func"
+        mkdir -p "$temp_dir"
+        cp "lambda/$func/main.go" "$temp_dir/"
+        
         # Build from backend directory to use financetracker module
         cd "../backend"
         
         # Build the function and output to CDK lambda directory
-        if go build -ldflags="-s -w" -o "../cdk/lambda/$func/bootstrap" "../cdk/lambda/$func/main.go"; then
+        if go build -ldflags="-s -w" -o "../cdk/lambda/$func/bootstrap" "./tmp/lambda/$func/main.go"; then
             echo "Successfully built $func function"
         else
             echo "Error: Failed to build $func function"
             exit 1
         fi
+        
+        # Cleanup temporary files
+        rm -rf "./tmp/lambda/$func"
         
         cd "../cdk"
     else
