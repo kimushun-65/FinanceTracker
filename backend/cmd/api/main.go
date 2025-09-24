@@ -70,6 +70,7 @@ func main() {
 		UserHandler:        container.UserHandler,
 		AccountHandler:     container.AccountHandler,
 		TransactionHandler: container.TransactionHandler,
+		CategoryHandler:    container.CategoryHandler,
 	})
 
 	// Start server

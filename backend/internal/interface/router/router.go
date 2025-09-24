@@ -42,6 +42,14 @@ type Handlers struct {
 		Delete(*gin.Context)
 		MonthlySummary(*gin.Context)
 	}
+	CategoryHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		ListMaster(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -183,10 +191,21 @@ func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
 // カテゴリールート（TODO: 専用ファイルに分離）
 func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
 	categories := group.Group("/categories")
-	categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
-	categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
-	categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
-	categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
+	if r.handlers != nil && r.handlers.CategoryHandler != nil {
+		categories.GET("", r.handlers.CategoryHandler.List)
+		categories.POST("", r.handlers.CategoryHandler.Create)
+		categories.GET("/:id", r.handlers.CategoryHandler.Get)
+		categories.PUT("/:id", r.handlers.CategoryHandler.Update)
+		categories.DELETE("/:id", r.handlers.CategoryHandler.Delete)
+		categories.GET("/master", r.handlers.CategoryHandler.ListMaster)
+	} else {
+		categories.GET("", r.notImplemented)
+		categories.POST("", r.notImplemented)
+		categories.GET("/:id", r.notImplemented)
+		categories.PUT("/:id", r.notImplemented)
+		categories.DELETE("/:id", r.notImplemented)
+		categories.GET("/master", r.notImplemented)
+	}
 }
 
 // 予算ルート（TODO: 専用ファイルに分離）
