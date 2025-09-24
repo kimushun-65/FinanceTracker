@@ -603,7 +603,17 @@ CategoryMaster (0..1) --- (*) CategoryMaster (self-reference)
 - 認証システム（Auth0統合、JWT認証）
 - 基盤構築（DB接続、ログ、エラーハンドリング）
 
-#### Phase 2: インフラストラクチャ層（最優先）- 1週間
+#### Phase 2: アプリケーション層（最優先）- 1週間
+1. **DTO定義**
+   - user_dto.go, account_dto.go, transaction_dto.go
+   - category_dto.go, budget_dto.go
+   
+2. **サービス実装**
+   - user_service.go, account_service.go
+   - transaction_service.go, category_service.go
+   - budget_service.go
+
+#### Phase 3: インフラストラクチャ層 - 1週間
 1. **コアリポジトリ実装**
    - account_repository.go
    - transaction_repository.go
@@ -614,16 +624,6 @@ CategoryMaster (0..1) --- (*) CategoryMaster (self-reference)
    - budget_repository.go
    - asset_snapshot_repository.go
    - notification_settings_repository.go
-
-#### Phase 3: アプリケーション層 - 1週間
-1. **DTO定義**
-   - user_dto.go, account_dto.go, transaction_dto.go
-   - category_dto.go, budget_dto.go
-   
-2. **サービス実装**
-   - user_service.go, account_service.go
-   - transaction_service.go, category_service.go
-   - budget_service.go
 
 #### Phase 4: インターフェース層 - 1週間
 1. **HTTPハンドラー実装**

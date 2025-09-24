@@ -4,7 +4,7 @@
 FinanceTrackerバックエンドをDocker環境で開発するためのタスクリストです。
 AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築します。
 
-## 進捗サマリー (2025-09-23更新)
+## 進捗サマリー (2025-09-24更新)
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
 - **Phase 2: ドメイン層実装** - 100%完了 ✅
@@ -476,18 +476,18 @@ func main() {
 
 ## 🚀 更新された次のステップ（優先順位順）
 
-### 🔥 **最優先（Week 4 Day 3-5）**: インフラストラクチャ層実装
-1. **コアリポジトリ実装**
-   - `account_repository.go` - 口座管理の基盤
-   - `transaction_repository.go` - 取引記録の基盤
-   - `category_repository.go` - カテゴリ管理の基盤
-   - `base_repository.go` - 共通CRUD処理
-
-### 🎯 **高優先（Week 5 Day 1-3）**: アプリケーション層実装
-2. **DTO・サービス実装**
+### 🔥 **最優先（Week 4 Day 3-5）**: アプリケーション層実装
+1. **DTO・サービス実装**
    - ユーザー管理（user_dto.go, user_service.go）
    - 口座管理（account_dto.go, account_service.go）
    - 取引管理（transaction_dto.go, transaction_service.go）
+
+### 🎯 **高優先（Week 5 Day 1-3）**: インフラストラクチャ層実装
+2. **コアリポジトリ実装**
+   - `base_repository.go` - 共通CRUD処理
+   - `account_repository.go` - 口座管理の基盤
+   - `transaction_repository.go` - 取引記録の基盤
+   - `category_repository.go` - カテゴリ管理の基盤
 
 ### 📋 **中優先（Week 5 Day 4-5）**: インターフェース層実装
 3. **HTTPハンドラー実装**
@@ -529,8 +529,8 @@ func main() {
 ### 📋 更新された実装推奨順序
 ```
 Week 4 Day 1-2: ✅ DI層実装（基盤強化）- 完了
-Week 4 Day 3-5: インフラ層実装（リポジトリ群）
-Week 5 Day 1-3: アプリケーション層実装（DTO・サービス）
+Week 4 Day 3-5: アプリケーション層実装（DTO・サービス）
+Week 5 Day 1-3: インフラストラクチャ層実装（リポジトリ群）
 Week 5 Day 4-5: インターフェース層実装（HTTPハンドラー）
 Week 6: テスト・統合・最適化（テスト用DIコンテナ活用）
 ```
