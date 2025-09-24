@@ -24,13 +24,9 @@ package main
 import (
 	stdlog "log"
 
-	"financetracker/internal/application/service"
-	"financetracker/internal/infrastructure/auth0"
-	gormRepo "financetracker/internal/infrastructure/gorm/repository"
-	"financetracker/internal/interface/handler"
+	"financetracker/internal/di"
 	"financetracker/internal/interface/router"
 	"financetracker/pkg/config"
-	"financetracker/pkg/database"
 	"financetracker/pkg/logger"
 
 	_ "financetracker/docs" // Swagger生成ドキュメント
@@ -53,37 +49,24 @@ func main() {
 		}
 	}()
 
-	// Load configuration
-	cfg := config.Load()
-
-	// Initialize database
-	db, err := database.New(cfg, log)
+	// Initialize DI container
+	container, err := di.NewContainer()
 	if err != nil {
-		log.Error("Failed to connect to database: " + err.Error())
+		log.Error("Failed to initialize DI container: " + err.Error())
 		return
 	}
 	defer func() {
-		if err := db.Close(); err != nil {
-			log.Error("Failed to close database: " + err.Error())
+		if err := container.Close(); err != nil {
+			log.Error("Failed to close DI container: " + err.Error())
 		}
 	}()
 
-	// Initialize Auth0
-	auth0Client := auth0.NewClient(cfg.Auth0Domain, cfg.Auth0ClientID, cfg.Auth0Audience)
-	authMiddleware := auth0.NewAuthMiddleware(auth0Client)
+	// Load configuration for router (router expects pkg/config.Config)
+	cfg := config.Load()
 
-	// Initialize repositories
-	userRepo := gormRepo.NewUserRepository(db.DB)
-
-	// Initialize services
-	authService := service.NewAuthService(userRepo)
-
-	// Initialize handlers
-	authHandler := handler.NewAuthHandler(authService, auth0Client, authMiddleware, cfg.Auth0ClientID, cfg.Auth0CallbackURL)
-
-	// Create router with handlers
+	// Create router with handlers from DI container
 	r := router.NewWithHandlers(cfg, log, &router.Handlers{
-		AuthHandler: authHandler,
+		AuthHandler: container.AuthHandler,
 	})
 
 	// Start server
