@@ -47,53 +47,63 @@
 - ✅ ほぼ全ての値オブジェクト実装
 - ⚠️ notificationドメインのvalue/のみ未実装（必要に応じて後で追加）
 
-### フェーズ3: インフラストラクチャ層実装（次フェーズ - 優先）
+### フェーズ3: アプリケーション層実装（完了）✅
+
+実装済み内容：
+- ✅ 認証関連のDTO（auth_dto.go）
+- ✅ 認証サービス（auth_service.go）
+- ✅ 全DTOの実装（user_dto.go, account_dto.go, transaction_dto.go, category_dto.go, budget_dto.go）
+- ✅ 全サービスの実装（user_service.go, account_service.go, transaction_service.go, category_service.go, budget_service.go）
+
+#### 3.1 DTOの定義（完了）
+```go
+// internal/application/dto/
+├── auth_dto.go             # ✅ 実装済み
+├── user_dto.go            # ✅ 実装済み
+├── account_dto.go         # ✅ 実装済み
+├── transaction_dto.go     # ✅ 実装済み
+├── category_dto.go        # ✅ 実装済み
+└── budget_dto.go          # ✅ 実装済み
+```
+
+#### 3.2 サービス実装（完了）
+```go
+// internal/application/service/
+├── auth_service.go         # ✅ 実装済み
+├── user_service.go        # ✅ 実装済み
+├── account_service.go     # ✅ 実装済み
+├── transaction_service.go # ✅ 実装済み
+├── category_service.go    # ✅ 実装済み
+└── budget_service.go      # ✅ 実装済み（一部エラー修正済み）
+```
+
+### フェーズ4: インフラストラクチャ層実装（コア機能完了）✅
 
 現在の実装状況：
 - ✅ GORMモデル定義（100%完了）
 - ✅ Auth0統合（100%完了）
-- ✅ UserRepository（100%完了）
-- ❌ その他のリポジトリ未実装（6/7未実装）
+- ✅ コアリポジトリ実装（100%完了）
 
-#### 3.1 リポジトリ実装（最優先）
+※ AssetRepositoryとNotificationRepositoryは拡張機能として後のフェーズで実装予定
+
+#### 4.1 コアリポジトリ実装（完了）
 ```go
 // internal/infrastructure/gorm/repository/
-├── user_repository.go           # ✅ 実装済み
-├── account_repository.go        # ❌ 未実装（最優先）
-├── transaction_repository.go    # ❌ 未実装（最優先）
-├── category_repository.go       # ❌ 未実装（最優先）
-├── budget_repository.go         # ❌ 未実装
-├── asset_repository.go          # ❌ 未実装
-└── notification_repository.go   # ❌ 未実装
+├── user_repository.go               # ✅ 実装済み
+├── account_repository.go            # ✅ 実装済み
+├── transaction_repository.go        # ✅ 実装済み
+├── category_repository.go           # ✅ 実装済み
+├── category_master_repository.go    # ✅ 実装済み
+└── budget_repository.go             # ✅ 実装済み
 ```
 
-### フェーズ4: アプリケーション層実装（インフラ層の後）
-
-現在の実装状況：
-- ✅ 認証関連のDTO（auth_dto.go）
-- ✅ 認証サービス（auth_service.go）
-- ❌ その他全てのDTO・サービス未実装
-
-#### 4.1 DTOの定義
+#### 4.2 拡張リポジトリ（後続フェーズで実装予定）
 ```go
-// internal/application/dto/
-├── auth_dto.go             # ✅ 実装済み
-├── user_dto.go            # ❌ 未実装
-├── account_dto.go         # ❌ 未実装
-├── transaction_dto.go     # ❌ 未実装
-├── category_dto.go        # ❌ 未実装
-└── budget_dto.go          # ❌ 未実装
-```
-
-#### 4.2 サービス実装
-```go
-// internal/application/service/
-├── auth_service.go         # ✅ 実装済み
-├── user_service.go        # ❌ 未実装
-├── account_service.go     # ❌ 未実装
-├── transaction_service.go # ❌ 未実装
-├── category_service.go    # ❌ 未実装
-└── budget_service.go      # ❌ 未実装
+// internal/infrastructure/gorm/repository/
+├── asset_repository.go              # 🔄 後続フェーズ
+├── asset_snapshot_repository.go     # 🔄 後続フェーズ
+├── asset_forecast_repository.go     # 🔄 後続フェーズ
+└── notification_repository.go       # 🔄 後続フェーズ
 ```
 
 #### 2.3 アカウントコンテキスト（account）
@@ -580,20 +590,23 @@ CategoryMaster (0..1) --- (*) CategoryMaster (self-reference)
 ### 完了済みフェーズ
 - ✅ **フェーズ1**: DI層の実装（100%完了）
 - ✅ **フェーズ2**: ドメイン層実装（95%完了）
+- ✅ **フェーズ3**: アプリケーション層実装（100%完了）
+- ✅ **フェーズ4**: インフラストラクチャ層実装 - コア機能（100%完了）
 
 ### 現在の状況
 1. **ドメイン層** - ほぼ完了
    - 全エンティティ、値オブジェクト、リポジトリインターフェース実装済み
    - notificationのvalue/のみ未実装
 
-2. **アプリケーション層** - ほぼ未実装（5%）
-   - 認証関連のみ実装済み
-   - 他の全てのDTO・サービス未実装
+2. **アプリケーション層** - 完了（100%）
+   - 全DTOの実装完了
+   - 全サービスの実装完了
 
-3. **インフラストラクチャ層** - 部分実装（40%）
+3. **インフラストラクチャ層** - コア機能完了（100%）
    - GORMモデル：100%完了
-   - リポジトリ実装：14%（UserRepoのみ）
+   - コアリポジトリ実装：100%（6/6リポジトリ完了）
    - Auth0：100%完了
+   - ※ 拡張機能（Asset、Notification）は後続フェーズで実装
 
 ### 実装ロードマップ
 
@@ -603,35 +616,46 @@ CategoryMaster (0..1) --- (*) CategoryMaster (self-reference)
 - 認証システム（Auth0統合、JWT認証）
 - 基盤構築（DB接続、ログ、エラーハンドリング）
 
-#### Phase 2: アプリケーション層（最優先）- 1週間
-1. **DTO定義**
-   - user_dto.go, account_dto.go, transaction_dto.go
-   - category_dto.go, budget_dto.go
-   
-2. **サービス実装**
-   - user_service.go, account_service.go
-   - transaction_service.go, category_service.go
-   - budget_service.go
+#### Phase 2: 完了済み ✅
+- アプリケーション層（DTO、サービス）の実装
+- 全DTOの定義（user_dto.go, account_dto.go, transaction_dto.go, category_dto.go, budget_dto.go）
+- 全サービスの実装（user_service.go, account_service.go, transaction_service.go, category_service.go, budget_service.go）
 
-#### Phase 3: インフラストラクチャ層 - 1週間
+#### Phase 3: インフラストラクチャ層（完了）✅
 1. **コアリポジトリ実装**
-   - account_repository.go
-   - transaction_repository.go
-   - category_repository.go
-   - category_master_repository.go
-   
-2. **補助リポジトリ実装**
-   - budget_repository.go
+   - ✅ account_repository.go
+   - ✅ transaction_repository.go
+   - ✅ category_repository.go
+   - ✅ category_master_repository.go
+   - ✅ budget_repository.go
+
+#### Phase 4: インターフェース層（次フェーズ）- 1週間
+1. **Lambdaハンドラー実装**
+   - users/handler.go
+   - accounts/handler.go
+   - transactions/handler.go
+   - categories/handler.go
+   - budgets/handler.go
+   - reports/handler.go
+   - auth/handler.go
+
+#### Phase 5: 拡張機能実装 - 1週間
+1. **追加リポジトリ実装**
+   - asset_repository.go
    - asset_snapshot_repository.go
-   - notification_settings_repository.go
+   - asset_forecast_repository.go
+   - notification_repository.go
 
-#### Phase 4: インターフェース層 - 1週間
-1. **HTTPハンドラー実装**
-   - user_handler.go, account_handler.go
-   - transaction_handler.go, category_handler.go
-   - budget_handler.go
+2. **追加サービス実装**
+   - asset_service.go
+   - asset_snapshot_service.go
+   - asset_forecast_service.go
+   - notification_service.go
 
-#### Phase 5: 統合・最適化 - 1週間
+3. **追加Lambdaハンドラー**
+   - notifications/handler.go
+
+#### Phase 6: 統合・最適化 - 1週間
 - APIテスト
 - パフォーマンス最適化
 - ドキュメント整備

@@ -1,125 +1,178 @@
 package main
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "log"
-    
-    "github.com/aws/aws-lambda-go/events"
-    "github.com/aws/aws-lambda-go/lambda"
-    
-    "finsight/common/db"
-    "finsight/common/models"
-    "finsight/common/utils"
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"go.uber.org/zap"
+
+	"financetracker/internal/application/dto"
+	"financetracker/internal/application/service"
+	"financetracker/internal/di"
+	"financetracker/pkg/logger"
 )
 
-func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-    // Get user ID from authorizer context
-    userID, ok := request.RequestContext.Authorizer["userId"].(string)
-    if !ok {
-        return utils.ErrorResponse(401, "Unauthorized"), nil
-    }
-    
-    switch request.HTTPMethod {
-    case "GET":
-        return handleGetUser(userID)
-    case "PUT":
-        return handleUpdateUser(userID, request.Body)
-    default:
-        return utils.ErrorResponse(405, "Method not allowed"), nil
-    }
+// Handler Lambda関数のハンドラー
+type Handler struct {
+	userService *service.UserService
+	logger      *logger.Logger
 }
 
-func handleGetUser(auth0UserID string) (events.APIGatewayProxyResponse, error) {
-    database, err := db.GetDB()
-    if err != nil {
-        log.Printf("Failed to connect to database: %v", err)
-        return utils.ErrorResponse(500, "Database connection error"), nil
-    }
-    
-    var user models.User
-    query := `SELECT id, auth0_user_id, email, name, created_at, updated_at 
-              FROM users WHERE auth0_user_id = $1`
-    
-    err = database.QueryRow(query, auth0UserID).Scan(
-        &user.ID, &user.Auth0UserID, &user.Email, 
-        &user.Name, &user.CreatedAt, &user.UpdatedAt,
-    )
-    
-    if err != nil {
-        // If user not found, create new user
-        if err.Error() == "sql: no rows in result set" {
-            return createNewUser(auth0UserID)
-        }
-        log.Printf("Failed to query user: %v", err)
-        return utils.ErrorResponse(500, "Failed to fetch user"), nil
-    }
-    
-    return utils.SuccessResponse(user), nil
+// NewHandler 新しいHandlerを作成
+func NewHandler(userService *service.UserService, logger *logger.Logger) *Handler {
+	return &Handler{
+		userService: userService,
+		logger:      logger,
+	}
 }
 
-func createNewUser(auth0UserID string) (events.APIGatewayProxyResponse, error) {
-    database, err := db.GetDB()
-    if err != nil {
-        return utils.ErrorResponse(500, "Database connection error"), nil
-    }
-    
-    var user models.User
-    query := `INSERT INTO users (auth0_user_id, email, name) 
-              VALUES ($1, $2, $3) 
-              RETURNING id, auth0_user_id, email, name, created_at, updated_at`
-    
-    // Default values for new user
-    email := fmt.Sprintf("%s@example.com", auth0UserID)
-    name := "New User"
-    
-    err = database.QueryRow(query, auth0UserID, email, name).Scan(
-        &user.ID, &user.Auth0UserID, &user.Email,
-        &user.Name, &user.CreatedAt, &user.UpdatedAt,
-    )
-    
-    if err != nil {
-        log.Printf("Failed to create user: %v", err)
-        return utils.ErrorResponse(500, "Failed to create user"), nil
-    }
-    
-    return utils.SuccessResponse(user), nil
+// Handle Lambdaイベントを処理
+func (h *Handler) Handle(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// リクエストIDをコンテキストから取得（API Gatewayで設定される）
+	requestID := request.RequestContext.RequestID
+	h.logger.Info("リクエスト受信",
+		zap.String("method", request.HTTPMethod),
+		zap.String("path", request.Path),
+		zap.String("requestId", requestID))
+
+	// Auth0ユーザーIDをAuthorizerコンテキストから取得
+	auth0ID, ok := request.RequestContext.Authorizer["userId"].(string)
+	if !ok {
+		h.logger.Warn("認証情報が見つかりません")
+		return errorResponse(401, "Unauthorized"), nil
+	}
+
+	switch request.HTTPMethod {
+	case "GET":
+		if request.Path == "/v1/users/me" || request.Resource == "/v1/users/me" {
+			return h.handleGetCurrentUser(ctx, auth0ID)
+		}
+		return errorResponse(404, "Not Found"), nil
+		
+	case "PUT":
+		if request.Path == "/v1/users/me" || request.Resource == "/v1/users/me" {
+			return h.handleUpdateCurrentUser(ctx, auth0ID, request.Body)
+		}
+		return errorResponse(404, "Not Found"), nil
+		
+	default:
+		return errorResponse(405, "Method Not Allowed"), nil
+	}
 }
 
-func handleUpdateUser(auth0UserID string, body string) (events.APIGatewayProxyResponse, error) {
-    var updateData struct {
-        Name  string `json:"name"`
-        Email string `json:"email"`
-    }
-    
-    if err := json.Unmarshal([]byte(body), &updateData); err != nil {
-        return utils.ErrorResponse(400, "Invalid request body"), nil
-    }
-    
-    database, err := db.GetDB()
-    if err != nil {
-        return utils.ErrorResponse(500, "Database connection error"), nil
-    }
-    
-    var user models.User
-    query := `UPDATE users SET name = $1, email = $2, updated_at = NOW() 
-              WHERE auth0_user_id = $3
-              RETURNING id, auth0_user_id, email, name, created_at, updated_at`
-    
-    err = database.QueryRow(query, updateData.Name, updateData.Email, auth0UserID).Scan(
-        &user.ID, &user.Auth0UserID, &user.Email,
-        &user.Name, &user.CreatedAt, &user.UpdatedAt,
-    )
-    
-    if err != nil {
-        log.Printf("Failed to update user: %v", err)
-        return utils.ErrorResponse(500, "Failed to update user"), nil
-    }
-    
-    return utils.SuccessResponse(user), nil
+// handleGetCurrentUser 現在のユーザー情報を取得
+func (h *Handler) handleGetCurrentUser(ctx context.Context, auth0ID string) (events.APIGatewayProxyResponse, error) {
+	user, err := h.userService.GetUserByAuth0ID(ctx, auth0ID)
+	if err != nil {
+		h.logger.Error("ユーザー取得エラー",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return errorResponse(500, "Failed to get user"), nil
+	}
+
+	// ユーザーが見つからない場合は作成
+	if user == nil {
+		h.logger.Info("新規ユーザー作成",
+			zap.String("auth0Id", auth0ID))
+		
+		// Auth0から取得した情報を使用してユーザーを作成
+		// 実際の実装では、Auth0のトークンから情報を取得する必要があります
+		createReq := &dto.CreateUserFromAuth0Request{
+			Auth0ID: auth0ID,
+			Email:   fmt.Sprintf("%s@example.com", auth0ID), // 仮の実装
+			Name:    "New User", // 仮の実装
+		}
+		
+		user, err = h.userService.CreateUserFromAuth0(ctx, createReq)
+		if err != nil {
+			h.logger.Error("ユーザー作成エラー",
+				zap.Error(err),
+				zap.String("auth0Id", auth0ID))
+			return errorResponse(500, "Failed to create user"), nil
+		}
+	}
+
+	return successResponse(user), nil
+}
+
+// handleUpdateCurrentUser 現在のユーザー情報を更新
+func (h *Handler) handleUpdateCurrentUser(ctx context.Context, auth0ID string, body string) (events.APIGatewayProxyResponse, error) {
+	// リクエストボディをパース
+	var updateReq dto.UpdateUserRequest
+	if err := json.Unmarshal([]byte(body), &updateReq); err != nil {
+		h.logger.Warn("不正なリクエストボディ",
+			zap.Error(err),
+			zap.String("body", body))
+		return errorResponse(400, "Invalid request body"), nil
+	}
+
+	// ユーザー情報を更新
+	user, err := h.userService.UpdateUserByAuth0ID(ctx, auth0ID, &updateReq)
+	if err != nil {
+		h.logger.Error("ユーザー更新エラー",
+			zap.Error(err),
+			zap.String("auth0Id", auth0ID))
+		return errorResponse(500, "Failed to update user"), nil
+	}
+
+	if user == nil {
+		return errorResponse(404, "User not found"), nil
+	}
+
+	return successResponse(user), nil
+}
+
+// successResponse 成功レスポンスを作成
+func successResponse(data interface{}) events.APIGatewayProxyResponse {
+	body, _ := json.Marshal(map[string]interface{}{
+		"success": true,
+		"data":    data,
+	})
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: string(body),
+	}
+}
+
+// errorResponse エラーレスポンスを作成
+func errorResponse(statusCode int, message string) events.APIGatewayProxyResponse {
+	body, _ := json.Marshal(map[string]interface{}{
+		"success": false,
+		"error":   message,
+	})
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: statusCode,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: string(body),
+	}
 }
 
 func main() {
-    lambda.Start(handler)
+	// DIコンテナを初期化
+	container, err := di.NewContainer()
+	if err != nil {
+		log.Fatalf("DIコンテナの初期化に失敗しました: %v", err)
+	}
+	defer func() {
+		if err := container.Close(); err != nil {
+			log.Printf("DIコンテナのクローズに失敗しました: %v", err)
+		}
+	}()
+
+	// ハンドラーを直接作成
+	handler := NewHandler(container.UserService, container.Logger)
+
+	// Lambda関数を開始
+	lambda.Start(handler.Handle)
 }
