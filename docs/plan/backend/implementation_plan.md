@@ -20,98 +20,80 @@
 
 ## 実装フェーズ
 
-### フェーズ1: プロジェクト構造の再編成（Day 1-2）
+### フェーズ1: DI層の実装（完了）✅
 
-#### 1.1 既存構造のリファクタリング
-現在の構造:
-```
-cdk/lambda/
-├── [function-name]/
-│   ├── main.go
-│   ├── go.mod
-│   └── bootstrap
-└── common/
-    ├── db/
-    ├── models/
-    └── utils/
-```
+#### 実装内容
+1. **DIコンテナ構造の実装**
+   - `internal/di/container.go` - 全依存関係を管理するDIコンテナ
+   - `internal/di/config.go` - 環境変数から設定を読み込む仕組み
+   - `internal/di/interfaces.go` - DIコンテナのインターフェース定義
 
-新しい構造（オニオンアーキテクチャ）:
-```
-backend/
-├── cmd/
-│   └── lambda/
-│       ├── users/
-│       ├── accounts/
-│       ├── transactions/
-│       ├── categories/
-│       ├── budgets/
-│       ├── reports/
-│       ├── auth/
-│       └── notifications/
-├── internal/
-│   ├── domain/                # ドメイン層
-│   │   ├── user/
-│   │   ├── account/
-│   │   ├── transaction/
-│   │   ├── category/
-│   │   ├── budget/
-│   │   └── common/
-│   ├── application/           # アプリケーション層
-│   │   ├── dto/
-│   │   ├── usecase/
-│   │   └── transaction/
-│   ├── infrastructure/        # インフラストラクチャ層
-│   │   ├── postgres/
-│   │   ├── auth0/
-│   │   └── aws/
-│   └── interface/             # インターフェース層
-│       └── lambda/
-├── pkg/                       # 共有パッケージ
-│   ├── config/
-│   └── errors/
-├── scripts/                   # ビルド・デプロイスクリプト
-├── go.mod
-├── go.sum
-└── Makefile
-```
+2. **初期化メソッドの実装**
+   - `initInfrastructure()` - データベースとAuth0クライアントの初期化
+   - `initRepositories()` - リポジトリの初期化（現在はUserRepoのみ）
+   - `initServices()` - サービスの初期化（現在はAuthServiceのみ）
+   - `initHandlers()` - ハンドラーの初期化（現在はAuthHandlerのみ）
 
-#### 1.2 依存関係の整理
-既存のパッケージに加えて:
-- GORM v2 (gorm.io/gorm)
-- GORM PostgreSQLドライバー (gorm.io/driver/postgres)
-- go-playground/validator/v10
-- uber-go/zap (ロギング)
+3. **設定管理の統一化**
+   - 全ての環境変数を一元管理
+   - タイムアウト、データベース接続、Auth0設定などを構造化
 
-#### 1.3 CDKとの統合
-- build-go-functions.sh スクリプトの更新
-- Lambda関数のビルドパスをbackend/に変更
+### フェーズ2: ドメイン層実装（完了）✅
 
-### フェーズ2: ドメイン層実装（Day 3-5）
+実装済み内容：
+- ✅ 共通ドメイン要素（base_entity, errors, 値オブジェクト）
+- ✅ 全7ドメインのエンティティ実装
+- ✅ 全ドメインのリポジトリインターフェース定義
+- ✅ ほぼ全ての値オブジェクト実装
+- ⚠️ notificationドメインのvalue/のみ未実装（必要に応じて後で追加）
 
-#### 2.1 共通ドメイン要素
+### フェーズ3: インフラストラクチャ層実装（次フェーズ - 優先）
+
+現在の実装状況：
+- ✅ GORMモデル定義（100%完了）
+- ✅ Auth0統合（100%完了）
+- ✅ UserRepository（100%完了）
+- ❌ その他のリポジトリ未実装（6/7未実装）
+
+#### 3.1 リポジトリ実装（最優先）
 ```go
-// internal/domain/common/
-├── errors.go              # 共通エラー定義
-├── base_entity.go         # 基本エンティティ（UUID, timestamps）
-├── value/
-│   ├── money.go           # 金額値オブジェクト
-│   ├── email.go           # メールアドレス値オブジェクト
-│   └── hex_color.go       # HEX形式の色値オブジェクト
-└── base_repository.go     # 基本リポジトリインターフェース
+// internal/infrastructure/gorm/repository/
+├── user_repository.go           # ✅ 実装済み
+├── account_repository.go        # ❌ 未実装（最優先）
+├── transaction_repository.go    # ❌ 未実装（最優先）
+├── category_repository.go       # ❌ 未実装（最優先）
+├── budget_repository.go         # ❌ 未実装
+├── asset_repository.go          # ❌ 未実装
+└── notification_repository.go   # ❌ 未実装
 ```
 
-#### 2.2 ユーザーコンテキスト（user）
+### フェーズ4: アプリケーション層実装（インフラ層の後）
+
+現在の実装状況：
+- ✅ 認証関連のDTO（auth_dto.go）
+- ✅ 認証サービス（auth_service.go）
+- ❌ その他全てのDTO・サービス未実装
+
+#### 4.1 DTOの定義
 ```go
-// internal/domain/user/
-├── entity/
-│   └── user.go           # ユーザーエンティティ
-├── value/
-│   ├── user_id.go        # ユーザーID値オブジェクト
-│   └── auth0_id.go       # Auth0 ID値オブジェクト
-├── repository/
-│   └── user_repository.go
-└── errors.go             # ユーザードメインエラー
+// internal/application/dto/
+├── auth_dto.go             # ✅ 実装済み
+├── user_dto.go            # ❌ 未実装
+├── account_dto.go         # ❌ 未実装
+├── transaction_dto.go     # ❌ 未実装
+├── category_dto.go        # ❌ 未実装
+└── budget_dto.go          # ❌ 未実装
+```
+
+#### 4.2 サービス実装
+```go
+// internal/application/service/
+├── auth_service.go         # ✅ 実装済み
+├── user_service.go        # ❌ 未実装
+├── account_service.go     # ❌ 未実装
+├── transaction_service.go # ❌ 未実装
+├── category_service.go    # ❌ 未実装
+└── budget_service.go      # ❌ 未実装
 ```
 
 #### 2.3 アカウントコンテキスト（account）
@@ -593,10 +575,63 @@ CategoryMaster (0..1) --- (*) CategoryMaster (self-reference)
 ## まとめ
 この実装計画に従って、既存のCDKインフラを活用しながら、FinanceTrackerのバックエンドをオニオンアーキテクチャで再構築します。現在のプレースホルダー実装から、保守性・テスタビリティ・拡張性に優れたプロダクショングレードのシステムへと成長させます。
 
-## 実装優先順位
+## 現在の実装状況と次のステップ
 
-1. **フェーズ1-2**: 構造の再編成とドメイン層の実装
-2. **フェーズ3-4**: アプリケーション層とインフラ層
-3. **フェーズ5**: Lambdaハンドラーの実装
-4. **フェーズ6-7**: CDK統合とテスト
-5. **フェーズ8**: デプロイと運用準備
+### 完了済みフェーズ
+- ✅ **フェーズ1**: DI層の実装（100%完了）
+- ✅ **フェーズ2**: ドメイン層実装（95%完了）
+
+### 現在の状況
+1. **ドメイン層** - ほぼ完了
+   - 全エンティティ、値オブジェクト、リポジトリインターフェース実装済み
+   - notificationのvalue/のみ未実装
+
+2. **アプリケーション層** - ほぼ未実装（5%）
+   - 認証関連のみ実装済み
+   - 他の全てのDTO・サービス未実装
+
+3. **インフラストラクチャ層** - 部分実装（40%）
+   - GORMモデル：100%完了
+   - リポジトリ実装：14%（UserRepoのみ）
+   - Auth0：100%完了
+
+### 実装ロードマップ
+
+#### Phase 1: 完了済み ✅
+- DI層実装（依存性注入コンテナ）
+- ドメイン層実装（エンティティ、値オブジェクト、リポジトリインターフェース）
+- 認証システム（Auth0統合、JWT認証）
+- 基盤構築（DB接続、ログ、エラーハンドリング）
+
+#### Phase 2: インフラストラクチャ層（最優先）- 1週間
+1. **コアリポジトリ実装**
+   - account_repository.go
+   - transaction_repository.go
+   - category_repository.go
+   - category_master_repository.go
+   
+2. **補助リポジトリ実装**
+   - budget_repository.go
+   - asset_snapshot_repository.go
+   - notification_settings_repository.go
+
+#### Phase 3: アプリケーション層 - 1週間
+1. **DTO定義**
+   - user_dto.go, account_dto.go, transaction_dto.go
+   - category_dto.go, budget_dto.go
+   
+2. **サービス実装**
+   - user_service.go, account_service.go
+   - transaction_service.go, category_service.go
+   - budget_service.go
+
+#### Phase 4: インターフェース層 - 1週間
+1. **HTTPハンドラー実装**
+   - user_handler.go, account_handler.go
+   - transaction_handler.go, category_handler.go
+   - budget_handler.go
+
+#### Phase 5: 統合・最適化 - 1週間
+- APIテスト
+- パフォーマンス最適化
+- ドキュメント整備
