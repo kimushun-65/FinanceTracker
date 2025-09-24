@@ -20,11 +20,9 @@ FUNCTIONS=(
     "notifications"
 )
 
-# Build each Go Lambda function
+# Build each Go Lambda function from backend directory
 for func in "${FUNCTIONS[@]}"; do
     echo "Building $func function..."
-    
-    cd "lambda/$func"
     
     # Set Go environment
     export GOOS=linux
@@ -32,18 +30,23 @@ for func in "${FUNCTIONS[@]}"; do
     export CGO_ENABLED=0
     export GO111MODULE=on
     
-    # Build the function
-    go mod tidy
-    go build -ldflags="-s -w" -o bootstrap main.go
-    
-    # Verify the binary exists
-    if [[ ! -f bootstrap ]]; then
-        echo "Error: Failed to build $func function"
-        exit 1
+    # Check if source exists first
+    if [[ -f "lambda/$func/main.go" ]]; then
+        # Build from backend directory to use financetracker module
+        cd "../backend"
+        
+        # Build the function and output to CDK lambda directory
+        if go build -ldflags="-s -w" -o "../cdk/lambda/$func/bootstrap" "../cdk/lambda/$func/main.go"; then
+            echo "Successfully built $func function"
+        else
+            echo "Error: Failed to build $func function"
+            exit 1
+        fi
+        
+        cd "../cdk"
+    else
+        echo "Skipping $func function (source not found)"
     fi
-    
-    echo "Successfully built $func function"
-    cd - > /dev/null
 done
 
 # Build Node.js authorizer function
