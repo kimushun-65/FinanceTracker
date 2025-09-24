@@ -25,14 +25,12 @@ on:
     paths:
       - "frontend/**"
       - "backend/**"
-      - "cdk/lambda/**"
       - ".github/workflows/build.yml"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
       - "backend/**"
-      - "cdk/lambda/**"
       - ".github/workflows/build.yml"
 
 # Environment variables for consistency
@@ -69,7 +67,6 @@ jobs:
               - '.github/workflows/build.yml'
             backend:
               - 'backend/**'
-              - 'cdk/lambda/**'
               - '.github/workflows/build.yml'
 
   # ==================== Frontend Jobs ====================
@@ -257,46 +254,6 @@ jobs:
           path: backend/coverage.out
           retention-days: 1
 
-  # Lambda関数ビルドチェック: Lambda関数のビルド可能性を検証
-  # CDKデプロイ前にLambda関数のビルドエラーを早期発見
-  lambda-build:
-    name: Lambda - Build Test
-    needs: changes
-    if: needs.changes.outputs.backend == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
-          cache-dependency-path: backend/go.sum
-
-      - name: Download dependencies
-        working-directory: backend
-        env:
-          GOTOOLCHAIN: go1.24.0
-        run: go mod download
-
-      - name: Build Lambda functions
-        env:
-          GOTOOLCHAIN: go1.24.0
-        run: |
-          echo "::group::Lambda build test"
-          cd cdk
-          chmod +x scripts/build-lambda.sh
-          ./scripts/build-lambda.sh
-          echo "::endgroup::"
-
-      - name: Upload Lambda artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: lambda-functions-${{ github.sha }}
-          path: cdk/lambda/*/bootstrap
-          retention-days: 1
-
   # ==================== Architecture Check ====================
   # アーキテクチャチェック: オニオンアーキテクチャの依存関係検証
   # 各層が適切な依存方向（内側から外側）を保っているかを確認
@@ -337,7 +294,6 @@ jobs:
       - backend-format
       - backend-lint
       - backend-build
-      - lambda-build
       - backend-architecture
     if: always() && needs.changes.outputs.any == 'true'
     runs-on: ubuntu-latest
@@ -368,10 +324,6 @@ jobs:
             echo "::error::Backend build/test failed"
             failed=true
           fi
-          if [[ "${{ needs.lambda-build.result }}" != "success" ]]; then
-            echo "::error::Lambda build test failed"
-            failed=true
-          fi
           if [[ "${{ needs.backend-architecture.result }}" != "success" ]]; then
             echo "::error::Backend architecture check failed"
             failed=true
@@ -399,7 +351,6 @@ jobs:
             echo "- Format: ${{ needs.backend-format.result }}" >> $GITHUB_STEP_SUMMARY
             echo "- Lint: ${{ needs.backend-lint.result }}" >> $GITHUB_STEP_SUMMARY
             echo "- Build/Test: ${{ needs.backend-build.result }}" >> $GITHUB_STEP_SUMMARY
-            echo "- Lambda Build: ${{ needs.lambda-build.result }}" >> $GITHUB_STEP_SUMMARY
             echo "- Architecture: ${{ needs.backend-architecture.result }}" >> $GITHUB_STEP_SUMMARY
           fi
 
