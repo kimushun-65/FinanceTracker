@@ -4,24 +4,23 @@
 FinanceTrackerバックエンドをDocker環境で開発するためのタスクリストです。
 AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築します。
 
-## 進捗サマリー (2025-09-24更新)
+## 進捗サマリー (2025-01-10更新)
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
 - **Phase 2: ドメイン層実装** - 100%完了 ✅
 - **Phase 2.5: Auth0認証実装** - 100%完了 ✅ (JWT、クッキー、認証API全て実装完了)
 - **Phase 2.7: DI層実装** - 100%完了 ✅
-- **Phase 3: アプリケーション層実装** - 15%完了（認証サービスのみ実装済み）
-- **Phase 4: インフラストラクチャ層実装** - 70%完了（DB接続・ユーザーリポジトリ実装済み、その他リポジトリ未実装）
-- **Phase 5: HTTPインターフェース層実装** - 60%完了（認証API完成、その他API未実装）
+- **Phase 3: アプリケーション層実装** - 90%完了（主要サービス・DTO実装完了）
+- **Phase 4: インフラストラクチャ層実装** - 95%完了（主要リポジトリ実装完了）
+- **Phase 5: HTTPインターフェース層実装** - 30%完了（認証API完成、Userロジック実装済み、HTTPハンドラー未実装）
 - **Phase 6: テスト実装** - 未着手
 - **Phase 7: CI/CD・運用設定** - 60%完了
-- **Phase 8: Lambda統合** - 未着手
+- **Phase 8: Lambda統合** - 10%完了（User系Lambdaプロキシ実装のみ）
 
 ### 🎯 更新された重要マイルストーン
-1. **Week 4 Day 1-2**: ✅ DI層実装完了
-2. **Week 4 Day 3-5**: アプリケーション層実装（DTO・サービス）
-3. **Week 5目標**: 全主要ビジネスAPI完成
-4. **Week 6目標**: テスト実装・統合完了
+1. **Week 4**: ✅ DI層、アプリケーション層、インフラ層実装完了
+2. **Week 5目標**: HTTPハンドラー実装、全主要ビジネスAPI完成
+3. **Week 6目標**: Lambda実装、テスト実装・統合完了
 
 ## Phase 0: 開発環境構築
 ### 0.1 Docker環境セットアップ
@@ -297,29 +296,29 @@ func main() {
 
 ### 3.1 DTOの定義 (DI層導入後に効率化)
 - [x] auth_dto.go (UserInfo, TokenClaims)
-- [ ] user_dto.go 🔥 **DI層導入後の優先実装**
-- [ ] account_dto.go 🔥 **DI層導入後の優先実装**
-- [ ] transaction_dto.go 🔥 **DI層導入後の優先実装**
-- [ ] category_dto.go
-- [ ] budget_dto.go
+- [x] user_dto.go ✅ **実装完了**
+- [x] account_dto.go ✅ **実装完了**
+- [x] transaction_dto.go ✅ **実装完了**
+- [x] category_dto.go ✅ **実装完了**
+- [x] budget_dto.go ✅ **実装完了**
 - [ ] asset_dto.go（AssetSnapshot, AssetForecast）
 - [ ] notification_dto.go（NotificationSettings）
 
 ### 3.2 ユースケース実装 (DI層により依存関係注入が自動化)
-- [x] ユーザー管理
-  - [ ] user_service.go ⚠️ **DI層導入後に完成**
+- [x] ユーザー管理 ✅ **実装完了**
+  - [x] user_service.go ✅ **実装完了**
   - [x] auth_service.go ✅ (SyncUser, GetUserByAuth0ID実装済み)
-- [ ] 口座管理 🔥 **DI層導入後の優先実装**
-  - [ ] account_service.go (DIコンテナで自動注入)
-  - [ ] account_movement_service.go (DIコンテナで自動注入)
-- [ ] 取引管理 🔥 **DI層導入後の優先実装**
-  - [ ] transaction_service.go (DIコンテナで自動注入)
-- [ ] カテゴリ管理 (DI層により効率化)
-  - [ ] category_service.go (DIコンテナで自動注入)
-  - [ ] category_master_service.go (DIコンテナで自動注入)
-- [ ] 予算管理 (DI層により効率化)
-  - [ ] budget_service.go (DIコンテナで自動注入)
-  - [ ] budget_suggestion_service.go (DIコンテナで自動注入)
+- [x] 口座管理 ✅ **実装完了**
+  - [x] account_service.go ✅ **実装完了**
+  - account_movement_service.go (要件外)
+- [x] 取引管理 ✅ **実装完了**
+  - [x] transaction_service.go ✅ **実装完了**
+- [x] カテゴリ管理 ✅ **実装完了**
+  - [x] category_service.go ✅ **実装完了**
+  - [x] category_master_service.go ✅ **実装完了**
+- [x] 予算管理 ✅ **実装完了**
+  - [x] budget_service.go ✅ **実装完了**
+  - [x] budget_suggestion_service.go ✅ **実装完了**
 - [ ] 資産管理 (DI層により効率化)
   - [ ] asset_snapshot_service.go (DIコンテナで自動注入)
   - [ ] asset_forecast_service.go (DIコンテナで自動注入)
@@ -354,13 +353,13 @@ func main() {
 ### 4.3 リポジトリ実装
 - [ ] base_repository.go（共通処理）🔥 **優先実装**
 - [x] user_repository.go ✅ (Save, FindByID, FindByAuth0UserID, Exists, Delete実装済み)
-- [ ] account_repository.go 🔥 **優先実装**
-- [ ] account_movement_repository.go 🔥 **優先実装**
-- [ ] transaction_repository.go 🔥 **優先実装**
-- [ ] category_repository.go
-- [ ] category_master_repository.go
-- [ ] budget_repository.go
-- [ ] budget_suggestion_repository.go
+- [x] account_repository.go ✅ **実装完了**
+- account_movement_repository.go (要件外)
+- [x] transaction_repository.go ✅ **実装完了**
+- [x] category_repository.go ✅ **実装完了**
+- [x] category_master_repository.go ✅ **実装完了**
+- [x] budget_repository.go ✅ **実装完了**
+- [x] budget_suggestion_repository.go ✅ **実装完了**
 - [ ] asset_snapshot_repository.go
 - [ ] asset_forecast_repository.go
 - [ ] notification_settings_repository.go
@@ -374,7 +373,7 @@ func main() {
 - [ ] メール送信サービス
 - [ ] キャッシュサービス（Redis）
 
-## Phase 5: HTTPインターフェース層実装 🔄 (60%完了)
+## Phase 5: HTTPインターフェース層実装 🔄 (30%完了)
 
 ### 5.1 ルーティング実装
 - [x] 全APIエンドポイントのルート定義完了 ✅
@@ -389,7 +388,10 @@ func main() {
 - [x] auth_handler.go ✅ **完全実装済み**
   - [x] ログイン・ログアウト・コールバック・ユーザー情報取得
   - [x] トークン管理・認証状態チェック
-- [ ] user_handler.go（GET,PUT /users/me）🔥 **優先実装**
+- [x] user_logic_handler.go ✅ **ロジック実装済み**
+  - [x] GetCurrentUser（Auth0 IDでユーザー取得、新規作成）
+  - [x] UpdateCurrentUser（Auth0 IDでユーザー更新）
+- [ ] user_handler.go（GET,PUT /users/me）🔥 **HTTPハンドラー未実装**
 - [ ] account_handler.go（CRUD /accounts）🔥 **優先実装**
 - [ ] transaction_handler.go（CRUD /transactions）🔥 **優先実装**
 - [ ] category_handler.go（CRUD /categories）
@@ -437,15 +439,33 @@ func main() {
 - [x] 環境構築手順書（README.mdに記載）
 - [x] マイグレーション手順書（cmd/migrate/README.md）
 
-## Phase 8: Lambda統合（オプション）
+## Phase 8: Lambda統合 🔄 (10%完了)
 ### 8.1 Lambda対応
-- [ ] Lambda用エントリポイント作成
-- [ ] CDKスタックとの統合
-- [ ] ビルドスクリプト更新
+- [x] Auth0 JWT Authorizer ✅ **完了**
+  - [x] `cdk/lambda/authorizer/index.js` - JWT検証実装
+- [x] ユーザー系Lambda ✅ **TypeScriptプロキシ実装**
+  - [x] `cdk/lambda/users/index.ts` - バックエンドAPIプロキシ
+  - [x] @types/aws-lambdaインストール済み
+- [ ] 残りのLambda関数実装（全てプレースホルダー）
+  - [ ] transactions - プレースホルダー
+  - [ ] accounts - プレースホルダー
+  - [ ] budgets - プレースホルダー
+  - [ ] categories - プレースホルダー
+  - [ ] reports - プレースホルダー
+  - [ ] notifications - プレースホルダー
+- [x] CDKスタックとの統合 ✅ **完了**
+- [x] ビルドスクリプト更新 ✅ **完了**
 
 ### 8.2 デプロイメント
-- [ ] Lambda関数デプロイ設定
-- [ ] API Gateway設定
+- [x] Lambda関数デプロイ設定 ✅ **完了**
+- [x] API Gateway設定 ✅ **完了**
+- [x] GitHub Actions CI/CD統合 ✅ **完了**
+
+### 8.3 Lambda実装方針
+- **場所**: `cdk/lambda/` - CDKディレクトリ内で管理
+- **アーキテクチャ**: DDD（ドメイン駆動設計）
+- **依存関係**: `financetracker/internal/*` モジュール使用
+- **ビルド**: 一時コピー＋backendディレクトリでビルドによる内部パッケージアクセス解決
 
 ## 技術スタック
 - **言語**: Go 1.21+
@@ -476,24 +496,34 @@ func main() {
 
 ## 🚀 更新された次のステップ（優先順位順）
 
-### 🔥 **最優先（Week 4 Day 3-5）**: アプリケーション層実装
-1. **DTO・サービス実装**
-   - ユーザー管理（user_dto.go, user_service.go）
-   - 口座管理（account_dto.go, account_service.go）
-   - 取引管理（transaction_dto.go, transaction_service.go）
+### ✅ **完了済み**: アプリケーション・インフラストラクチャ層実装
+1. **DTO・サービス実装** ✅ **完了**
+   - ユーザー管理（user_dto.go, user_service.go）✅
+   - 口座管理（account_dto.go, account_service.go）✅
+   - 取引管理（transaction_dto.go, transaction_service.go）✅
+   - カテゴリ管理（category_dto.go, category_service.go）✅
+   - 予算管理（budget_dto.go, budget_service.go）✅
 
-### 🎯 **高優先（Week 5 Day 1-3）**: インフラストラクチャ層実装
-2. **コアリポジトリ実装**
-   - `base_repository.go` - 共通CRUD処理
-   - `account_repository.go` - 口座管理の基盤
-   - `transaction_repository.go` - 取引記録の基盤
-   - `category_repository.go` - カテゴリ管理の基盤
+2. **コアリポジトリ実装** ✅ **完了**
+   - `account_repository.go` - 口座管理の基盤 ✅
+   - `transaction_repository.go` - 取引記録の基盤 ✅
+   - `category_repository.go` - カテゴリ管理の基盤 ✅
+   - `budget_repository.go` - 予算管理の基盤 ✅
 
-### 📋 **中優先（Week 5 Day 4-5）**: インターフェース層実装
+### 🔥 **最優先（現在）**: HTTPレイヤー実装
 3. **HTTPハンドラー実装**
-   - user_handler.go（GET/PUT /users/me）
-   - account_handler.go（CRUD /accounts）
-   - transaction_handler.go（CRUD /transactions）
+   - [ ] user_handler.go（GET/PUT /users/me）🔥 **最優先** - ロジックは実装済み、HTTPハンドラーのみ作成必要
+   - [ ] account_handler.go（CRUD /accounts）🔥 **最優先**
+   - [ ] transaction_handler.go（CRUD /transactions）🔥 **最優先**
+   - [ ] category_handler.go（CRUD /categories）
+   - [ ] budget_handler.go（CRUD /budgets）
+
+### 🔥 **最優先（現在）**: Lambda関数実装
+4. **Lambda関数実装**（現在全てプレースホルダー）
+   - [ ] cdk/lambda/accountsの実装 🔥 **最優先**
+   - [ ] cdk/lambda/transactionsの実装 🔥 **最優先**
+   - [ ] cdk/lambda/categoriesの実装
+   - [ ] cdk/lambda/budgetsの実装
 
 ### 🎯 **高優先（Week 5）**: 残りビジネス機能
 5. **カテゴリー管理** (DI層効率活用)

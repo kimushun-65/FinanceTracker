@@ -3,6 +3,15 @@
 ## 概要
 FinanceTrackerバックエンドは、Clean Architecture（オニオンアーキテクチャ）に基づいて設計された、DDD（ドメイン駆動設計）実装のGo言語プロジェクトです。認証システム、主要なドメインモデル、データベース管理機能が実装済みで、拡張性と保守性に優れた構成となっています。
 
+## 実装進捗サマリー（2025-01-10更新）
+
+- ✅ **フェーズ1: DI層実装** - 100%完了
+- ✅ **フェーズ2: ドメイン層実装** - 100%完了 
+- ✅ **フェーズ3: アプリケーション層実装** - 90%完了（主要サービス・DTO実装済み）
+- ✅ **フェーズ4: インフラストラクチャ層実装** - 95%完了（主要リポジトリ実装済み）
+- 🔄 **フェーズ5: HTTPインターフェース層実装** - 30%完了（認証API完成、Userロジック実装済み、HTTPハンドラー未実装）
+- 🔄 **フェーズ6: Lambda統合** - 10%完了（User系Lambdaプロキシ実装のみ）
+
 ## 技術スタック
 - **言語**: Go 1.24.0
 - **Webフレームワーク**: Gin v1.11.0
@@ -163,20 +172,19 @@ backend/
     ├── application/                              # 🎯 アプリケーション層（ユースケース）
     │   ├── dto/                                  # データ転送オブジェクト
     │   │   ├── auth_dto.go                       # 🟢 認証用DTO (実装済み)
-    │   │   ├── user_dto.go                       # 🔴 ユーザー用DTO (未実装)
-    │   │   ├── account_dto.go                    # 🔴 口座用DTO (未実装)
-    │   │   ├── transaction_dto.go                # 🔴 取引用DTO (未実装)
-    │   │   ├── category_dto.go                   # 🔴 カテゴリ用DTO (未実装)
-    │   │   ├── budget_dto.go                     # 🔴 予算用DTO (未実装)
-    │   │   ├── asset_dto.go                      # 🔴 資産管理用DTO (未実装)
+    │   │   ├── user_dto.go                       # 🟢 ユーザー用DTO (278行, 実装済み)
+    │   │   ├── account_dto.go                    # 🟢 口座用DTO (実装済み)
+    │   │   ├── transaction_dto.go                # 🟢 取引用DTO (実装済み)
+    │   │   ├── category_dto.go                   # 🟢 カテゴリ用DTO (実装済み)
+    │   │   ├── budget_dto.go                     # 🟢 予算用DTO (実装済み)
     │   │   └── notification_dto.go               # 🔴 通知用DTO (未実装)
     │   ├── service/                              # アプリケーションサービス（ユースケース）
     │   │   ├── auth_service.go                   # 🟢 認証サービス (89行, 実装済み)
-    │   │   ├── user_service.go                   # 🔴 ユーザー管理サービス (未実装)
-    │   │   ├── account_service.go                # 🔴 口座管理サービス (未実装)
-    │   │   ├── transaction_service.go            # 🔴 取引管理サービス (未実装)
-    │   │   ├── category_service.go               # 🔴 カテゴリ管理サービス (未実装)
-    │   │   ├── budget_service.go                 # 🔴 予算管理サービス (未実装)
+    │   │   ├── user_service.go                   # 🟢 ユーザー管理サービス (278行, 実装済み)
+    │   │   ├── account_service.go                # 🟢 口座管理サービス (実装済み)
+    │   │   ├── transaction_service.go            # 🟢 取引管理サービス (実装済み)
+    │   │   ├── category_service.go               # 🟢 カテゴリ管理サービス (実装済み)
+    │   │   ├── budget_service.go                 # 🟢 予算管理サービス (実装済み)
     │   │   ├── asset_service.go                  # 🔴 資産管理サービス (未実装)
     │   │   ├── notification_service.go           # 🔴 通知管理サービス (未実装)
     │   │   └── report_service.go                 # 🔴 レポート生成サービス (未実装)
