@@ -66,8 +66,9 @@ func main() {
 
 	// Create router with handlers from DI container
 	r := router.NewWithHandlers(cfg, log, &router.Handlers{
-		AuthHandler: container.AuthHandler,
-		UserHandler: container.UserHandler,
+		AuthHandler:    container.AuthHandler,
+		UserHandler:    container.UserHandler,
+		AccountHandler: container.AccountHandler,
 	})
 
 	// Start server

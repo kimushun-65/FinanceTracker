@@ -27,6 +27,13 @@ type Handlers struct {
 		GetCurrentUser(*gin.Context)
 		UpdateCurrentUser(*gin.Context)
 	}
+	AccountHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -128,12 +135,21 @@ func (r *Router) registerUserRoutes(group *gin.RouterGroup) {
 // アカウントルート（TODO: 専用ファイルに分離）
 func (r *Router) registerAccountRoutes(group *gin.RouterGroup) {
 	accounts := group.Group("/accounts")
-	accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
-	accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
-	accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
-	accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
-	accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
-	accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+	if r.handlers != nil && r.handlers.AccountHandler != nil {
+		accounts.GET("", r.handlers.AccountHandler.List)
+		accounts.POST("", r.handlers.AccountHandler.Create)
+		accounts.GET("/:id", r.handlers.AccountHandler.Get)
+		accounts.PUT("/:id", r.handlers.AccountHandler.Update)
+		accounts.DELETE("/:id", r.handlers.AccountHandler.Delete)
+		accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+	} else {
+		accounts.GET("", r.notImplemented)
+		accounts.POST("", r.notImplemented)
+		accounts.GET("/:id", r.notImplemented)
+		accounts.PUT("/:id", r.notImplemented)
+		accounts.DELETE("/:id", r.notImplemented)
+		accounts.POST("/:id/movements", r.notImplemented)
+	}
 }
 
 // トランザクションルート（TODO: 専用ファイルに分離）

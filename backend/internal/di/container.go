@@ -54,12 +54,14 @@ type Container struct {
 	NotificationRepo     notificationRepo.NotificationSettingsRepository
 
 	// アプリケーションサービス
-	AuthService *service.AuthService
-	UserService *service.UserService
+	AuthService    *service.AuthService
+	UserService    *service.UserService
+	AccountService *service.AccountService
 
 	// HTTPハンドラー
-	AuthHandler *handler.AuthHandler
-	UserHandler *handler.UserHandler
+	AuthHandler    *handler.AuthHandler
+	UserHandler    *handler.UserHandler
+	AccountHandler *handler.AccountHandler
 
 	// 共有ロジックハンドラー
 	UserLogicHandler *appHandler.UserLogicHandler
@@ -217,6 +219,12 @@ func (c *Container) initServices() {
 		c.UserRepo,
 		c.Logger,
 	)
+
+	// 口座サービス
+	c.AccountService = service.NewAccountService(
+		c.AccountRepo,
+		c.Logger,
+	)
 }
 
 // initHandlers は全てのHTTPハンドラーを初期化する
@@ -239,6 +247,12 @@ func (c *Container) initHandlers() {
 	// ユーザーハンドラー
 	c.UserHandler = handler.NewUserHandler(
 		c.UserService,
+		c.Logger,
+	)
+
+	// 口座ハンドラー
+	c.AccountHandler = handler.NewAccountHandler(
+		c.AccountService,
 		c.Logger,
 	)
 }
