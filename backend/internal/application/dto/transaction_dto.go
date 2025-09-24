@@ -35,7 +35,7 @@ type CreateTransactionRequest struct {
 
 // UpdateTransactionRequest 取引更新リクエスト
 type UpdateTransactionRequest struct {
-	CategoryID      *uuid.UUID      `json:"category_id" binding:"omitempty"`
+	CategoryID      *uuid.UUID       `json:"category_id" binding:"omitempty"`
 	Amount          *decimal.Decimal `json:"amount" binding:"omitempty,gt=0"`
 	Description     *string          `json:"description" binding:"omitempty,min=1,max=500"`
 	TransactionDate *time.Time       `json:"transaction_date" binding:"omitempty"`
@@ -53,18 +53,18 @@ type TransactionListResponse struct {
 
 // TransactionSearchParams 取引検索パラメータ
 type TransactionSearchParams struct {
-	UserID          uuid.UUID   `form:"-"`
-	AccountID       *uuid.UUID  `form:"account_id"`
-	CategoryID      *uuid.UUID  `form:"category_id"`
-	TransactionType *string     `form:"transaction_type" binding:"omitempty,oneof=income expense"`
-	DateFrom        *time.Time  `form:"date_from"`
-	DateTo          *time.Time  `form:"date_to"`
+	UserID          uuid.UUID        `form:"-"`
+	AccountID       *uuid.UUID       `form:"account_id"`
+	CategoryID      *uuid.UUID       `form:"category_id"`
+	TransactionType *string          `form:"transaction_type" binding:"omitempty,oneof=income expense"`
+	DateFrom        *time.Time       `form:"date_from"`
+	DateTo          *time.Time       `form:"date_to"`
 	AmountMin       *decimal.Decimal `form:"amount_min" binding:"omitempty,gte=0"`
 	AmountMax       *decimal.Decimal `form:"amount_max" binding:"omitempty,gte=0"`
-	Description     *string     `form:"description"`
-	Page            int         `form:"page,default=1" binding:"min=1"`
-	PerPage         int         `form:"per_page,default=20" binding:"min=1,max=100"`
-	OrderBy         string      `form:"order_by,default=transaction_date desc"`
+	Description     *string          `form:"description"`
+	Page            int              `form:"page,default=1" binding:"min=1"`
+	PerPage         int              `form:"per_page,default=20" binding:"min=1,max=100"`
+	OrderBy         string           `form:"order_by,default=transaction_date desc"`
 }
 
 // TransactionSummary 取引サマリー

@@ -46,4 +46,3 @@ func UserFromDomain(user *userDomain.User) *UserResponse {
 		UpdatedAt: user.UpdatedAt,
 	}
 }
-
