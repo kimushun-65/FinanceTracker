@@ -26,6 +26,7 @@ import (
 
 	// インターフェース
 	"financetracker/internal/interface/handler"
+	loggerPkg "financetracker/pkg/logger"
 )
 
 // Container は全ての依存関係を保持する
@@ -53,9 +54,14 @@ type Container struct {
 
 	// アプリケーションサービス
 	AuthService *service.AuthService
+	UserService *service.UserService
 
 	// HTTPハンドラー
 	AuthHandler *handler.AuthHandler
+
+
+	// ロガー
+	Logger *loggerPkg.Logger
 }
 
 // NewContainer は全ての依存関係を初期化して作成する
@@ -95,6 +101,7 @@ func (c *Container) Close() error {
 	}
 	return nil
 }
+
 
 // initInfrastructure はインフラストラクチャの初期化を行う
 func (c *Container) initInfrastructure() error {
@@ -177,20 +184,36 @@ func (c *Container) setupAuth0() (*auth0.Client, error) {
 func (c *Container) initRepositories() {
 	// ユーザーリポジトリ
 	c.UserRepo = postgresRepo.NewUserRepository(c.DB)
-
-	// TODO: 以下のリポジトリは実装が完了したら有効化する
+	
 	// アカウントリポジトリ
-	// c.AccountRepo = postgresRepo.NewAccountRepository(c.DB)
+	c.AccountRepo = postgresRepo.NewAccountRepository(c.DB)
+	
+	// 取引リポジトリ
+	c.TransactionRepo = postgresRepo.NewTransactionRepository(c.DB)
+	
+	// カテゴリリポジトリ
+	c.CategoryRepo = postgresRepo.NewCategoryRepository(c.DB)
+	c.CategoryMasterRepo = postgresRepo.NewCategoryMasterRepository(c.DB)
+	
+	// 予算リポジトリ
+	c.BudgetRepo = postgresRepo.NewBudgetRepository(c.DB)
 }
 
 // initServices は全てのアプリケーションサービスを初期化する
 func (c *Container) initServices() {
+	// ロガーを初期化
+	c.Logger = loggerPkg.NewLogger(c.Config.Log.Level)
+	
 	// 認証サービス
 	c.AuthService = service.NewAuthService(
 		c.UserRepo,
 	)
-
-	// TODO: 以下のサービスは実装が完了したら有効化する
+	
+	// ユーザーサービス
+	c.UserService = service.NewUserService(
+		c.UserRepo,
+		c.Logger,
+	)
 }
 
 // initHandlers は全てのHTTPハンドラーを初期化する
@@ -203,6 +226,4 @@ func (c *Container) initHandlers() {
 		c.Config.Auth0.Domain,
 		c.Config.Auth0.Audience,
 	)
-
-	// TODO: 以下のハンドラーは実装が完了したら有効化する
 }

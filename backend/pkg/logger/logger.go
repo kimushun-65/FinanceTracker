@@ -14,11 +14,12 @@ type Logger struct {
 	*zap.Logger
 }
 
-// New creates a new logger instance
-func New() *Logger {
+
+// NewLogger creates a new logger instance with specified log level
+func NewLogger(logLevel string) *Logger {
 	config := zap.NewProductionConfig()
-	// Set log level from environment
-	logLevel := os.Getenv("LOG_LEVEL")
+	
+	// Set log level
 	switch logLevel {
 	case "debug":
 		config.Level = zap.NewAtomicLevelAt(zapcore.DebugLevel)
