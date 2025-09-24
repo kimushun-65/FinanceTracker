@@ -18,6 +18,7 @@ import (
 	userRepo "financetracker/internal/domain/user/repository"
 
 	// アプリケーションサービス
+	appHandler "financetracker/internal/application/handler"
 	"financetracker/internal/application/service"
 
 	// インフラストラクチャ
@@ -58,6 +59,10 @@ type Container struct {
 
 	// HTTPハンドラー
 	AuthHandler *handler.AuthHandler
+	UserHandler *handler.UserHandler
+
+	// 共有ロジックハンドラー
+	UserLogicHandler *appHandler.UserLogicHandler
 
 	// ロガー
 	Logger *loggerPkg.Logger
@@ -223,5 +228,17 @@ func (c *Container) initHandlers() {
 		&auth0.AuthMiddleware{},
 		c.Config.Auth0.Domain,
 		c.Config.Auth0.Audience,
+	)
+
+	// 共有ロジックハンドラー
+	c.UserLogicHandler = appHandler.NewUserLogicHandler(
+		c.UserService,
+		c.Logger,
+	)
+
+	// ユーザーハンドラー
+	c.UserHandler = handler.NewUserHandler(
+		c.UserService,
+		c.Logger,
 	)
 }

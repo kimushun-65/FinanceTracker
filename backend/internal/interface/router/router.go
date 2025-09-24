@@ -23,6 +23,10 @@ type Handlers struct {
 		SetToken(*gin.Context)
 		RemoveToken(*gin.Context)
 	}
+	UserHandler interface {
+		GetCurrentUser(*gin.Context)
+		UpdateCurrentUser(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -112,8 +116,13 @@ func (r *Router) setupRoutes() {
 // ユーザールート（TODO: 専用ファイルに分離）
 func (r *Router) registerUserRoutes(group *gin.RouterGroup) {
 	users := group.Group("/users")
-	users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
-	users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
+	if r.handlers != nil && r.handlers.UserHandler != nil {
+		users.GET("/me", r.handlers.UserHandler.GetCurrentUser)
+		users.PUT("/me", r.handlers.UserHandler.UpdateCurrentUser)
+	} else {
+		users.GET("/me", r.notImplemented)
+		users.PUT("/me", r.notImplemented)
+	}
 }
 
 // アカウントルート（TODO: 専用ファイルに分離）

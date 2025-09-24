@@ -96,6 +96,7 @@ func authenticateRequest(c *gin.Context, cfg *authConfig) error {
 // setUserContext sets user information in the Gin context
 func setUserContext(c *gin.Context, claims *Auth0Claims) {
 	c.Set("UserID", claims.Subject)
+	c.Set("auth0ID", claims.Subject) // UserHandlerが期待するキー
 	c.Set("Claims", claims)
 	c.Set("Permissions", claims.Permissions)
 }
