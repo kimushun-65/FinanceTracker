@@ -21,7 +21,6 @@ type UserModel struct {
 	Email         string    `gorm:"type:varchar(255);unique;not null"`
 	Name          string    `gorm:"type:varchar(100);not null"`
 	EmailVerified bool      `gorm:"type:boolean;default:false"`
-	Picture       string    `gorm:"type:varchar(500)"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -130,7 +129,7 @@ func (r *UserRepository) toModel(user *entity.User) *UserModel {
 		Auth0UserID:   user.Auth0UserID().Value(),
 		Email:         user.Email().Value(),
 		Name:          user.Name(),
-		EmailVerified: false, // 別途保存が必要
+		EmailVerified: user.IsEmailVerified(),
 		CreatedAt:     user.GetCreatedAt(),
 		UpdatedAt:     user.GetUpdatedAt(),
 	}
@@ -159,5 +158,6 @@ func (r *UserRepository) toDomain(model *UserModel) (*entity.User, error) {
 		*auth0ID,
 		*email,
 		model.Name,
+		model.EmailVerified,
 	), nil
 }

@@ -10,12 +10,13 @@ import (
 
 // UserResponse ユーザー情報レスポンス
 type UserResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Auth0ID   string    `json:"auth0_id"`
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	Auth0ID       string    `json:"auth0_id"`
+	Email         string    `json:"email"`
+	Name          string    `json:"name"`
+	EmailVerified bool      `json:"email_verified"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // UpdateUserRequest ユーザー更新リクエスト
@@ -45,11 +46,12 @@ func UserFromDomain(user *userDomain.User) *UserResponse {
 	}
 
 	return &UserResponse{
-		ID:        user.ID,
-		Auth0ID:   user.Auth0UserID().String(),
-		Email:     user.Email().String(),
-		Name:      user.Name(),
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:            user.ID,
+		Auth0ID:       user.Auth0UserID().String(),
+		Email:         user.Email().String(),
+		Name:          user.Name(),
+		EmailVerified: user.IsEmailVerified(),
+		CreatedAt:     user.CreatedAt,
+		UpdatedAt:     user.UpdatedAt,
 	}
 }

@@ -11,22 +11,24 @@ import (
 // User ユーザーエンティティ
 type User struct {
 	common.BaseEntity
-	auth0UserID userValue.Auth0ID
-	email       value.Email
-	name        string
+	auth0UserID   userValue.Auth0ID
+	email         value.Email
+	name          string
+	emailVerified bool
 }
 
 // NewUser 新しいUserエンティティを作成
-func NewUser(auth0UserID userValue.Auth0ID, email value.Email, name string) (*User, error) {
+func NewUser(auth0UserID userValue.Auth0ID, email value.Email, name string, emailVerified bool) (*User, error) {
 	if err := validateUserName(name); err != nil {
 		return nil, err
 	}
 
 	return &User{
-		BaseEntity:  common.NewBaseEntity(),
-		auth0UserID: auth0UserID,
-		email:       email,
-		name:        strings.TrimSpace(name),
+		BaseEntity:    common.NewBaseEntity(),
+		auth0UserID:   auth0UserID,
+		email:         email,
+		name:          strings.TrimSpace(name),
+		emailVerified: emailVerified,
 	}, nil
 }
 
@@ -36,12 +38,14 @@ func ReconstructUser(
 	auth0UserID userValue.Auth0ID,
 	email value.Email,
 	name string,
+	emailVerified bool,
 ) *User {
 	return &User{
-		BaseEntity:  baseEntity,
-		auth0UserID: auth0UserID,
-		email:       email,
-		name:        name,
+		BaseEntity:    baseEntity,
+		auth0UserID:   auth0UserID,
+		email:         email,
+		name:          name,
+		emailVerified: emailVerified,
 	}
 }
 
@@ -71,6 +75,17 @@ func (u *User) UpdateProfile(name string, email value.Email) error {
 	u.UpdateTimestamp()
 
 	return nil
+}
+
+// UpdateEmailVerified メール検証状態を更新
+func (u *User) UpdateEmailVerified(verified bool) {
+	u.emailVerified = verified
+	u.UpdateTimestamp()
+}
+
+// IsEmailVerified メールアドレスが検証済みかどうかを取得
+func (u User) IsEmailVerified() bool {
+	return u.emailVerified
 }
 
 // IsSocialLoginUser ソーシャルログインユーザーかどうかを判定
