@@ -17,12 +17,16 @@ func seedTransactions(db *gorm.DB) error {
 		return err
 	}
 
-	// 最初のユーザーのみにサンプルトランザクションを作成
-	if len(users) == 0 {
-		return nil
+	// 開発テストユーザーを取得
+	var user model.User
+	if err := db.Where("auth0_id = ?", "auth0|dev-test-user-123").First(&user).Error; err != nil {
+		log.Printf("Dev test user not found: %v", err)
+		// フォールバック: 最初のユーザーを使用
+		if len(users) == 0 {
+			return nil
+		}
+		user = users[0]
 	}
-
-	user := users[0]
 
 	// 口座を取得
 	var accounts []model.Account
