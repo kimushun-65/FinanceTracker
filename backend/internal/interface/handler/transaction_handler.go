@@ -17,13 +17,15 @@ import (
 // TransactionHandler トランザクション関連のHTTPハンドラー
 type TransactionHandler struct {
 	transactionService *service.TransactionService
+	userService        *service.UserService
 	logger             *logger.Logger
 }
 
 // NewTransactionHandler 新しいトランザクションハンドラーを作成
-func NewTransactionHandler(transactionService *service.TransactionService, logger *logger.Logger) *TransactionHandler {
+func NewTransactionHandler(transactionService *service.TransactionService, userService *service.UserService, logger *logger.Logger) *TransactionHandler {
 	return &TransactionHandler{
 		transactionService: transactionService,
+		userService:        userService,
 		logger:             logger,
 	}
 }
@@ -46,23 +48,20 @@ func NewTransactionHandler(transactionService *service.TransactionService, logge
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/transactions [get]
 func (h *TransactionHandler) List(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
 	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
-		})
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -160,10 +159,10 @@ func (h *TransactionHandler) List(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/transactions [post]
 func (h *TransactionHandler) Create(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		h.logger.Error("Failed to get user ID: " + err.Error())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "認証情報が見つかりません",
 		})
@@ -176,16 +175,6 @@ func (h *TransactionHandler) Create(c *gin.Context) {
 		h.logger.Error("リクエストボディのパースエラー: " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "リクエストが無効です",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
 		})
 		return
 	}

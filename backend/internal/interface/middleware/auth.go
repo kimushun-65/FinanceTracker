@@ -16,7 +16,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 // JWKSResponse represents the response from Auth0 JWKS endpoint.
@@ -57,22 +56,33 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 	authCfg := newAuthConfig(cfg)
 
 	return func(c *gin.Context) {
-		// Development bypass: X-Dev-User-ID header
+		// Development bypass: X-Auth0-User-ID header
 		if cfg.AppEnv == "development" {
+			auth0UserID := c.GetHeader("X-Auth0-User-ID")
+			if auth0UserID != "" {
+				// Set auth0_id for handler to look up actual user
+				c.Set("auth0_id", auth0UserID)
+				c.Set("Claims", &Auth0Claims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						Subject: auth0UserID,
+					},
+				})
+				// Note: UserID will be set by the handler after looking up the user
+				c.Next()
+				return
+			}
+
+			// Legacy X-Dev-User-ID support (deprecated)
 			devUserID := c.GetHeader("X-Dev-User-ID")
 			if devUserID != "" {
-				// Generate a deterministic UUID from the dev user ID for consistency
-				// This ensures the same X-Dev-User-ID always maps to the same UUID
-				userUUID := generateDeterministicUUID(devUserID)
-
-				// Set user information for development
-				c.Set("UserID", userUUID.String())
+				// Set auth0_id for handler to look up actual user
 				c.Set("auth0_id", devUserID)
 				c.Set("Claims", &Auth0Claims{
 					RegisteredClaims: jwt.RegisteredClaims{
 						Subject: devUserID,
 					},
 				})
+				// Note: UserID will be set by the handler after looking up the user
 				c.Next()
 				return
 			}
@@ -117,10 +127,11 @@ func authenticateRequest(c *gin.Context, cfg *authConfig) error {
 
 // setUserContext sets user information in the Gin context
 func setUserContext(c *gin.Context, claims *Auth0Claims) {
-	c.Set("UserID", claims.Subject)
-	c.Set("auth0ID", claims.Subject) // UserHandlerが期待するキー
+	// Set auth0_id for handler to look up actual user
+	c.Set("auth0_id", claims.Subject)
 	c.Set("Claims", claims)
 	c.Set("Permissions", claims.Permissions)
+	// Note: UserID will be set by the handler after looking up the user
 }
 
 // extractTokenFromHeader extracts the JWT token from the Authorization header
@@ -370,13 +381,4 @@ func OptionalAuth(cfg *config.Config) gin.HandlerFunc {
 		// If auth header exists, validate it
 		authMiddleware(c)
 	}
-}
-
-// generateDeterministicUUID generates a deterministic UUID v5 from a string
-func generateDeterministicUUID(input string) uuid.UUID {
-	// Create a namespace UUID for our application
-	namespace := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-
-	// Generate UUID v5 using SHA-1 hash of namespace and input
-	return uuid.NewSHA1(namespace, []byte(input))
 }

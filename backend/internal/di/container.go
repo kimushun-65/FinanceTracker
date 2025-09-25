@@ -278,24 +278,28 @@ func (c *Container) initHandlers() {
 	// 口座ハンドラー
 	c.AccountHandler = handler.NewAccountHandler(
 		c.AccountService,
+		c.UserService,
 		c.Logger,
 	)
 
 	// トランザクションハンドラー
 	c.TransactionHandler = handler.NewTransactionHandler(
 		c.TransactionService,
+		c.UserService,
 		c.Logger,
 	)
 
 	// カテゴリハンドラー
 	c.CategoryHandler = handler.NewCategoryHandler(
 		c.CategoryService,
+		c.UserService,
 		c.Logger,
 	)
 
 	// 予算ハンドラー
 	c.BudgetHandler = handler.NewBudgetHandler(
 		c.BudgetService,
+		c.UserService,
 		c.Logger,
 	)
 }

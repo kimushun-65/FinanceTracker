@@ -17,13 +17,15 @@ import (
 // BudgetHandler 予算関連のHTTPハンドラー
 type BudgetHandler struct {
 	budgetService *service.BudgetService
+	userService   *service.UserService
 	logger        *logger.Logger
 }
 
 // NewBudgetHandler 新しい予算ハンドラーを作成
-func NewBudgetHandler(budgetService *service.BudgetService, logger *logger.Logger) *BudgetHandler {
+func NewBudgetHandler(budgetService *service.BudgetService, userService *service.UserService, logger *logger.Logger) *BudgetHandler {
 	return &BudgetHandler{
 		budgetService: budgetService,
+		userService:   userService,
 		logger:        logger,
 	}
 }
@@ -45,23 +47,20 @@ func NewBudgetHandler(budgetService *service.BudgetService, logger *logger.Logge
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets [get]
 func (h *BudgetHandler) List(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
 	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
-		})
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -458,23 +457,20 @@ func (h *BudgetHandler) Delete(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets/current [get]
 func (h *BudgetHandler) GetCurrent(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
 	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
-		})
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 

@@ -260,7 +260,7 @@ func (s *UserService) CreateUserFromAuth0(ctx context.Context, req *dto.CreateUs
 	}
 
 	// 新規ユーザーを作成
-	user, err := userDomain.NewUser(*auth0ID, *email, req.Name)
+	user, err := userDomain.NewUser(*auth0ID, *email, req.Name, false)
 	if err != nil {
 		s.logger.Error("ユーザー作成エラー", zap.Error(err))
 		return nil, errors.NewValidationError("ユーザーの作成に失敗しました")
