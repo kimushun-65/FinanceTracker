@@ -19,9 +19,10 @@ func seedTestUsers(db *gorm.DB) error {
 				CreatedAt: now,
 				UpdatedAt: now,
 			},
-			Auth0ID: "auth0|test_user_1",
-			Email:   "test1@example.com",
-			Name:    "テストユーザー1",
+			Auth0ID:       "auth0|test_user_1",
+			Email:         "test1@example.com",
+			Name:          "テストユーザー1",
+			EmailVerified: true,
 		},
 		{
 			Base: model.Base{
@@ -29,9 +30,10 @@ func seedTestUsers(db *gorm.DB) error {
 				CreatedAt: now,
 				UpdatedAt: now,
 			},
-			Auth0ID: "auth0|test_user_2",
-			Email:   "test2@example.com",
-			Name:    "テストユーザー2",
+			Auth0ID:       "auth0|test_user_2",
+			Email:         "test2@example.com",
+			Name:          "テストユーザー2",
+			EmailVerified: true,
 		},
 		{
 			Base: model.Base{
@@ -39,9 +41,10 @@ func seedTestUsers(db *gorm.DB) error {
 				CreatedAt: now,
 				UpdatedAt: now,
 			},
-			Auth0ID: "auth0|dev-test-user-123",
-			Email:   "dev-test@example.com",
-			Name:    "開発テストユーザー",
+			Auth0ID:       "auth0|dev-test-user-123",
+			Email:         "dev-test@example.com",
+			Name:          "開発テストユーザー",
+			EmailVerified: false, // 開発用ユーザーは未検証として設定
 		},
 	}
 
