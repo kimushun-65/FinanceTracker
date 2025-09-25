@@ -59,7 +59,6 @@ func (h *AccountHandler) List(c *gin.Context) {
 		return
 	}
 
-
 	// サービス層を呼び出し
 	accounts, err := h.accountService.GetAccountsByUser(c.Request.Context(), userUUID)
 	if err != nil {
