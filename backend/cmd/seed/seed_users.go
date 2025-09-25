@@ -2,23 +2,46 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"financetracker/internal/infrastructure/gorm/model"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func seedTestUsers(db *gorm.DB) error {
+	now := time.Now()
 	users := []model.User{
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			Auth0ID: "auth0|test_user_1",
 			Email:   "test1@example.com",
 			Name:    "テストユーザー1",
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			Auth0ID: "auth0|test_user_2",
 			Email:   "test2@example.com",
 			Name:    "テストユーザー2",
+		},
+		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+			Auth0ID: "auth0|dev-test-user-123",
+			Email:   "dev-test@example.com",
+			Name:    "開発テストユーザー",
 		},
 	}
 

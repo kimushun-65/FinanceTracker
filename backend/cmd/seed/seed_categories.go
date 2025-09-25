@@ -2,9 +2,11 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"financetracker/internal/infrastructure/gorm/model"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +23,13 @@ func seedCategories(db *gorm.DB) error {
 
 	for i := range users {
 		for j := range categoryMasters {
+			now := time.Now()
 			category := model.Category{
+				Base: model.Base{
+					ID:        uuid.New(),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
 				UserID:           users[i].ID,
 				CategoryMasterID: categoryMasters[j].ID,
 				IsActive:         true,

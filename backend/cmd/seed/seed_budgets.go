@@ -6,6 +6,7 @@ import (
 
 	"financetracker/internal/infrastructure/gorm/model"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -62,6 +63,11 @@ func seedBudgets(db *gorm.DB) error {
 		}
 
 		budget := model.Budget{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:     user.ID,
 			CategoryID: categories[i].ID,
 			Amount:     decimal.NewFromInt(amount),
