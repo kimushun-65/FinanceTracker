@@ -31,8 +31,9 @@ type CreateAccountRequest struct {
 
 // UpdateAccountRequest 口座更新リクエスト
 type UpdateAccountRequest struct {
-	Name        *string `json:"name" binding:"omitempty,min=1,max=100"`
-	AccountType *string `json:"account_type" binding:"omitempty,oneof=checking investment cash"`
+	Name        *string          `json:"name" binding:"omitempty,min=1,max=100"`
+	AccountType *string          `json:"account_type" binding:"omitempty,oneof=checking investment cash"`
+	Balance     *decimal.Decimal `json:"balance" binding:"omitempty"`
 }
 
 // AccountListResponse 口座一覧レスポンス

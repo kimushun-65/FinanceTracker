@@ -194,6 +194,28 @@ func (s *AccountService) UpdateAccount(ctx context.Context, userID, accountID uu
 		return nil, errors.NewValidationError("口座タイプの変更は現在サポートされていません")
 	}
 
+	// 残高の更新
+	if req.Balance != nil {
+		// 現在の通貨を使用して金額を作成
+		currentCurrency := account.CurrentBalance().Currency()
+		money, err := value.NewMoney(req.Balance.IntPart(), currentCurrency)
+		if err != nil {
+			s.logger.Error("残高金額作成エラー",
+				zap.Error(err),
+				zap.String("balance", req.Balance.String()),
+				zap.String("currency", currentCurrency))
+			return nil, errors.NewValidationError("無効な残高金額です")
+		}
+
+		// 残高を設定
+		if err := account.SetBalance(*money); err != nil {
+			s.logger.Error("残高設定エラー",
+				zap.Error(err),
+				zap.String("accountID", accountID.String()))
+			return nil, errors.NewValidationError("残高の設定に失敗しました")
+		}
+	}
+
 	// リポジトリで更新
 	if err := s.accountRepo.Save(ctx, account); err != nil {
 		s.logger.Error("口座更新エラー",
