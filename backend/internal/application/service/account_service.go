@@ -251,12 +251,6 @@ func (s *AccountService) DeleteAccount(ctx context.Context, userID, accountID uu
 		return errors.NewForbiddenError("この口座へのアクセス権限がありません")
 	}
 
-	// 残高が0でない場合は削除不可
-	balance := account.CurrentBalance()
-	if balance.Amount() != 0 {
-		return errors.NewValidationError("残高がある口座は削除できません")
-	}
-
 	// リポジトリから削除
 	if err := s.accountRepo.Delete(ctx, accountID); err != nil {
 		s.logger.Error("口座削除エラー",
