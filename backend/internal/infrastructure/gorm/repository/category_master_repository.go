@@ -56,7 +56,7 @@ func (r *CategoryMasterRepository) FindByID(ctx context.Context, id uuid.UUID) (
 // FindAll すべてのカテゴリマスターを取得
 func (r *CategoryMasterRepository) FindAll(ctx context.Context) ([]categoryDomain.CategoryMaster, error) {
 	var categoryMasterModels []model.CategoryMaster
-	result := r.db.WithContext(ctx).Order("display_order ASC, created_at ASC").Find(&categoryMasterModels)
+	result := r.db.WithContext(ctx).Unscoped().Order("display_order ASC, created_at ASC").Find(&categoryMasterModels)
 
 	if result.Error != nil {
 		return nil, fmt.Errorf("カテゴリマスター一覧の取得に失敗しました: %w", result.Error)
@@ -78,7 +78,7 @@ func (r *CategoryMasterRepository) FindAll(ctx context.Context) ([]categoryDomai
 // FindByType タイプでカテゴリマスターを取得
 func (r *CategoryMasterRepository) FindByType(ctx context.Context, categoryType categoryValue.CategoryType) ([]categoryDomain.CategoryMaster, error) {
 	var categoryMasterModels []model.CategoryMaster
-	result := r.db.WithContext(ctx).
+	result := r.db.WithContext(ctx).Unscoped().
 		Where("type = ?", categoryType.String()).
 		Order("display_order ASC, created_at ASC").
 		Find(&categoryMasterModels)
@@ -148,13 +148,22 @@ func (r *CategoryMasterRepository) toModel(categoryMaster *categoryDomain.Catego
 	}
 
 	return &model.CategoryMaster{
-		Base: model.Base{
+		BaseNoUpdate: model.BaseNoUpdate{
 			ID:        categoryMaster.ID,
 			CreatedAt: categoryMaster.CreatedAt,
-			UpdatedAt: categoryMaster.UpdatedAt,
 		},
-		Name:         categoryMaster.Name().String(),
-		Type:         model.CategoryType(categoryMaster.Type().String()),
+		Name: categoryMaster.Name().String(),
+		Type: func() model.CategoryType {
+			// ドメイン（小文字）からDB（大文字）への変換
+			switch categoryMaster.Type().String() {
+			case "income":
+				return model.CategoryTypeIncome
+			case "expense":
+				return model.CategoryTypeExpense
+			default:
+				return model.CategoryType(categoryMaster.Type().String())
+			}
+		}(),
 		Icon:         iconPtr,
 		Color:        color,
 		DisplayOrder: categoryMaster.DisplayOrder(),
@@ -169,8 +178,15 @@ func (r *CategoryMasterRepository) toDomain(categoryMasterModel *model.CategoryM
 		return nil, fmt.Errorf("カテゴリ名の作成に失敗しました: %w", err)
 	}
 
-	// カテゴリタイプ
-	categoryType, err := categoryValue.NewCategoryType(string(categoryMasterModel.Type))
+	// カテゴリタイプ (DBは大文字、ドメインは小文字を期待)
+	typeStr := string(categoryMasterModel.Type)
+	switch typeStr {
+	case "INCOME":
+		typeStr = "income"
+	case "EXPENSE":
+		typeStr = "expense"
+	}
+	categoryType, err := categoryValue.NewCategoryType(typeStr)
 	if err != nil {
 		return nil, fmt.Errorf("カテゴリタイプの作成に失敗しました: %w", err)
 	}
@@ -203,11 +219,11 @@ func (r *CategoryMasterRepository) toDomain(categoryMasterModel *model.CategoryM
 		return nil, fmt.Errorf("カテゴリマスターエンティティの作成に失敗しました: %w", err)
 	}
 
-	// BaseEntityを設定
+	// BaseEntityを設定 (category_mastersテーブルにはupdated_atがないため、created_atを使用)
 	categoryMaster.BaseEntity = common.BaseEntity{
 		ID:        categoryMasterModel.ID,
 		CreatedAt: categoryMasterModel.CreatedAt,
-		UpdatedAt: categoryMasterModel.UpdatedAt,
+		UpdatedAt: categoryMasterModel.CreatedAt, // DB has no updated_at, use created_at
 	}
 
 	return &categoryMaster, nil

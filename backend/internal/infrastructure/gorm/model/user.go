@@ -4,7 +4,7 @@ package model
 // User represents a user in the system.
 type User struct {
 	Base
-	Auth0ID string `gorm:"type:varchar(255);not null;uniqueIndex"`
+	Auth0ID string `gorm:"column:auth0_id;type:varchar(255);not null;uniqueIndex"`
 	Email   string `gorm:"type:varchar(255);not null;uniqueIndex"`
 	Name    string `gorm:"type:varchar(255);not null"`
 

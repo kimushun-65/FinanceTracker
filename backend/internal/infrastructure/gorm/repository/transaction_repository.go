@@ -199,11 +199,21 @@ func (r *TransactionRepository) toModel(transaction *transactionDomain.Transacti
 			CreatedAt: transaction.CreatedAt,
 			UpdatedAt: transaction.UpdatedAt,
 		},
-		UserID:      transaction.UserID(),
-		AccountID:   transaction.AccountID(),
-		CategoryID:  transaction.CategoryID(),
-		Amount:      decimal.NewFromInt(amount.Amount()),
-		Type:        model.TransactionType(transaction.Type().String()),
+		UserID:     transaction.UserID(),
+		AccountID:  transaction.AccountID(),
+		CategoryID: transaction.CategoryID(),
+		Amount:     decimal.NewFromInt(amount.Amount()),
+		Type: func() model.TransactionType {
+			// ドメイン（小文字）からDB（大文字）への変換
+			switch transaction.Type().String() {
+			case "income":
+				return model.TransactionTypeIncome
+			case "expense":
+				return model.TransactionTypeExpense
+			default:
+				return model.TransactionType(transaction.Type().String())
+			}
+		}(),
 		Date:        transaction.Date(),
 		Description: descriptionPtr,
 	}
@@ -217,8 +227,15 @@ func (r *TransactionRepository) toDomain(transactionModel *model.Transaction) (*
 		return nil, fmt.Errorf("金額の作成に失敗しました: %w", err)
 	}
 
-	// 取引タイプ
-	txType, err := transactionValue.NewTransactionType(string(transactionModel.Type))
+	// 取引タイプ (DBは大文字、ドメインは小文字を期待)
+	typeStr := string(transactionModel.Type)
+	switch typeStr {
+	case "INCOME":
+		typeStr = "income"
+	case "EXPENSE":
+		typeStr = "expense"
+	}
+	txType, err := transactionValue.NewTransactionType(typeStr)
 	if err != nil {
 		return nil, fmt.Errorf("取引タイプの作成に失敗しました: %w", err)
 	}

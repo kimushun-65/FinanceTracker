@@ -16,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // JWKSResponse represents the response from Auth0 JWKS endpoint.
@@ -56,6 +57,27 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 	authCfg := newAuthConfig(cfg)
 
 	return func(c *gin.Context) {
+		// Development bypass: X-Dev-User-ID header
+		if cfg.AppEnv == "development" {
+			devUserID := c.GetHeader("X-Dev-User-ID")
+			if devUserID != "" {
+				// Generate a deterministic UUID from the dev user ID for consistency
+				// This ensures the same X-Dev-User-ID always maps to the same UUID
+				userUUID := generateDeterministicUUID(devUserID)
+
+				// Set user information for development
+				c.Set("UserID", userUUID.String())
+				c.Set("auth0_id", devUserID)
+				c.Set("Claims", &Auth0Claims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						Subject: devUserID,
+					},
+				})
+				c.Next()
+				return
+			}
+		}
+
 		if err := authenticateRequest(c, authCfg); err != nil {
 			handleAuthError(c, err)
 			return
@@ -348,4 +370,13 @@ func OptionalAuth(cfg *config.Config) gin.HandlerFunc {
 		// If auth header exists, validate it
 		authMiddleware(c)
 	}
+}
+
+// generateDeterministicUUID generates a deterministic UUID v5 from a string
+func generateDeterministicUUID(input string) uuid.UUID {
+	// Create a namespace UUID for our application
+	namespace := uuid.MustParse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	// Generate UUID v5 using SHA-1 hash of namespace and input
+	return uuid.NewSHA1(namespace, []byte(input))
 }

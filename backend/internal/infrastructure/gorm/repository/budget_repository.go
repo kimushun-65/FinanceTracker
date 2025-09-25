@@ -200,10 +200,20 @@ func (r *BudgetRepository) toModel(budget *budgetDomain.Budget) *model.Budget {
 		UserID:     budget.UserID(),
 		CategoryID: budget.CategoryID(),
 		Amount:     decimal.NewFromInt(amount.Amount()),
-		PeriodType: model.PeriodType(budget.PeriodType().String()),
-		StartDate:  budget.StartDate(),
-		EndDate:    budget.EndDate(),
-		IsActive:   budget.IsActive(),
+		PeriodType: func() model.PeriodType {
+			// ドメイン（小文字）からDB（大文字）への変換
+			switch budget.PeriodType().String() {
+			case "monthly":
+				return model.PeriodTypeMonthly
+			case "yearly":
+				return model.PeriodTypeYearly
+			default:
+				return model.PeriodType(budget.PeriodType().String())
+			}
+		}(),
+		StartDate: budget.StartDate(),
+		EndDate:   budget.EndDate(),
+		IsActive:  budget.IsActive(),
 	}
 }
 
@@ -215,8 +225,15 @@ func (r *BudgetRepository) toDomain(budgetModel *model.Budget) (*budgetDomain.Bu
 		return nil, fmt.Errorf("金額の作成に失敗しました: %w", err)
 	}
 
-	// 期間タイプ
-	periodType, err := budgetValue.NewPeriodType(string(budgetModel.PeriodType))
+	// 期間タイプ (DBは大文字、ドメインは小文字を期待)
+	typeStr := string(budgetModel.PeriodType)
+	switch typeStr {
+	case "MONTHLY":
+		typeStr = "monthly"
+	case "YEARLY":
+		typeStr = "yearly"
+	}
+	periodType, err := budgetValue.NewPeriodType(typeStr)
 	if err != nil {
 		return nil, fmt.Errorf("期間タイプの作成に失敗しました: %w", err)
 	}
