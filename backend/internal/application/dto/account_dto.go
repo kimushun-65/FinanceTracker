@@ -25,7 +25,7 @@ type AccountResponse struct {
 type CreateAccountRequest struct {
 	Name           string           `json:"name" binding:"required,min=1,max=100"`
 	AccountType    string           `json:"account_type" binding:"required,oneof=checking investment cash"`
-	InitialBalance *decimal.Decimal `json:"initial_balance" binding:"omitempty,min=0"`
+	InitialBalance *decimal.Decimal `json:"initial_balance" binding:"omitempty"`
 	Currency       string           `json:"currency" binding:"required,len=3"`
 }
 

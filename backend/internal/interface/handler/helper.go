@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"financetracker/internal/application/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

@@ -61,6 +61,9 @@ func (s *AccountService) CreateAccount(ctx context.Context, userID uuid.UUID, re
 	// 初期残高を設定（デフォルトは0）
 	initialBalance := int64(0)
 	if req.InitialBalance != nil {
+		if req.InitialBalance.IsNegative() {
+			return nil, errors.NewValidationError("初期残高は0以上である必要があります")
+		}
 		initialBalance = req.InitialBalance.IntPart()
 	}
 
