@@ -99,18 +99,7 @@ jobs:
         working-directory: ./cdk
         run: npm run build
 
-      - name: Setup Go environment
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Build Lambda functions
-        working-directory: ./cdk
-        run: |
-          chmod +x scripts/build-lambda.sh
-          ./scripts/build-lambda.sh
-
-      - name: Deploy to production (blue-green)
+      - name: Deploy to production
         working-directory: ./cdk
         run: |
           npm install -g aws-cdk
