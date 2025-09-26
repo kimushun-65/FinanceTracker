@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -381,14 +382,62 @@ func (s *TransactionService) GetMonthlyTransactionSummary(ctx context.Context, u
 	// 収入と支出の合計を計算
 	totalIncome := decimal.Zero
 	totalExpense := decimal.Zero
+	
+	// 日別データを格納するマップ
+	dailyDataMap := make(map[string]*dto.DailyTransactionData)
+	
 	for _, transaction := range transactions {
 		amount := transaction.Amount()
+		amountDecimal := decimal.NewFromInt(amount.Amount())
+		
+		// 月全体の合計計算
 		if transaction.Type().IsIncome() {
-			totalIncome = totalIncome.Add(decimal.NewFromInt(amount.Amount()))
+			totalIncome = totalIncome.Add(amountDecimal)
 		} else {
-			totalExpense = totalExpense.Add(decimal.NewFromInt(amount.Amount()))
+			totalExpense = totalExpense.Add(amountDecimal)
+		}
+		
+		// 日別データの集計
+		dateKey := transaction.Date().Format("2006-01-02")
+		if dailyData, exists := dailyDataMap[dateKey]; exists {
+			// 既存の日付データを更新
+			if transaction.Type().IsIncome() {
+				dailyData.TotalIncome = dailyData.TotalIncome.Add(amountDecimal)
+			} else {
+				dailyData.TotalExpense = dailyData.TotalExpense.Add(amountDecimal)
+			}
+			dailyData.NetAmount = dailyData.TotalIncome.Sub(dailyData.TotalExpense)
+			dailyData.Count++
+		} else {
+			// 新しい日付データを作成
+			newDailyData := &dto.DailyTransactionData{
+				Date:         transaction.Date(),
+				TotalIncome:  decimal.Zero,
+				TotalExpense: decimal.Zero,
+				Count:        1,
+			}
+			
+			if transaction.Type().IsIncome() {
+				newDailyData.TotalIncome = amountDecimal
+			} else {
+				newDailyData.TotalExpense = amountDecimal
+			}
+			newDailyData.NetAmount = newDailyData.TotalIncome.Sub(newDailyData.TotalExpense)
+			
+			dailyDataMap[dateKey] = newDailyData
 		}
 	}
+	
+	// マップをスライスに変換してソート
+	dailyDataSlice := make([]dto.DailyTransactionData, 0, len(dailyDataMap))
+	for _, dailyData := range dailyDataMap {
+		dailyDataSlice = append(dailyDataSlice, *dailyData)
+	}
+	
+	// 日付順にソート
+	sort.Slice(dailyDataSlice, func(i, j int) bool {
+		return dailyDataSlice[i].Date.Before(dailyDataSlice[j].Date)
+	})
 
 	// DTOに変換
 	return &dto.MonthlyTransactionSummary{
@@ -397,6 +446,6 @@ func (s *TransactionService) GetMonthlyTransactionSummary(ctx context.Context, u
 		TotalIncome:  totalIncome,
 		TotalExpense: totalExpense,
 		NetAmount:    totalIncome.Sub(totalExpense),
-		DailyData:    []dto.DailyTransactionData{}, // 詳細な日別データは必要に応じて実装
+		DailyData:    dailyDataSlice,
 	}, nil
 }
