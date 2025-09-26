@@ -17,16 +17,27 @@ func seedBudgets(db *gorm.DB) error {
 		return err
 	}
 
-	// 最初のユーザーのみに予算を作成
 	if len(users) == 0 {
 		return nil
 	}
 
-	user := users[0]
+	// dev-test-user-123 のユーザーを探す
+	var devUser *model.User
+	for i := range users {
+		if users[i].Auth0ID == "auth0|dev-test-user-123" {
+			devUser = &users[i]
+			break
+		}
+	}
+
+	// dev-test-user が見つからない場合は最初のユーザーを使用
+	if devUser == nil {
+		devUser = &users[0]
+	}
 
 	// カテゴリを取得
 	var categories []model.Category
-	if err := db.Where("user_id = ?", user.ID).Preload("CategoryMaster").Find(&categories).Error; err != nil {
+	if err := db.Where("user_id = ?", devUser.ID).Preload("CategoryMaster").Find(&categories).Error; err != nil {
 		return err
 	}
 
@@ -68,7 +79,7 @@ func seedBudgets(db *gorm.DB) error {
 				CreatedAt: now,
 				UpdatedAt: now,
 			},
-			UserID:     user.ID,
+			UserID:     devUser.ID,
 			CategoryID: categories[i].ID,
 			Amount:     decimal.NewFromInt(amount),
 			PeriodType: model.PeriodTypeMonthly,
@@ -93,7 +104,7 @@ func seedBudgets(db *gorm.DB) error {
 			return err
 		}
 
-		log.Printf("Created budget for category: %s, amount: %d\n", categories[i].CategoryMaster.Name, amount)
+		log.Printf("Created budget for user %s, category: %s, amount: %d\n", devUser.Name, categories[i].CategoryMaster.Name, amount)
 	}
 
 	return nil
