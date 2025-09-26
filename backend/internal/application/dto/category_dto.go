@@ -13,6 +13,7 @@ type CategoryResponse struct {
 	ID               uuid.UUID `json:"id"`
 	UserID           uuid.UUID `json:"user_id"`
 	CategoryMasterID uuid.UUID `json:"category_master_id"`
+	Name             string    `json:"name"`
 	CustomName       *string   `json:"custom_name,omitempty"`
 	IsActive         bool      `json:"is_active"`
 	CreatedAt        time.Time `json:"created_at"`

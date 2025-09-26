@@ -93,7 +93,11 @@ func (s *CategoryService) CreateCategory(ctx context.Context, userID uuid.UUID, 
 			return nil, errors.NewInternalError("カテゴリーの更新に失敗しました", err)
 		}
 
-		return dto.CategoryFromDomain(existingCategory), nil
+		categoryDTO := dto.CategoryFromDomain(existingCategory)
+		if categoryDTO != nil {
+			categoryDTO.Name = categoryMaster.Name().String()
+		}
+		return categoryDTO, nil
 	}
 
 	// 新規カテゴリーを作成
@@ -110,7 +114,11 @@ func (s *CategoryService) CreateCategory(ctx context.Context, userID uuid.UUID, 
 	}
 
 	// DTOに変換して返却
-	return dto.CategoryFromDomain(&category), nil
+	categoryDTO := dto.CategoryFromDomain(&category)
+	if categoryDTO != nil {
+		categoryDTO.Name = categoryMaster.Name().String()
+	}
+	return categoryDTO, nil
 }
 
 // GetCategory カテゴリー情報を取得
@@ -136,8 +144,21 @@ func (s *CategoryService) GetCategory(ctx context.Context, userID, categoryID uu
 		return nil, errors.NewForbiddenError("このカテゴリーへのアクセス権限がありません")
 	}
 
+	// カテゴリマスターの情報を取得
+	categoryMaster, err := s.categoryMasterRepo.FindByID(ctx, category.CategoryMasterID())
+	if err != nil {
+		s.logger.Error("カテゴリマスター取得エラー",
+			zap.Error(err),
+			zap.String("masterID", category.CategoryMasterID().String()))
+		return nil, errors.NewInternalError("カテゴリマスター情報の取得に失敗しました", err)
+	}
+
 	// DTOに変換
-	return dto.CategoryFromDomain(category), nil
+	categoryDTO := dto.CategoryFromDomain(category)
+	if categoryDTO != nil && categoryMaster != nil {
+		categoryDTO.Name = categoryMaster.Name().String()
+	}
+	return categoryDTO, nil
 }
 
 // GetCategoriesByUser ユーザーのカテゴリー一覧を取得
@@ -169,10 +190,47 @@ func (s *CategoryService) GetCategoriesByUser(ctx context.Context, userID uuid.U
 		filteredCategories = append(filteredCategories, category)
 	}
 
-	// DTOに変換
+	// カテゴリマスターを取得してマップを作成
+	masterIDs := make([]uuid.UUID, 0, len(filteredCategories))
+	masterIDMap := make(map[uuid.UUID]bool)
+	for _, cat := range filteredCategories {
+		if !masterIDMap[cat.CategoryMasterID()] {
+			masterIDs = append(masterIDs, cat.CategoryMasterID())
+			masterIDMap[cat.CategoryMasterID()] = true
+		}
+	}
+
+	// カテゴリマスターを一括取得
+	categoryMasters := make(map[uuid.UUID]*categoryDomain.CategoryMaster)
+	for _, masterID := range masterIDs {
+		master, err := s.categoryMasterRepo.FindByID(ctx, masterID)
+		if err != nil {
+			s.logger.Error("カテゴリマスター取得エラー",
+				zap.Error(err),
+				zap.String("masterID", masterID.String()))
+			continue
+		}
+		if master != nil {
+			categoryMasters[masterID] = master
+		}
+	}
+
+	// DTOに変換（カテゴリマスター情報を含む）
+	categoryResponses := make([]dto.CategoryResponse, len(filteredCategories))
+	for i, category := range filteredCategories {
+		categoryDTO := dto.CategoryFromDomain(category)
+		if categoryDTO != nil {
+			// カテゴリマスターの名前を設定
+			if master, ok := categoryMasters[category.CategoryMasterID()]; ok {
+				categoryDTO.Name = master.Name().String()
+			}
+			categoryResponses[i] = *categoryDTO
+		}
+	}
+
 	return &dto.CategoryListResponse{
-		Categories: dto.CategoriesFromDomain(filteredCategories),
-		TotalCount: int64(len(filteredCategories)),
+		Categories: categoryResponses,
+		TotalCount: int64(len(categoryResponses)),
 	}, nil
 }
 
@@ -231,8 +289,21 @@ func (s *CategoryService) UpdateCategory(ctx context.Context, userID, categoryID
 		return nil, errors.NewInternalError("カテゴリー情報の更新に失敗しました", err)
 	}
 
+	// カテゴリマスターの情報を取得
+	categoryMaster, err := s.categoryMasterRepo.FindByID(ctx, category.CategoryMasterID())
+	if err != nil {
+		s.logger.Error("カテゴリマスター取得エラー",
+			zap.Error(err),
+			zap.String("masterID", category.CategoryMasterID().String()))
+		return nil, errors.NewInternalError("カテゴリマスター情報の取得に失敗しました", err)
+	}
+
 	// DTOに変換して返却
-	return dto.CategoryFromDomain(category), nil
+	categoryDTO := dto.CategoryFromDomain(category)
+	if categoryDTO != nil && categoryMaster != nil {
+		categoryDTO.Name = categoryMaster.Name().String()
+	}
+	return categoryDTO, nil
 }
 
 // DeleteCategory カテゴリーを削除（論理削除：無効化）
