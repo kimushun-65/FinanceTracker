@@ -142,13 +142,20 @@ func (h *BudgetHandler) List(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets [post]
 func (h *BudgetHandler) Create(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -158,16 +165,6 @@ func (h *BudgetHandler) Create(c *gin.Context) {
 		h.logger.Error("リクエストボディのパースエラー: " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "リクエストが無効です",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
 		})
 		return
 	}
@@ -217,13 +214,20 @@ func (h *BudgetHandler) Create(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets/{id} [get]
 func (h *BudgetHandler) Get(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -233,16 +237,6 @@ func (h *BudgetHandler) Get(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "無効な予算IDです",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
 		})
 		return
 	}
@@ -293,13 +287,20 @@ func (h *BudgetHandler) Get(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets/{id} [put]
 func (h *BudgetHandler) Update(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -319,16 +320,6 @@ func (h *BudgetHandler) Update(c *gin.Context) {
 		h.logger.Error("リクエストボディのパースエラー: " + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "リクエストが無効です",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
 		})
 		return
 	}
@@ -386,13 +377,20 @@ func (h *BudgetHandler) Update(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/budgets/{id} [delete]
 func (h *BudgetHandler) Delete(c *gin.Context) {
-	// 認証情報からユーザーIDを取得
-	userID, exists := c.Get("UserID")
-	if !exists {
-		h.logger.Error("User ID not found in context")
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "認証情報が見つかりません",
-		})
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
 		return
 	}
 
@@ -402,16 +400,6 @@ func (h *BudgetHandler) Delete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "無効な予算IDです",
-		})
-		return
-	}
-
-	// UserIDをUUIDに変換
-	userUUID, err := uuid.Parse(userID.(string))
-	if err != nil {
-		h.logger.Error("Invalid user ID format: " + userID.(string))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "内部エラーが発生しました",
 		})
 		return
 	}
