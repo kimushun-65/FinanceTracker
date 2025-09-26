@@ -20,7 +20,7 @@ func main() {
 	}
 
 	// Initialize logger
-	logger := logger.New()
+	logger := logger.NewLogger("seed")
 	defer func() {
 		if err := logger.Sync(); err != nil {
 			log.Printf("Failed to sync logger: %v", err)

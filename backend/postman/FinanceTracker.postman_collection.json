@@ -1,0 +1,801 @@
+{
+  "info": {
+    "name": "FinanceTracker API",
+    "description": "FinanceTracker API collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "Bearer {{access_token}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "Authorization",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// 開発環境用のヘッダーを自動追加",
+          "if (pm.environment.get('use_dev_auth') === 'true') {",
+          "    pm.request.headers.add({",
+          "        key: 'X-Dev-User-ID',",
+          "        value: pm.environment.get('dev_user_id') || 'auth0|dev-test-user-123'",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Get Auth0 Token (Client Credentials)",
+          "description": "Machine-to-Machine認証用のトークンを取得します。このエンドポイントを使用するには、Auth0でM2Mアプリケーションを作成する必要があります。",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// このリクエストは開発用ヘッダーを使用しない",
+                  "pm.request.headers.remove('X-Dev-User-ID');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('access_token', response.access_token);",
+                  "    console.log('Token saved successfully');",
+                  "} else {",
+                  "    console.log('Token request failed:', pm.response.code, pm.response.json());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"YOUR_M2M_CLIENT_ID\",\n  \"client_secret\": \"YOUR_M2M_CLIENT_SECRET\",\n  \"audience\": \"{{auth0_audience}}\",\n  \"grant_type\": \"client_credentials\"\n}"
+            },
+            "url": {
+              "raw": "https://{{auth0_domain}}/oauth/token",
+              "protocol": "https",
+              "host": ["{{auth0_domain}}"],
+              "path": ["oauth", "token"]
+            }
+          }
+        },
+        {
+          "name": "DEV: Skip Auth0 (Use Dev Header)",
+          "description": "開発環境では、Auth0トークンの代わりにX-Dev-User-IDヘッダーを使用します。このリクエストは何もしませんが、開発フローの説明として含まれています。",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// 開発環境用の設定確認",
+                  "console.log('開発用認証が有効です。');",
+                  "console.log('使用中のユーザーID:', pm.environment.get('dev_user_id'));",
+                  "console.log('');",
+                  "console.log('全てのAPIリクエストに自動的にX-Dev-User-IDヘッダーが追加されます。');",
+                  "console.log('実際のAuth0認証を使用する場合は、use_dev_authをfalseに設定してください。');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/health",
+              "host": ["{{api_base_url}}"],
+              "path": ["health"]
+            },
+            "description": "このリクエストは実際には/healthエンドポイントを呼び出しますが、主な目的は開発用認証の説明です。"
+          }
+        },
+        {
+          "name": "Set Token Cookie",
+          "description": "取得したトークンをHttpOnlyクッキーに保存",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"access_token\": \"{{access_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "token"]
+            }
+          }
+        },
+        {
+          "name": "Remove Token Cookie",
+          "description": "HttpOnlyクッキーからトークンを削除",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "token"]
+            }
+          }
+        },
+        {
+          "name": "Check Auth",
+          "description": "HttpOnlyクッキーから認証状態を確認",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/check",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "check"]
+            }
+          }
+        },
+        {
+          "name": "Get Auth User",
+          "description": "認証済みユーザーの情報を取得",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/user",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "user"]
+            }
+          }
+        },
+        {
+          "name": "Login (Redirect)",
+          "description": "Auth0のログインページへリダイレクト（ブラウザで開く）",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "description": "ログアウトしてクッキーをクリア",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Dev-User-ID",
+                "value": "{{dev_user_id}}",
+                "type": "text",
+                "description": "開発環境用ユーザーID",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{api_base_url}}/users/me",
+              "host": ["{{api_base_url}}"],
+              "path": ["users", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Current User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User Updated\",\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/users/me",
+              "host": ["{{api_base_url}}"],
+              "path": ["users", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "List Accounts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/accounts?limit=10&offset=0",
+              "host": ["{{api_base_url}}"],
+              "path": ["accounts"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"メイン口座\",\n  \"account_type\": \"checking\",\n  \"currency\": \"JPY\",\n  \"initial_balance\": 100000\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/accounts",
+              "host": ["{{api_base_url}}"],
+              "path": ["accounts"]
+            }
+          }
+        },
+        {
+          "name": "Get Account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/accounts/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["accounts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "account-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"メイン口座（更新）\",\n  \"account_type\": \"investment\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/accounts/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["accounts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "account-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/accounts/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["accounts", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "account-uuid-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/transactions?from=2024-01-01&to=2024-12-31&limit=20&offset=0",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2024-12-31"
+                },
+                {
+                  "key": "category_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_id\": \"account-uuid-here\",\n  \"category_id\": \"category-uuid-here\",\n  \"transaction_type\": \"expense\",\n  \"amount\": 1500,\n  \"description\": \"ランチ代\",\n  \"transaction_date\": \"2024-01-15T12:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/transactions",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions"]
+            }
+          }
+        },
+        {
+          "name": "Get Transaction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/transactions/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transaction-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Transaction",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2000,\n  \"description\": \"ディナー代\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/transactions/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transaction-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/transactions/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "transaction-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Monthly Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/transactions/summary/monthly?year=2024&month=1",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions", "summary", "monthly"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "2024"
+                },
+                {
+                  "key": "month",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Master Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/categories/master?category_type=expense",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories", "master"],
+              "query": [
+                {
+                  "key": "category_type",
+                  "value": "expense"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List User Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/categories?is_active=true",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories"],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_master_id\": \"master-category-uuid-here\",\n  \"custom_name\": \"外食費\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/categories",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories"]
+            }
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/categories/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"custom_name\": \"外食・飲み会\",\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/categories/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/categories/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["categories", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "category-uuid-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "List Budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/budgets?is_active=true&period=monthly",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets"],
+              "query": [
+                {
+                  "key": "category_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "period",
+                  "value": "monthly"
+                },
+                {
+                  "key": "is_active",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Current Budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/budgets/current",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets", "current"]
+            }
+          }
+        },
+        {
+          "name": "Create Budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"category-uuid-here\",\n  \"amount\": 50000,\n  \"period\": \"monthly\",\n  \"start_date\": \"2024-01-01\",\n  \"end_date\": \"2024-12-31\"\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/budgets",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets"]
+            }
+          }
+        },
+        {
+          "name": "Get Budget",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/budgets/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "budget-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Budget",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 60000,\n  \"is_active\": true\n}"
+            },
+            "url": {
+              "raw": "{{api_base_url}}/budgets/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "budget-uuid-here"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Budget",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/budgets/:id",
+              "host": ["{{api_base_url}}"],
+              "path": ["budgets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "budget-uuid-here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": ["{{base_url}}"],
+          "path": ["health"]
+        }
+      }
+    }
+  ]
+}

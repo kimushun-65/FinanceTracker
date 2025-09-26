@@ -56,6 +56,38 @@ func Auth(cfg *config.Config) gin.HandlerFunc {
 	authCfg := newAuthConfig(cfg)
 
 	return func(c *gin.Context) {
+		// Development bypass: X-Auth0-User-ID header
+		if cfg.AppEnv == "development" {
+			auth0UserID := c.GetHeader("X-Auth0-User-ID")
+			if auth0UserID != "" {
+				// Set auth0_id for handler to look up actual user
+				c.Set("auth0_id", auth0UserID)
+				c.Set("Claims", &Auth0Claims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						Subject: auth0UserID,
+					},
+				})
+				// Note: UserID will be set by the handler after looking up the user
+				c.Next()
+				return
+			}
+
+			// Legacy X-Dev-User-ID support (deprecated)
+			devUserID := c.GetHeader("X-Dev-User-ID")
+			if devUserID != "" {
+				// Set auth0_id for handler to look up actual user
+				c.Set("auth0_id", devUserID)
+				c.Set("Claims", &Auth0Claims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						Subject: devUserID,
+					},
+				})
+				// Note: UserID will be set by the handler after looking up the user
+				c.Next()
+				return
+			}
+		}
+
 		if err := authenticateRequest(c, authCfg); err != nil {
 			handleAuthError(c, err)
 			return
@@ -95,9 +127,11 @@ func authenticateRequest(c *gin.Context, cfg *authConfig) error {
 
 // setUserContext sets user information in the Gin context
 func setUserContext(c *gin.Context, claims *Auth0Claims) {
-	c.Set("UserID", claims.Subject)
+	// Set auth0_id for handler to look up actual user
+	c.Set("auth0_id", claims.Subject)
 	c.Set("Claims", claims)
 	c.Set("Permissions", claims.Permissions)
+	// Note: UserID will be set by the handler after looking up the user
 }
 
 // extractTokenFromHeader extracts the JWT token from the Authorization header

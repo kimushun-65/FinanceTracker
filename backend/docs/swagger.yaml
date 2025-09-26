@@ -1,4 +1,341 @@
 basePath: /api/v1
+definitions:
+  financetracker_internal_application_dto.AccountListResponse:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.AccountResponse'
+        type: array
+      total_balance:
+        type: number
+      total_count:
+        type: integer
+    type: object
+  financetracker_internal_application_dto.AccountResponse:
+    properties:
+      account_type:
+        type: string
+      balance:
+        type: number
+      created_at:
+        type: string
+      currency:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  financetracker_internal_application_dto.BudgetListResponse:
+    properties:
+      budgets:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.BudgetResponse'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  financetracker_internal_application_dto.BudgetResponse:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      created_at:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      period:
+        type: string
+      start_date:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  financetracker_internal_application_dto.CategoryListResponse:
+    properties:
+      categories:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.CategoryResponse'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  financetracker_internal_application_dto.CategoryMasterListResponse:
+    properties:
+      category_masters:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.CategoryMasterResponse'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  financetracker_internal_application_dto.CategoryMasterResponse:
+    properties:
+      category_type:
+        type: string
+      color:
+        type: string
+      created_at:
+        type: string
+      display_order:
+        type: integer
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  financetracker_internal_application_dto.CategoryResponse:
+    properties:
+      category_master_id:
+        type: string
+      created_at:
+        type: string
+      custom_name:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  financetracker_internal_application_dto.CreateAccountRequest:
+    properties:
+      account_type:
+        enum:
+        - checking
+        - investment
+        - cash
+        type: string
+      currency:
+        type: string
+      initial_balance:
+        minimum: 0
+        type: number
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - account_type
+    - currency
+    - name
+    type: object
+  financetracker_internal_application_dto.CreateBudgetRequest:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      end_date:
+        type: string
+      period:
+        enum:
+        - monthly
+        - yearly
+        type: string
+      start_date:
+        type: string
+    required:
+    - amount
+    - category_id
+    - period
+    - start_date
+    type: object
+  financetracker_internal_application_dto.CreateCategoryRequest:
+    properties:
+      category_master_id:
+        type: string
+      custom_name:
+        maxLength: 50
+        minLength: 1
+        type: string
+    required:
+    - category_master_id
+    type: object
+  financetracker_internal_application_dto.CreateTransactionRequest:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        maxLength: 500
+        minLength: 1
+        type: string
+      transaction_date:
+        type: string
+      transaction_type:
+        enum:
+        - income
+        - expense
+        type: string
+    required:
+    - account_id
+    - amount
+    - category_id
+    - description
+    - transaction_type
+    type: object
+  financetracker_internal_application_dto.DailyTransactionData:
+    properties:
+      count:
+        type: integer
+      date:
+        type: string
+      net_amount:
+        type: number
+      total_expense:
+        type: number
+      total_income:
+        type: number
+    type: object
+  financetracker_internal_application_dto.MonthlyTransactionSummary:
+    properties:
+      daily_data:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.DailyTransactionData'
+        type: array
+      month:
+        type: integer
+      net_amount:
+        type: number
+      total_expense:
+        type: number
+      total_income:
+        type: number
+      year:
+        type: integer
+    type: object
+  financetracker_internal_application_dto.TransactionListResponse:
+    properties:
+      page:
+        type: integer
+      per_page:
+        type: integer
+      total_count:
+        type: integer
+      total_expense:
+        type: number
+      total_income:
+        type: number
+      transactions:
+        items:
+          $ref: '#/definitions/financetracker_internal_application_dto.TransactionResponse'
+        type: array
+    type: object
+  financetracker_internal_application_dto.TransactionResponse:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      transaction_date:
+        type: string
+      transaction_type:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  financetracker_internal_application_dto.UpdateAccountRequest:
+    properties:
+      account_type:
+        enum:
+        - checking
+        - investment
+        - cash
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  financetracker_internal_application_dto.UpdateBudgetRequest:
+    properties:
+      amount:
+        type: number
+      end_date:
+        type: string
+      is_active:
+        type: boolean
+      start_date:
+        type: string
+    type: object
+  financetracker_internal_application_dto.UpdateCategoryRequest:
+    properties:
+      custom_name:
+        maxLength: 50
+        minLength: 1
+        type: string
+      is_active:
+        type: boolean
+    type: object
+  financetracker_internal_application_dto.UpdateTransactionRequest:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        maxLength: 500
+        minLength: 1
+        type: string
+      transaction_date:
+        type: string
+    type: object
+  financetracker_internal_application_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  financetracker_internal_application_dto.UserResponse:
+    properties:
+      auth0_id:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -26,6 +363,1186 @@ paths:
       summary: API情報
       tags:
       - system
+  /api/v1/accounts:
+    get:
+      consumes:
+      - application/json
+      description: ユーザーの口座一覧を取得します
+      parameters:
+      - default: 100
+        description: 取得件数制限
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: 取得開始位置
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.AccountListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 口座一覧取得
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: 新しい口座を作成します
+      parameters:
+      - description: 作成する口座情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.AccountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 口座作成
+      tags:
+      - accounts
+  /api/v1/accounts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定されたIDの口座を削除します
+      parameters:
+      - description: 口座ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 口座削除
+      tags:
+      - accounts
+    get:
+      consumes:
+      - application/json
+      description: 指定されたIDの口座を取得します
+      parameters:
+      - description: 口座ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.AccountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 口座取得
+      tags:
+      - accounts
+    put:
+      consumes:
+      - application/json
+      description: 指定されたIDの口座を更新します
+      parameters:
+      - description: 口座ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新する口座情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.UpdateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.AccountResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 口座更新
+      tags:
+      - accounts
+  /api/v1/budgets:
+    get:
+      consumes:
+      - application/json
+      description: ユーザーの予算一覧を取得します
+      parameters:
+      - description: カテゴリID
+        in: query
+        name: category_id
+        type: string
+      - description: 期間
+        enum:
+        - monthly
+        - yearly
+        in: query
+        name: period
+        type: string
+      - description: アクティブ状態
+        in: query
+        name: is_active
+        type: boolean
+      - default: '"start_date desc"'
+        description: ソート順
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.BudgetListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 予算一覧取得
+      tags:
+      - budgets
+    post:
+      consumes:
+      - application/json
+      description: 新しい予算を作成します
+      parameters:
+      - description: 作成する予算情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.CreateBudgetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.BudgetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 予算作成
+      tags:
+      - budgets
+  /api/v1/budgets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定されたIDの予算を削除します
+      parameters:
+      - description: 予算ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 予算削除
+      tags:
+      - budgets
+    get:
+      consumes:
+      - application/json
+      description: 指定されたIDの予算を取得します
+      parameters:
+      - description: 予算ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.BudgetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 予算取得
+      tags:
+      - budgets
+    put:
+      consumes:
+      - application/json
+      description: 指定されたIDの予算を更新します
+      parameters:
+      - description: 予算ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新する予算情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.UpdateBudgetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.BudgetResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 予算更新
+      tags:
+      - budgets
+  /api/v1/budgets/current:
+    get:
+      consumes:
+      - application/json
+      description: 現在の日付に対してアクティブな予算を取得します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.BudgetListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 現在の期間の予算取得
+      tags:
+      - budgets
+  /api/v1/categories:
+    get:
+      consumes:
+      - application/json
+      description: ユーザーのカスタムカテゴリ一覧を取得します
+      parameters:
+      - description: カテゴリマスターID
+        in: query
+        name: category_master_id
+        type: string
+      - description: アクティブ状態
+        in: query
+        name: is_active
+        type: boolean
+      - default: '"created_at desc"'
+        description: ソート順
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.CategoryListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: ユーザーカテゴリ一覧取得
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      description: 新しいユーザーカテゴリを作成します
+      parameters:
+      - description: 作成するカテゴリ情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: カテゴリ作成
+      tags:
+      - categories
+  /api/v1/categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定されたIDのカテゴリを削除（非活性化）します
+      parameters:
+      - description: カテゴリID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: カテゴリ削除
+      tags:
+      - categories
+    get:
+      consumes:
+      - application/json
+      description: 指定されたIDのカテゴリを取得します
+      parameters:
+      - description: カテゴリID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: カテゴリ取得
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: 指定されたIDのカテゴリを更新します
+      parameters:
+      - description: カテゴリID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新するカテゴリ情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.CategoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: カテゴリ更新
+      tags:
+      - categories
+  /api/v1/categories/master:
+    get:
+      consumes:
+      - application/json
+      description: 利用可能なカテゴリマスター（テンプレート）一覧を取得します
+      parameters:
+      - description: カテゴリタイプ
+        enum:
+        - income
+        - expense
+        in: query
+        name: category_type
+        type: string
+      - default: '"display_order asc"'
+        description: ソート順
+        in: query
+        name: order_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.CategoryMasterListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: カテゴリマスター一覧取得
+      tags:
+      - categories
+  /api/v1/transactions:
+    get:
+      consumes:
+      - application/json
+      description: ユーザーのトランザクション一覧を取得します（日付範囲とカテゴリでフィルタリング可能）
+      parameters:
+      - description: 開始日 (YYYY-MM-DD形式)
+        in: query
+        name: from
+        type: string
+      - description: 終了日 (YYYY-MM-DD形式)
+        in: query
+        name: to
+        type: string
+      - description: カテゴリID
+        in: query
+        name: category_id
+        type: string
+      - default: 100
+        description: 取得件数制限
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: 取得開始位置
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.TransactionListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: トランザクション一覧取得
+      tags:
+      - transactions
+    post:
+      consumes:
+      - application/json
+      description: 新しいトランザクションを作成します
+      parameters:
+      - description: 作成するトランザクション情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.CreateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.TransactionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: トランザクション作成
+      tags:
+      - transactions
+  /api/v1/transactions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定されたIDのトランザクションを削除します
+      parameters:
+      - description: トランザクションID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: トランザクション削除
+      tags:
+      - transactions
+    get:
+      consumes:
+      - application/json
+      description: 指定されたIDのトランザクションを取得します
+      parameters:
+      - description: トランザクションID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.TransactionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: トランザクション取得
+      tags:
+      - transactions
+    put:
+      consumes:
+      - application/json
+      description: 指定されたIDのトランザクションを更新します
+      parameters:
+      - description: トランザクションID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 更新するトランザクション情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.UpdateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.TransactionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: トランザクション更新
+      tags:
+      - transactions
+  /api/v1/transactions/summary/monthly:
+    get:
+      consumes:
+      - application/json
+      description: 指定された年月のトランザクションサマリーを取得します
+      parameters:
+      - description: 年 (YYYY)
+        in: query
+        name: year
+        required: true
+        type: integer
+      - description: 月 (1-12)
+        in: query
+        name: month
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.MonthlyTransactionSummary'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 月次サマリー取得
+      tags:
+      - transactions
+  /api/v1/users/me:
+    get:
+      consumes:
+      - application/json
+      description: 認証済みユーザーの情報を取得します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 現在のユーザー情報取得
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: 認証済みユーザーの情報を更新します
+      parameters:
+      - description: 更新するユーザー情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/financetracker_internal_application_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/financetracker_internal_application_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: 現在のユーザー情報更新
+      tags:
+      - users
   /auth/callback:
     get:
       description: Auth0からの認証コールバックを処理し、ユーザー情報を保存します
@@ -64,6 +1581,23 @@ paths:
       summary: Auth0コールバック
       tags:
       - auth
+  /auth/check:
+    get:
+      description: HttpOnlyクッキーからトークンを読み取り、認証状態を確認します
+      responses:
+        "200":
+          description: 認証成功
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: 認証失敗
+          schema:
+            additionalProperties: true
+            type: object
+      summary: 認証状態チェック
+      tags:
+      - auth
   /auth/login:
     get:
       description: Auth0のログインページへリダイレクトします
@@ -84,6 +1618,43 @@ paths:
           schema:
             type: string
       summary: ログアウト
+      tags:
+      - auth
+  /auth/token:
+    delete:
+      description: HttpOnlyクッキーからアクセストークンを削除します
+      responses:
+        "200":
+          description: トークン削除成功
+          schema:
+            additionalProperties: true
+            type: object
+      summary: トークン削除
+      tags:
+      - auth
+    post:
+      description: Auth0トークンをHttpOnlyクッキーに保存します
+      parameters:
+      - description: トークンリクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      responses:
+        "200":
+          description: トークン設定成功
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: リクエストエラー
+          schema:
+            additionalProperties: true
+            type: object
+      summary: トークン設定
       tags:
       - auth
   /auth/user:

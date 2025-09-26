@@ -6,7 +6,6 @@ type UserInfo struct {
 	Name          string
 	Email         string
 	EmailVerified bool
-	Picture       string
 }
 
 // TokenClaims トークンのクレーム情報

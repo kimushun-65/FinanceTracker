@@ -6,6 +6,7 @@ import (
 
 	"financetracker/internal/infrastructure/gorm/model"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -16,12 +17,16 @@ func seedTransactions(db *gorm.DB) error {
 		return err
 	}
 
-	// 最初のユーザーのみにサンプルトランザクションを作成
-	if len(users) == 0 {
-		return nil
+	// 開発テストユーザーを取得
+	var user model.User
+	if err := db.Where("auth0_id = ?", "auth0|dev-test-user-123").First(&user).Error; err != nil {
+		log.Printf("Dev test user not found: %v", err)
+		// フォールバック: 最初のユーザーを使用
+		if len(users) == 0 {
+			return nil
+		}
+		user = users[0]
 	}
-
-	user := users[0]
 
 	// 口座を取得
 	var accounts []model.Account
@@ -62,6 +67,11 @@ func seedTransactions(db *gorm.DB) error {
 	transactions := []model.Transaction{
 		// 収入
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["給与"].ID,
@@ -72,6 +82,11 @@ func seedTransactions(db *gorm.DB) error {
 		},
 		// 支出
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["住居費"].ID,
@@ -81,6 +96,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("家賃"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["光熱費"].ID,
@@ -90,6 +110,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("電気・ガス・水道"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["通信費"].ID,
@@ -99,6 +124,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("携帯・インターネット"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["食費"].ID,
@@ -108,6 +138,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("スーパー・コンビニ"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["外食費"].ID,
@@ -117,6 +152,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("レストラン"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["交通費"].ID,
@@ -126,6 +166,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("電車・バス定期"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["娯楽費"].ID,
@@ -135,6 +180,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("映画・ゲーム"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["日用品"].ID,
@@ -144,6 +194,11 @@ func seedTransactions(db *gorm.DB) error {
 			Description: stringPtr("ドラッグストア"),
 		},
 		{
+			Base: model.Base{
+				ID:        uuid.New(),
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
 			UserID:      user.ID,
 			AccountID:   bankAccount.ID,
 			CategoryID:  categoryMap["衣服費"].ID,

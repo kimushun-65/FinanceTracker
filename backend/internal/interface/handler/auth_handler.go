@@ -151,7 +151,6 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		Name:          userInfo.Name,
 		Email:         userInfo.Email,
 		EmailVerified: userInfo.EmailVerified,
-		Picture:       userInfo.Picture,
 	}
 
 	tokenClaimsDTO := &dto.TokenClaims{
@@ -205,10 +204,10 @@ func (h *AuthHandler) CheckAuth(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"authenticated": true,
 		"user": gin.H{
-			"sub":     userInfo.Sub,
-			"name":    userInfo.Name,
-			"email":   userInfo.Email,
-			"picture": userInfo.Picture,
+			"sub":           userInfo.Sub,
+			"name":          userInfo.Name,
+			"email":         userInfo.Email,
+			"emailVerified": userInfo.EmailVerified,
 		},
 	})
 }

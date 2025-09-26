@@ -210,24 +210,87 @@ cdk deploy --all --context env=prod --require-approval broadening
 
 ## Lambda 関数設計
 
-### 関数分割戦略
+### 実装状況（2025-01-10更新）
 
-- **認証系**: `/auth/*` エンドポイント用
-- **ユーザー系**: `/users/*` エンドポイント用
-- **取引系**: `/transactions/*` エンドポイント用
-- **予算系**: `/budgets/*` エンドポイント用
-- **資産系**: `/accounts/*`, `/assets/*` エンドポイント用
-- **カテゴリ系**: `/categories/*` エンドポイント用
-- **レポート系**: `/reports/*` エンドポイント用
-- **通知系**: `/notifications/*` エンドポイント用
+#### 完成済み
+- **認証系**: Auth0 JWT Authorizer
+  - **場所**: `cdk/lambda/authorizer/index.js`
+  - **機能**: API Gateway用JWT検証、トークン検証
+  
+- **ユーザー系**: `/v1/users/*` エンドポイント用
+  - **場所**: `cdk/lambda/users/index.ts` (TypeScriptプロキシ実装)
+  - **アーキテクチャ**: バックエンドAPIへのプロキシ
+  - **機能**: ユーザー取得・更新のバックエンドAPI呼び出し
+
+#### 未実装（全てプレースホルダー）
+- **認証系**: `/v1/auth/*` エンドポイント用
+- **取引系**: `/v1/transactions/*` エンドポイント用
+- **予算系**: `/v1/budgets/*` エンドポイント用
+- **資産系**: `/v1/accounts/*`, `/v1/assets/*` エンドポイント用
+- **カテゴリ系**: `/v1/categories/*` エンドポイント用
+- **レポート系**: `/v1/reports/*` エンドポイント用
+- **通知系**: `/v1/notifications/*` エンドポイント用
+
+### アーキテクチャ設計
+
+#### Lambda関数構成
+```
+cdk/lambda/users/
+├── main.go          # Lambda関数エントリーポイント
+└── bootstrap        # ビルド済みバイナリ（Linux/AMD64）
+
+backend/
+├── internal/        # 共有ドメインロジック
+│   ├── application/ # アプリケーションサービス
+│   ├── domain/      # ドメインエンティティ
+│   ├── infrastructure/ # 外部サービス連携
+│   └── di/          # 依存性注入コンテナ
+└── pkg/             # 共通ユーティリティ
+```
+
+#### ビルドプロセス
+1. **ソース管理**: CDKディレクトリ内で関数ソース管理
+2. **依存解決**: backendの`financetracker`モジュールを参照
+3. **ビルド**: Go クロスコンパイルでLinux/AMD64バイナリ生成
+4. **デプロイ**: CDKが`bootstrap`バイナリをLambda環境にデプロイ
+
+#### DI（依存性注入）パターン
+```go
+// Lambda関数内でDIコンテナを初期化
+container, err := di.NewContainer()
+handler := NewHandler(container.UserService, container.Logger)
+lambda.Start(handler.Handle)
+```
+
+### ビルド・デプロイ設定
+
+#### GitHub Actions統合
+```bash
+# CI: Lambda関数ビルドテスト
+- 変更検出: cdk/lambda/** の変更時
+- ビルド検証: 新実装関数のみビルド
+- レガシースキップ: 旧実装関数はスキップ
+
+# CD: 本番デプロイ
+- Lambda関数ビルド（Linux/AMD64）
+- CDKデプロイ（--all）
+```
+
+#### ビルドスクリプト特徴
+```bash
+# cdk/scripts/build-lambda.sh
+- 実装判定: financetracker/internal 使用確認
+- 新実装: DDD構成でビルド実行
+- 旧実装: スキップ（エラーなし）
+- 未実装: スキップ（エラーなし）
+```
 
 ### コールドスタート対策
 
-- **Provisioned Concurrency**: 重要なエンドポイントに設定
-- **関数の最適化**:
-  - 初期化処理の最小化
-  - 依存関係の削減
-  - コンテナイメージではなく ZIP デプロイ
+- **アーキテクチャ最適化**: DI初期化の最小化
+- **バイナリサイズ削減**: `go build -ldflags="-s -w"`
+- **メモリ設定**: 512MB〜1024MB（関数ごと最適化）
+- **Provisioned Concurrency**: 重要なエンドポイントで検討
 
 ## データベース接続管理
 

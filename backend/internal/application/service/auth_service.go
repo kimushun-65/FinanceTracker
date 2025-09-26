@@ -53,6 +53,9 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *dto.UserInfo, clai
 			return nil, fmt.Errorf("failed to update user profile: %w", err)
 		}
 
+		// メール検証状態を更新
+		existingUser.UpdateEmailVerified(userInfo.EmailVerified)
+
 		if err := s.userRepo.Save(ctx, existingUser); err != nil {
 			return nil, fmt.Errorf("failed to update user: %w", err)
 		}
@@ -61,7 +64,7 @@ func (s *AuthService) SyncUser(ctx context.Context, userInfo *dto.UserInfo, clai
 	}
 
 	// 新規ユーザーを作成
-	newUser, err := entity.NewUser(*auth0IDValue, *emailValue, userInfo.Name)
+	newUser, err := entity.NewUser(*auth0IDValue, *emailValue, userInfo.Name, userInfo.EmailVerified)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new user: %w", err)
 	}

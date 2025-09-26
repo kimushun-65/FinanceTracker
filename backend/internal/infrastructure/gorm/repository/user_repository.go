@@ -1,4 +1,4 @@
-package postgres
+package repository
 
 import (
 	"context"
@@ -17,14 +17,12 @@ import (
 // UserModel ユーザーのデータベースモデル
 type UserModel struct {
 	ID            uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()"`
-	Auth0UserID   string    `gorm:"type:varchar(255);unique;not null"`
+	Auth0UserID   string    `gorm:"column:auth0_id;type:varchar(255);unique;not null"`
 	Email         string    `gorm:"type:varchar(255);unique;not null"`
 	Name          string    `gorm:"type:varchar(100);not null"`
 	EmailVerified bool      `gorm:"type:boolean;default:false"`
-	Picture       string    `gorm:"type:varchar(500)"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
-	DeletedAt     gorm.DeletedAt `gorm:"index"`
 }
 
 // TableName Userモデルのテーブル名を指定
@@ -74,7 +72,7 @@ func (r *UserRepository) FindByID(ctx context.Context, id uuid.UUID) (*entity.Us
 // FindByAuth0UserID Auth0ユーザーIDでユーザーを検索
 func (r *UserRepository) FindByAuth0UserID(ctx context.Context, auth0UserID userValue.Auth0ID) (*entity.User, error) {
 	var model UserModel
-	result := r.db.WithContext(ctx).Where("auth0_user_id = ?", auth0UserID.Value()).First(&model)
+	result := r.db.WithContext(ctx).Where("auth0_id = ?", auth0UserID.Value()).First(&model)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -89,7 +87,7 @@ func (r *UserRepository) FindByAuth0UserID(ctx context.Context, auth0UserID user
 // ExistsByAuth0UserID 指定されたAuth0 IDのユーザーが存在するか確認
 func (r *UserRepository) ExistsByAuth0UserID(ctx context.Context, auth0UserID userValue.Auth0ID) (bool, error) {
 	var count int64
-	result := r.db.WithContext(ctx).Model(&UserModel{}).Where("auth0_user_id = ?", auth0UserID.Value()).Count(&count)
+	result := r.db.WithContext(ctx).Model(&UserModel{}).Where("auth0_id = ?", auth0UserID.Value()).Count(&count)
 
 	if result.Error != nil {
 		return false, result.Error
@@ -131,7 +129,7 @@ func (r *UserRepository) toModel(user *entity.User) *UserModel {
 		Auth0UserID:   user.Auth0UserID().Value(),
 		Email:         user.Email().Value(),
 		Name:          user.Name(),
-		EmailVerified: false, // 別途保存が必要
+		EmailVerified: user.IsEmailVerified(),
 		CreatedAt:     user.GetCreatedAt(),
 		UpdatedAt:     user.GetUpdatedAt(),
 	}
@@ -160,5 +158,6 @@ func (r *UserRepository) toDomain(model *UserModel) (*entity.User, error) {
 		*auth0ID,
 		*email,
 		model.Name,
+		model.EmailVerified,
 	), nil
 }

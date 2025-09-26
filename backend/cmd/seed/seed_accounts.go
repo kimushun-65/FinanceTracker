@@ -2,7 +2,9 @@ package main
 
 import (
 	"financetracker/internal/infrastructure/gorm/model"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
@@ -14,8 +16,14 @@ func seedAccounts(db *gorm.DB) error {
 	}
 
 	for i := range users {
+		now := time.Now()
 		accounts := []model.Account{
 			{
+				Base: model.Base{
+					ID:        uuid.New(),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
 				UserID:   users[i].ID,
 				Name:     "現金",
 				Type:     model.AccountTypeCash,
@@ -24,6 +32,11 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
+				Base: model.Base{
+					ID:        uuid.New(),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
 				UserID:   users[i].ID,
 				Name:     "みずほ銀行",
 				Type:     model.AccountTypeBank,
@@ -32,6 +45,11 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
+				Base: model.Base{
+					ID:        uuid.New(),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
 				UserID:   users[i].ID,
 				Name:     "楽天カード",
 				Type:     model.AccountTypeCreditCard,
@@ -40,6 +58,11 @@ func seedAccounts(db *gorm.DB) error {
 				IsActive: true,
 			},
 			{
+				Base: model.Base{
+					ID:        uuid.New(),
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
 				UserID:   users[i].ID,
 				Name:     "SBI証券",
 				Type:     model.AccountTypeInvestment,

@@ -14,7 +14,7 @@ const (
 
 // CategoryMaster represents a master category template.
 type CategoryMaster struct {
-	Base
+	BaseNoUpdate
 	Name         string       `gorm:"type:varchar(100);not null"`
 	Type         CategoryType `gorm:"type:varchar(20);not null;index"`
 	Icon         *string      `gorm:"type:varchar(50)"`

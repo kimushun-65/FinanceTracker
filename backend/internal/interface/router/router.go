@@ -23,6 +23,41 @@ type Handlers struct {
 		SetToken(*gin.Context)
 		RemoveToken(*gin.Context)
 	}
+	UserHandler interface {
+		GetCurrentUser(*gin.Context)
+		UpdateCurrentUser(*gin.Context)
+	}
+	AccountHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+	}
+	TransactionHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		MonthlySummary(*gin.Context)
+	}
+	CategoryHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		ListMaster(*gin.Context)
+	}
+	BudgetHandler interface {
+		List(*gin.Context)
+		Create(*gin.Context)
+		Get(*gin.Context)
+		Update(*gin.Context)
+		Delete(*gin.Context)
+		GetCurrent(*gin.Context)
+	}
 }
 
 // Router represents the HTTP router with its dependencies.
@@ -112,55 +147,99 @@ func (r *Router) setupRoutes() {
 // ユーザールート（TODO: 専用ファイルに分離）
 func (r *Router) registerUserRoutes(group *gin.RouterGroup) {
 	users := group.Group("/users")
-	users.GET("/me", r.notImplemented) // TODO: userHandler.GetCurrentUser
-	users.PUT("/me", r.notImplemented) // TODO: userHandler.UpdateCurrentUser
+	if r.handlers != nil && r.handlers.UserHandler != nil {
+		users.GET("/me", r.handlers.UserHandler.GetCurrentUser)
+		users.PUT("/me", r.handlers.UserHandler.UpdateCurrentUser)
+	} else {
+		users.GET("/me", r.notImplemented)
+		users.PUT("/me", r.notImplemented)
+	}
 }
 
 // アカウントルート（TODO: 専用ファイルに分離）
 func (r *Router) registerAccountRoutes(group *gin.RouterGroup) {
 	accounts := group.Group("/accounts")
-	accounts.GET("", r.notImplemented)                // TODO: accountHandler.List
-	accounts.POST("", r.notImplemented)               // TODO: accountHandler.Create
-	accounts.GET("/:id", r.notImplemented)            // TODO: accountHandler.Get
-	accounts.PUT("/:id", r.notImplemented)            // TODO: accountHandler.Update
-	accounts.DELETE("/:id", r.notImplemented)         // TODO: accountHandler.Delete
-	accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+	if r.handlers != nil && r.handlers.AccountHandler != nil {
+		accounts.GET("", r.handlers.AccountHandler.List)
+		accounts.POST("", r.handlers.AccountHandler.Create)
+		accounts.GET("/:id", r.handlers.AccountHandler.Get)
+		accounts.PUT("/:id", r.handlers.AccountHandler.Update)
+		accounts.DELETE("/:id", r.handlers.AccountHandler.Delete)
+		accounts.POST("/:id/movements", r.notImplemented) // TODO: accountHandler.CreateMovement
+	} else {
+		accounts.GET("", r.notImplemented)
+		accounts.POST("", r.notImplemented)
+		accounts.GET("/:id", r.notImplemented)
+		accounts.PUT("/:id", r.notImplemented)
+		accounts.DELETE("/:id", r.notImplemented)
+		accounts.POST("/:id/movements", r.notImplemented)
+	}
 }
 
 // トランザクションルート（TODO: 専用ファイルに分離）
 func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
 	transactions := group.Group("/transactions")
-	transactions.GET("", r.notImplemented)                 // TODO: transactionHandler.List
-	transactions.POST("", r.notImplemented)                // TODO: transactionHandler.Create
-	transactions.GET("/:id", r.notImplemented)             // TODO: transactionHandler.Get
-	transactions.PUT("/:id", r.notImplemented)             // TODO: transactionHandler.Update
-	transactions.DELETE("/:id", r.notImplemented)          // TODO: transactionHandler.Delete
-	transactions.GET("/summary/monthly", r.notImplemented) // TODO: transactionHandler.MonthlySummary
+	if r.handlers != nil && r.handlers.TransactionHandler != nil {
+		transactions.GET("", r.handlers.TransactionHandler.List)
+		transactions.POST("", r.handlers.TransactionHandler.Create)
+		transactions.GET("/:id", r.handlers.TransactionHandler.Get)
+		transactions.PUT("/:id", r.handlers.TransactionHandler.Update)
+		transactions.DELETE("/:id", r.handlers.TransactionHandler.Delete)
+		transactions.GET("/summary/monthly", r.handlers.TransactionHandler.MonthlySummary)
+	} else {
+		transactions.GET("", r.notImplemented)
+		transactions.POST("", r.notImplemented)
+		transactions.GET("/:id", r.notImplemented)
+		transactions.PUT("/:id", r.notImplemented)
+		transactions.DELETE("/:id", r.notImplemented)
+		transactions.GET("/summary/monthly", r.notImplemented)
+	}
 }
 
 // カテゴリールート（TODO: 専用ファイルに分離）
 func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
 	categories := group.Group("/categories")
-	categories.GET("", r.notImplemented)        // TODO: categoryHandler.List
-	categories.PUT("/:id", r.notImplemented)    // TODO: categoryHandler.Update
-	categories.DELETE("/:id", r.notImplemented) // TODO: categoryHandler.Delete
-	categories.GET("/master", r.notImplemented) // TODO: categoryHandler.ListMaster
+	if r.handlers != nil && r.handlers.CategoryHandler != nil {
+		categories.GET("", r.handlers.CategoryHandler.List)
+		categories.POST("", r.handlers.CategoryHandler.Create)
+		categories.GET("/:id", r.handlers.CategoryHandler.Get)
+		categories.PUT("/:id", r.handlers.CategoryHandler.Update)
+		categories.DELETE("/:id", r.handlers.CategoryHandler.Delete)
+		categories.GET("/master", r.handlers.CategoryHandler.ListMaster)
+	} else {
+		categories.GET("", r.notImplemented)
+		categories.POST("", r.notImplemented)
+		categories.GET("/:id", r.notImplemented)
+		categories.PUT("/:id", r.notImplemented)
+		categories.DELETE("/:id", r.notImplemented)
+		categories.GET("/master", r.notImplemented)
+	}
 }
 
 // 予算ルート（TODO: 専用ファイルに分離）
 func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
 	budgets := group.Group("/budgets")
-	budgets.GET("", r.notImplemented)         // TODO: budgetHandler.List
-	budgets.POST("", r.notImplemented)        // TODO: budgetHandler.Create
-	budgets.GET("/:id", r.notImplemented)     // TODO: budgetHandler.Get
-	budgets.PUT("/:id", r.notImplemented)     // TODO: budgetHandler.Update
-	budgets.DELETE("/:id", r.notImplemented)  // TODO: budgetHandler.Delete
-	budgets.GET("/current", r.notImplemented) // TODO: budgetHandler.GetCurrent
+	if r.handlers != nil && r.handlers.BudgetHandler != nil {
+		// Note: /current must come before /:id to avoid route conflicts
+		budgets.GET("/current", r.handlers.BudgetHandler.GetCurrent)
+		budgets.GET("", r.handlers.BudgetHandler.List)
+		budgets.POST("", r.handlers.BudgetHandler.Create)
+		budgets.GET("/:id", r.handlers.BudgetHandler.Get)
+		budgets.PUT("/:id", r.handlers.BudgetHandler.Update)
+		budgets.DELETE("/:id", r.handlers.BudgetHandler.Delete)
+	} else {
+		budgets.GET("/current", r.notImplemented)
+		budgets.GET("", r.notImplemented)
+		budgets.POST("", r.notImplemented)
+		budgets.GET("/:id", r.notImplemented)
+		budgets.PUT("/:id", r.notImplemented)
+		budgets.DELETE("/:id", r.notImplemented)
+	}
 
-	// 予算提案ルート
+	// 予算提案ルート（未実装）
 	suggestions := group.Group("/budget-suggestions")
-	suggestions.GET("", r.notImplemented)           // TODO: suggestionHandler.List
-	suggestions.POST("/generate", r.notImplemented) // TODO: suggestionHandler.Generate
+	suggestions.GET("", r.notImplemented)
+	suggestions.POST("/generate", r.notImplemented)
 }
 
 // レポートルート（TODO: 専用ファイルに分離）

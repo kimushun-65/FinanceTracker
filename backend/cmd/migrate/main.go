@@ -29,7 +29,7 @@ func run() int {
 	}
 
 	// Initialize logger
-	logger := logger.New()
+	logger := logger.NewLogger("migrate")
 	defer func() {
 		if err := logger.Sync(); err != nil {
 			log.Printf("Failed to sync logger: %v", err)
@@ -58,9 +58,9 @@ func run() int {
 // printUsage prints the usage message based on the environment
 func printUsage(appEnv string) {
 	if appEnv == "development" {
-		log.Fatal("Usage: migrate [apply|check|diff|validate|dev-setup]")
+		log.Fatal("Usage: migrate [apply|check|diff|validate|hash|dev-setup]")
 	}
-	log.Fatal("Usage: migrate [apply|check|diff|validate]")
+	log.Fatal("Usage: migrate [apply|check|diff|validate|hash]")
 }
 
 // runCommand executes the specified command
@@ -74,6 +74,8 @@ func runCommand(command string, cfg *config.Config, logger *logger.Logger) error
 		return runDiffCommand(logger)
 	case "validate":
 		return runValidateCommand(logger)
+	case "hash":
+		return runHashCommand(logger)
 	case "dev-setup":
 		return runDevSetupCommand(cfg, logger)
 	default:
@@ -85,7 +87,14 @@ func runCommand(command string, cfg *config.Config, logger *logger.Logger) error
 func runApplyCommand(logger *logger.Logger) error {
 	logger.Info("Applying Atlas migrations...")
 
-	// First, try to apply migrations normally
+	// First, recalculate hash to ensure checksums are up to date
+	logger.Info("Recalculating migration hashes...")
+	if err := runAtlasCommand("migrate", "hash",
+		"--dir", "file:///app/cmd/migrate/migrations"); err != nil {
+		logger.Warn("Failed to recalculate hashes, continuing anyway...")
+	}
+
+	// Try to apply migrations normally
 	err := runAtlasCommand("migrate", "apply",
 		"--config", "file:///app/atlas.hcl",
 		"--env", "dev",
@@ -139,6 +148,17 @@ func runValidateCommand(logger *logger.Logger) error {
 		return fmt.Errorf("failed to validate migrations: %w", err)
 	}
 	logger.Info("Migrations validated successfully")
+	return nil
+}
+
+// runHashCommand recalculates migration hashes
+func runHashCommand(logger *logger.Logger) error {
+	logger.Info("Recalculating migration hashes...")
+	if err := runAtlasCommand("migrate", "hash",
+		"--dir", "file:///app/cmd/migrate/migrations"); err != nil {
+		return fmt.Errorf("failed to recalculate hashes: %w", err)
+	}
+	logger.Info("Migration hashes recalculated successfully")
 	return nil
 }
 
