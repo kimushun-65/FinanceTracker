@@ -7,9 +7,8 @@ export interface EnvironmentConfig {
   auth0ClientId: string;
   githubOwner: string;
   repositoryName: string;
-  apiBaseUrl?: string;
   databaseConfig: DatabaseConfig;
-  lambdaConfig: LambdaConfig;
+  ecsConfig: EcsConfig;
   sesConfig: SesConfig;
 }
 
@@ -19,9 +18,10 @@ export interface DatabaseConfig {
   deletionProtection: boolean;
 }
 
-export interface LambdaConfig {
-  memorySize: number;
-  timeout: number;
+export interface EcsConfig {
+  cpu: number;
+  memoryMB: number;
+  desiredCount: number;
 }
 
 export interface SesConfig {

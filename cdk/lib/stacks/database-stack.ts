@@ -8,12 +8,9 @@ import {
 } from 'aws-cdk-lib/aws-rds';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { Vpc, SecurityGroup, SubnetType, InstanceType, InstanceClass, InstanceSize } from 'aws-cdk-lib/aws-ec2';
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
-
 export interface DatabaseStackProps extends StackProps {
   vpc: Vpc;
   rdsSecurityGroup: SecurityGroup;
-  lambdaSecurityGroup: SecurityGroup;
   environment: string;
 }
 
@@ -39,38 +36,24 @@ export class DatabaseStack extends Stack {
       engine: DatabaseInstanceEngine.postgres({
         version: PostgresEngineVersion.VER_15,
       }),
-      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.SMALL),
+      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
       vpc: props.vpc,
       vpcSubnets: {
-        subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: SubnetType.PRIVATE_ISOLATED,
       },
       securityGroups: [props.rdsSecurityGroup],
       credentials: Credentials.fromSecret(this.dbSecret),
-      multiAz: props.environment === 'prod',
+      multiAz: false, // 最小構成のためシングルAZ
       storageEncrypted: true,
       backupRetention: Duration.days(7),
-      deletionProtection: props.environment === 'prod',
+      deletionProtection: false, // 開発中は無効化
       databaseName: 'finsight',
       removalPolicy: props.environment === 'prod'
         ? RemovalPolicy.RETAIN
         : RemovalPolicy.DESTROY,
     });
 
-    // データベース初期化Lambda
-    const dbInitFunction = new Function(this, 'DbInitFunction', {
-      runtime: Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: Code.fromAsset('lambda/db-init'),
-      vpc: props.vpc,
-      securityGroups: [props.lambdaSecurityGroup],
-      environment: {
-        DB_SECRET_ARN: this.dbSecret.secretArn,
-        DB_ENDPOINT: this.database.instanceEndpoint.hostname,
-      },
-      timeout: Duration.minutes(5),
-    });
-
-    // Secret読み取り権限付与
-    this.dbSecret.grantRead(dbInitFunction);
+    // データベース初期化はECSアプリケーション起動時に実行
+    // Lambda関数は削除し、Goアプリケーションの初期化処理で対応
   }
 }
