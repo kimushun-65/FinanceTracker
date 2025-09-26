@@ -60,8 +60,30 @@ func (s *BudgetService) CreateBudget(ctx context.Context, userID uuid.UUID, req 
 		return nil, errors.NewValidationError("無効な予算期間タイプです")
 	}
 
+	// 開始日をパース
+	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		s.logger.Error("開始日パースエラー",
+			zap.Error(err),
+			zap.String("start_date", req.StartDate))
+		return nil, errors.NewValidationError("無効な開始日形式です (YYYY-MM-DD)")
+	}
+
+	// 終了日をパース（オプション）
+	var endDate *time.Time
+	if req.EndDate != nil {
+		parsed, err := time.Parse("2006-01-02", *req.EndDate)
+		if err != nil {
+			s.logger.Error("終了日パースエラー",
+				zap.Error(err),
+				zap.String("end_date", *req.EndDate))
+			return nil, errors.NewValidationError("無効な終了日形式です (YYYY-MM-DD)")
+		}
+		endDate = &parsed
+	}
+
 	// 日付の妥当性チェック
-	if req.EndDate != nil && req.EndDate.Before(req.StartDate) {
+	if endDate != nil && endDate.Before(startDate) {
 		return nil, errors.NewValidationError("終了日は開始日より後である必要があります")
 	}
 
@@ -71,8 +93,8 @@ func (s *BudgetService) CreateBudget(ctx context.Context, userID uuid.UUID, req 
 		req.CategoryID,
 		*money,
 		periodType,
-		req.StartDate,
-		req.EndDate,
+		startDate,
+		endDate,
 	)
 	if err != nil {
 		s.logger.Error("予算作成エラー", zap.Error(err))
@@ -199,12 +221,31 @@ func (s *BudgetService) UpdateBudget(ctx context.Context, userID, budgetID uuid.
 	if req.StartDate != nil || req.EndDate != nil {
 		startDate := budget.StartDate()
 		if req.StartDate != nil {
-			startDate = *req.StartDate
+			parsed, err := time.Parse("2006-01-02", *req.StartDate)
+			if err != nil {
+				s.logger.Error("開始日パースエラー",
+					zap.Error(err),
+					zap.String("start_date", *req.StartDate))
+				return nil, errors.NewValidationError("無効な開始日形式です (YYYY-MM-DD)")
+			}
+			startDate = parsed
 		}
 
 		endDate := budget.EndDate()
 		if req.EndDate != nil {
-			endDate = req.EndDate
+			if *req.EndDate == "" {
+				// 空文字列の場合は終了日をクリア
+				endDate = nil
+			} else {
+				parsed, err := time.Parse("2006-01-02", *req.EndDate)
+				if err != nil {
+					s.logger.Error("終了日パースエラー",
+						zap.Error(err),
+						zap.String("end_date", *req.EndDate))
+					return nil, errors.NewValidationError("無効な終了日形式です (YYYY-MM-DD)")
+				}
+				endDate = &parsed
+			}
 		}
 
 		if endDate != nil && endDate.Before(startDate) {

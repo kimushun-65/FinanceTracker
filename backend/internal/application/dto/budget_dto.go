@@ -26,17 +26,17 @@ type BudgetResponse struct {
 // CreateBudgetRequest 予算作成リクエスト
 type CreateBudgetRequest struct {
 	CategoryID uuid.UUID       `json:"category_id" binding:"required"`
-	Amount     decimal.Decimal `json:"amount" binding:"required,gt=0"`
+	Amount     decimal.Decimal `json:"amount" binding:"required"`
 	Period     string          `json:"period" binding:"required,oneof=monthly yearly"`
-	StartDate  time.Time       `json:"start_date" binding:"required"`
-	EndDate    *time.Time      `json:"end_date" binding:"omitempty"`
+	StartDate  string          `json:"start_date" binding:"required"`
+	EndDate    *string         `json:"end_date" binding:"omitempty"`
 }
 
 // UpdateBudgetRequest 予算更新リクエスト
 type UpdateBudgetRequest struct {
-	Amount    *decimal.Decimal `json:"amount" binding:"omitempty,gt=0"`
-	StartDate *time.Time       `json:"start_date" binding:"omitempty"`
-	EndDate   *time.Time       `json:"end_date" binding:"omitempty"`
+	Amount    *decimal.Decimal `json:"amount" binding:"omitempty"`
+	StartDate *string          `json:"start_date" binding:"omitempty"`
+	EndDate   *string          `json:"end_date" binding:"omitempty"`
 	IsActive  *bool            `json:"is_active" binding:"omitempty"`
 }
 
