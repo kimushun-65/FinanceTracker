@@ -25,6 +25,7 @@ import {
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { DatabaseInstance } from 'aws-cdk-lib/aws-rds';
+import { Repository } from 'aws-cdk-lib/aws-ecr';
 import { EnvironmentConfig } from '../interfaces/config';
 
 export interface EcsStackProps extends StackProps {
@@ -38,9 +39,16 @@ export class EcsStack extends Stack {
   public readonly cluster: Cluster;
   public readonly service: FargateService;
   public readonly loadBalancer: ApplicationLoadBalancer;
+  public readonly ecrRepository: Repository;
 
   constructor(scope: Construct, id: string, props: EcsStackProps) {
     super(scope, id, props);
+
+    // ECRリポジトリ作成
+    this.ecrRepository = new Repository(this, 'FinanceTrackerRepository', {
+      repositoryName: `finance-tracker-${props.config.environment}`,
+      imageScanOnPush: true,
+    });
 
     // ECSクラスター作成
     this.cluster = new Cluster(this, 'FinanceTrackerCluster', {

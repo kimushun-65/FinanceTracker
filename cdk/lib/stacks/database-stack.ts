@@ -36,17 +36,17 @@ export class DatabaseStack extends Stack {
       engine: DatabaseInstanceEngine.postgres({
         version: PostgresEngineVersion.VER_15,
       }),
-      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.SMALL),
+      instanceType: InstanceType.of(InstanceClass.T3, InstanceSize.MICRO),
       vpc: props.vpc,
       vpcSubnets: {
         subnetType: SubnetType.PRIVATE_ISOLATED,
       },
       securityGroups: [props.rdsSecurityGroup],
       credentials: Credentials.fromSecret(this.dbSecret),
-      multiAz: props.environment === 'prod',
+      multiAz: false, // 最小構成のためシングルAZ
       storageEncrypted: true,
       backupRetention: Duration.days(7),
-      deletionProtection: props.environment === 'prod',
+      deletionProtection: false, // 開発中は無効化
       databaseName: 'finsight',
       removalPolicy: props.environment === 'prod'
         ? RemovalPolicy.RETAIN
