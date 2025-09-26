@@ -101,12 +101,15 @@ export class ApiStack extends Stack {
     // Lambda関数作成
     lambdaConfigs.forEach(config => {
       const lambdaFunction = new Function(this, `${config.name}Function`, {
-        runtime: Runtime.PROVIDED_AL2,
-        handler: 'bootstrap',
+        runtime: Runtime.NODEJS_18_X,
+        handler: 'index.handler',
         code: Code.fromAsset(`lambda/${config.path}`),
         vpc: props.vpc,
         securityGroups: [props.lambdaSecurityGroup],
-        environment: commonEnv,
+        environment: {
+          ...commonEnv,
+          API_BASE_URL: props.config.apiBaseUrl || 'http://backend:8080',
+        },
         timeout: Duration.seconds(props.config.lambdaConfig.timeout),
         memorySize: props.config.lambdaConfig.memorySize,
         tracing: Tracing.ACTIVE,

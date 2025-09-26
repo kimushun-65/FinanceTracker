@@ -7,6 +7,22 @@ export const handler = async (
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
+    // Health check endpoint
+    if (event.path === '/v1/health') {
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          service: 'FinanceTracker API',
+          environment: process.env.ENVIRONMENT || 'unknown',
+        }),
+      };
+    }
     // APIエンドポイントを構築（/v1/auth/* → /api/v1/auth/*）
     const apiPath = `/api${event.path}`;
     const url = new URL(apiPath, API_BASE_URL);

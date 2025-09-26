@@ -7,6 +7,7 @@
   "auth0ClientId": "your-prod-auth0-client-id",
   "githubOwner": "kimushun-65",
   "repositoryName": "FinanceTracker",
+  "apiBaseUrl": "http://backend:8080",
   "databaseConfig": {
     "databaseName": "finsight",
     "port": 5432,

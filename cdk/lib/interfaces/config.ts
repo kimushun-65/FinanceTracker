@@ -7,6 +7,7 @@ export interface EnvironmentConfig {
   auth0ClientId: string;
   githubOwner: string;
   repositoryName: string;
+  apiBaseUrl?: string;
   databaseConfig: DatabaseConfig;
   lambdaConfig: LambdaConfig;
   sesConfig: SesConfig;
