@@ -28,7 +28,7 @@ type CreateTransactionRequest struct {
 	AccountID       uuid.UUID       `json:"account_id" binding:"required"`
 	CategoryID      uuid.UUID       `json:"category_id" binding:"required"`
 	TransactionType string          `json:"transaction_type" binding:"required,oneof=income expense"`
-	Amount          decimal.Decimal `json:"amount" binding:"required,gt=0"`
+	Amount          decimal.Decimal `json:"amount" binding:"required"`
 	Description     string          `json:"description" binding:"required,min=1,max=500"`
 	TransactionDate *time.Time      `json:"transaction_date" binding:"omitempty"`
 }
@@ -36,7 +36,7 @@ type CreateTransactionRequest struct {
 // UpdateTransactionRequest 取引更新リクエスト
 type UpdateTransactionRequest struct {
 	CategoryID      *uuid.UUID       `json:"category_id" binding:"omitempty"`
-	Amount          *decimal.Decimal `json:"amount" binding:"omitempty,gt=0"`
+	Amount          *decimal.Decimal `json:"amount" binding:"omitempty"`
 	Description     *string          `json:"description" binding:"omitempty,min=1,max=500"`
 	TransactionDate *time.Time       `json:"transaction_date" binding:"omitempty"`
 }
@@ -59,8 +59,8 @@ type TransactionSearchParams struct {
 	TransactionType *string          `form:"transaction_type" binding:"omitempty,oneof=income expense"`
 	DateFrom        *time.Time       `form:"date_from"`
 	DateTo          *time.Time       `form:"date_to"`
-	AmountMin       *decimal.Decimal `form:"amount_min" binding:"omitempty,gte=0"`
-	AmountMax       *decimal.Decimal `form:"amount_max" binding:"omitempty,gte=0"`
+	AmountMin       *decimal.Decimal `form:"amount_min" binding:"omitempty"`
+	AmountMax       *decimal.Decimal `form:"amount_max" binding:"omitempty"`
 	Description     *string          `form:"description"`
 	Page            int              `form:"page,default=1" binding:"min=1"`
 	PerPage         int              `form:"per_page,default=20" binding:"min=1,max=100"`
