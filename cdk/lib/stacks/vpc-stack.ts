@@ -14,13 +14,12 @@ export interface VpcStackProps extends StackProps {
 
 export class VpcStack extends Stack {
   public readonly vpc: Vpc;
-  public readonly lambdaSecurityGroup: SecurityGroup;
   public readonly rdsSecurityGroup: SecurityGroup;
 
   constructor(scope: Construct, id: string, props: VpcStackProps) {
     super(scope, id, props);
 
-    // VPC作成
+    // VPC作成（NAT Gateway削除でコスト削減）
     this.vpc = new Vpc(this, 'FinSightVpc', {
       ipAddresses: IpAddresses.cidr('10.0.0.0/16'),
       maxAzs: 2,
@@ -32,18 +31,11 @@ export class VpcStack extends Stack {
         },
         {
           cidrMask: 24,
-          name: 'Private',
-          subnetType: SubnetType.PRIVATE_WITH_EGRESS,
+          name: 'Database',
+          subnetType: SubnetType.PRIVATE_ISOLATED,
         },
       ],
-      natGateways: 2,
-    });
-
-    // Lambda用セキュリティグループ
-    this.lambdaSecurityGroup = new SecurityGroup(this, 'LambdaSecurityGroup', {
-      vpc: this.vpc,
-      description: 'Security group for Lambda functions',
-      allowAllOutbound: true,
+      natGateways: 0, // NAT Gateway削除（月9,000円削減）
     });
 
     // RDS用セキュリティグループ
@@ -52,12 +44,5 @@ export class VpcStack extends Stack {
       description: 'Security group for RDS database',
       allowAllOutbound: false,
     });
-
-    // Lambda → RDS接続許可
-    this.rdsSecurityGroup.addIngressRule(
-      this.lambdaSecurityGroup,
-      Port.tcp(5432),
-      'Allow Lambda to access RDS'
-    );
   }
 }

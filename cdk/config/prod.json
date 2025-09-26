@@ -7,7 +7,6 @@
   "auth0ClientId": "your-prod-auth0-client-id",
   "githubOwner": "kimushun-65",
   "repositoryName": "FinanceTracker",
-  "apiBaseUrl": "http://backend:8080",
   "databaseConfig": {
     "databaseName": "finsight",
     "port": 5432,
@@ -15,10 +14,10 @@
     "preferredBackupWindow": "03:00-04:00",
     "preferredMaintenanceWindow": "sun:04:00-sun:05:00"
   },
-  "lambdaConfig": {
-    "memorySize": 512,
-    "timeout": 30,
-    "reservedConcurrentExecutions": 10
+  "ecsConfig": {
+    "cpu": 256,
+    "memoryMB": 512,
+    "desiredCount": 1
   },
   "sesConfig": {
     "fromEmail": "noreply@finsight.com"

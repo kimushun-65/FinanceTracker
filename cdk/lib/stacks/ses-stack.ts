@@ -9,7 +9,6 @@ import { EnvironmentConfig } from '../interfaces/config';
 
 export interface SesStackProps extends StackProps {
   config: EnvironmentConfig;
-  lambdaFunctions: { [key: string]: Function };
 }
 
 export class SesStack extends Stack {
@@ -57,14 +56,7 @@ export class SesStack extends Stack {
       },
     });
 
-    // reports と notifications Lambda関数にSES権限を付与
-    if (props.lambdaFunctions.reports) {
-      props.lambdaFunctions.reports.addToRolePolicy(sesSendPolicy);
-    }
-
-    if (props.lambdaFunctions.notifications) {
-      props.lambdaFunctions.notifications.addToRolePolicy(sesSendPolicy);
-    }
+    // SESポリシーは作成済み（ECSタスクに権限付与が必要な場合は別途設定）
 
     // 出力
     new CfnOutput(this, 'BounceTopicArn', {

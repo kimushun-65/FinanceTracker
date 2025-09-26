@@ -1,9 +1,9 @@
 import { Stack, StackProps, CfnOutput, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Dashboard, GraphWidget, Metric, SingleValueWidget, TextWidget } from 'aws-cdk-lib/aws-cloudwatch';
-import { Function } from 'aws-cdk-lib/aws-lambda';
 import { DatabaseInstance } from 'aws-cdk-lib/aws-rds';
 import { RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { FargateService } from 'aws-cdk-lib/aws-ecs';
 import { Alarm, ComparisonOperator, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch';
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Topic } from 'aws-cdk-lib/aws-sns';
@@ -12,7 +12,7 @@ import { EnvironmentConfig } from '../interfaces/config';
 
 export interface MonitoringStackProps extends StackProps {
   config: EnvironmentConfig;
-  lambdaFunctions: { [key: string]: Function };
+  ecsService: FargateService;
   database: DatabaseInstance;
   api: RestApi;
 }
@@ -34,45 +34,55 @@ export class MonitoringStack extends Stack {
     // NOTE: Update this email address to your actual alert email
     this.alertTopic.addSubscription(new EmailSubscription('alerts@finsight.com'));
 
-    // Lambda関数のメトリクス
-    const lambdaWidgets = Object.entries(props.lambdaFunctions).map(([name, func]) => {
-      // Lambda関数のアラーム設定
-      const errorAlarm = new Alarm(this, `${name}ErrorAlarm`, {
-        metric: func.metricErrors({
-          period: Duration.minutes(5),
-        }),
-        threshold: 5,
-        evaluationPeriods: 2,
-        comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-        treatMissingData: TreatMissingData.NOT_BREACHING,
-        alarmDescription: `High error rate for ${name} function`,
-      });
-      errorAlarm.addAlarmAction(new SnsAction(this.alertTopic));
+    // ECSサービスのメトリクス
+    const ecsServiceMetrics = [
+      new Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'CPUUtilization',
+        dimensionsMap: {
+          ServiceName: props.ecsService.serviceName,
+          ClusterName: props.ecsService.cluster.clusterName,
+        },
+        period: Duration.minutes(5),
+      }),
+      new Metric({
+        namespace: 'AWS/ECS',
+        metricName: 'MemoryUtilization',
+        dimensionsMap: {
+          ServiceName: props.ecsService.serviceName,
+          ClusterName: props.ecsService.cluster.clusterName,
+        },
+        period: Duration.minutes(5),
+      }),
+    ];
 
-      const durationAlarm = new Alarm(this, `${name}DurationAlarm`, {
-        metric: func.metricDuration({
-          period: Duration.minutes(5),
-        }),
-        threshold: 10000, // 10秒
-        evaluationPeriods: 3,
-        comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
-        treatMissingData: TreatMissingData.NOT_BREACHING,
-        alarmDescription: `High duration for ${name} function`,
-      });
-      durationAlarm.addAlarmAction(new SnsAction(this.alertTopic));
+    // ECSサービスのアラーム
+    const cpuAlarm = new Alarm(this, 'EcsCpuAlarm', {
+      metric: ecsServiceMetrics[0],
+      threshold: 80,
+      evaluationPeriods: 2,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'High CPU utilization for ECS service',
+    });
+    cpuAlarm.addAlarmAction(new SnsAction(this.alertTopic));
 
-      return new GraphWidget({
-        title: `Lambda: ${name}`,
-        width: 12,
-        height: 6,
-        left: [
-          func.metricInvocations({ period: Duration.minutes(5) }),
-          func.metricErrors({ period: Duration.minutes(5) }),
-        ],
-        right: [
-          func.metricDuration({ period: Duration.minutes(5) }),
-        ],
-      });
+    const memoryAlarm = new Alarm(this, 'EcsMemoryAlarm', {
+      metric: ecsServiceMetrics[1],
+      threshold: 80,
+      evaluationPeriods: 2,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: TreatMissingData.NOT_BREACHING,
+      alarmDescription: 'High memory utilization for ECS service',
+    });
+    memoryAlarm.addAlarmAction(new SnsAction(this.alertTopic));
+
+    const ecsWidget = new GraphWidget({
+      title: 'ECS Service Metrics',
+      width: 12,
+      height: 6,
+      left: [ecsServiceMetrics[0]],
+      right: [ecsServiceMetrics[1]],
     });
 
     // API Gatewayメトリクス
@@ -168,8 +178,8 @@ export class MonitoringStack extends Stack {
 - **System Health**: Overall availability and performance
 
 ### Alert Thresholds:
-- Lambda errors: ≥5 errors in 10 minutes
-- Lambda duration: >10 seconds for 15 minutes
+- ECS CPU: >80% for 10 minutes
+- ECS Memory: >80% for 10 minutes
 - API errors: >10 server errors in 10 minutes  
 - API latency: >5 seconds for 15 minutes
 - RDS connections: >80 connections
@@ -184,8 +194,8 @@ export class MonitoringStack extends Stack {
       widgets: [
         [systemOverviewWidget],
         [apiWidget],
+        [ecsWidget],
         [rdsWidget],
-        ...lambdaWidgets.map(widget => [widget]),
       ],
     });
 
