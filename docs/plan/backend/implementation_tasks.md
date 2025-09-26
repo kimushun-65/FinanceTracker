@@ -4,7 +4,7 @@
 FinanceTrackerバックエンドをDocker環境で開発するためのタスクリストです。
 AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築します。
 
-## 進捗サマリー (2025-01-10更新)
+## 進捗サマリー (2025-09-26更新)
 - **Phase 0: 開発環境構築** - 100%完了 ✅
 - **Phase 1: プロジェクト構造構築** - 100%完了 ✅
 - **Phase 2: ドメイン層実装** - 100%完了 ✅
@@ -12,7 +12,7 @@ AWS Lambda版の実装計画を基に、Gin framework + PostgreSQLで構築し�
 - **Phase 2.7: DI層実装** - 100%完了 ✅
 - **Phase 3: アプリケーション層実装** - 100%完了 ✅（全サービス・DTO実装完了）
 - **Phase 4: インフラストラクチャ層実装** - 100%完了 ✅（全リポジトリ実装完了）
-- **Phase 5: HTTPインターフェース層実装** - 90%完了 ✅（全ハンドラー実装完了、一部ハンドラー未接続）
+- **Phase 5: HTTPインターフェース層実装** - 95%完了 ✅（主要ハンドラー実装・デバッグ完了）
 - **Phase 6: テスト実装** - 未着手
 - **Phase 7: CI/CD・運用設定** - 60%完了
 - **Phase 8: Lambda統合** - 100%完了 ✅（全Lambda関数をTypeScriptプロキシとして実装）
@@ -291,36 +291,36 @@ backend/
 
 ### 5.2 ハンドラー実装
 - [x] auth_handler.go ✅ **完全実装済み**
-- [x] user_handler.go ✅ **実装完了**
+- [x] user_handler.go ✅ **実装・デバッグ完了**
   - [x] GetCurrentUser（GET /users/me）
   - [x] UpdateCurrentUser（PUT /users/me）
-- [x] account_handler.go ✅ **実装完了**
+- [x] account_handler.go ✅ **実装・デバッグ完了**
   - [x] List（GET /accounts）
   - [x] Create（POST /accounts）
   - [x] Get（GET /accounts/:id）
   - [x] Update（PUT /accounts/:id）
   - [x] Delete（DELETE /accounts/:id）
-- [x] transaction_handler.go ✅ **実装完了**
-  - [x] List（GET /transactions）
+- [x] transaction_handler.go ✅ **実装・デバッグ完了**
+  - [x] List（GET /transactions）- 日付フィルタリング修正済み
   - [x] Create（POST /transactions）
   - [x] Get（GET /transactions/:id）
-  - [x] Update（PUT /transactions/:id）
-  - [x] Delete（DELETE /transactions/:id）
-  - [x] MonthlySummary（GET /transactions/summary/monthly）
-- [x] category_handler.go ✅ **実装完了**
-  - [x] List（GET /categories）
-  - [x] Create（POST /categories）
-  - [x] Get（GET /categories/:id）
-  - [x] Update（PUT /categories/:id）
-  - [x] Delete（DELETE /categories/:id）
-  - [x] ListMaster（GET /categories/master）
-- [x] budget_handler.go ✅ **実装完了**
-  - [x] List（GET /budgets）
-  - [x] Create（POST /budgets）
-  - [x] Get（GET /budgets/:id）
-  - [x] Update（PUT /budgets/:id）
-  - [x] Delete（DELETE /budgets/:id）
-  - [x] GetCurrent（GET /budgets/current）
+  - [x] Update（PUT /transactions/:id）- 認証エラー修正済み
+  - [x] Delete（DELETE /transactions/:id）- 認証エラー修正済み
+  - [x] MonthlySummary（GET /transactions/summary/monthly）- 認証エラー修正済み
+- [x] category_handler.go ✅ **実装・デバッグ完了**
+  - [x] List（GET /categories）- name フィールド追加済み
+  - [x] Create（POST /categories）- name フィールド追加済み
+  - [x] Get（GET /categories/:id）- name フィールド追加済み
+  - [x] Update（PUT /categories/:id）- name フィールド追加済み
+  - [x] Delete（DELETE /categories/:id）- 論理削除実装
+  - [x] ListMaster（GET /categories/master）- 認証エラー修正済み
+- [x] budget_handler.go ✅ **実装・デバッグ完了**
+  - [x] List（GET /budgets）- 認証エラー修正済み
+  - [x] Create（POST /budgets）- 日付パースエラー修正済み
+  - [x] Get（GET /budgets/:id）- 認証エラー修正済み
+  - [x] Update（PUT /budgets/:id）- 認証エラー修正済み
+  - [x] Delete（DELETE /budgets/:id）- 認証エラー修正済み
+  - [x] GetCurrent（GET /budgets/current）- 認証エラー修正済み
 - [ ] asset_handler.go（GET /assets/snapshots, /assets/forecasts）
 - [ ] report_handler.go（GET /reports/*）
 - [ ] notification_handler.go（CRUD /notification-settings）

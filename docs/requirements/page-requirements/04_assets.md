@@ -44,70 +44,60 @@
 - **表示内容**: 口座種別ごとの推移
 - **インタラクティブ**: ホバーで詳細表示
 
-### 5. 資産予測機能（1年後予測）
-- **予測ボタン**: 「1年後の予測を見る」
-- **予測API**: POST /assets/forecasts使用
-  - 過去の資産推移から成長率を計算
-  - 1年後の資産額を予測
-- **予測結果表示**:
-  - 現在の総資産
-  - 1年後の予測資産額
-  - 予想成長率（%）
-  - 予測グラフ（現在から1年後まで）
-- **予測ロジック**:
-  - 過去6ヶ月の平均成長率を基に計算
-  - 毎月の収支傾向を考慮
+### 5. 資産予測機能（1年後予測） ⚠️ **未実装**
+- **現在の状況**: 資産予測APIが未実装のため利用不可
+- **代替案**: 
+  - 基本的な資産表示・管理機能のみ実装
+  - 予測機能は将来のアップデートで追加予定
+- **実装予定内容**:
+  - **予測ボタン**: 「1年後の予測を見る」
+  - **予測API**: POST /assets/forecasts（未実装）
+  - **予測結果表示**: 現在総資産、1年後予測額、成長率
+  
+**注意**: 資産予測機能は将来実装予定。現在は口座管理と資産推移表示のみ対応。
 
 ## 対応API・テーブル・ドメイン情報
 
 ### 関連API
-1. **GET /accounts**
+
+#### 実装済みAPI ✅
+1. **GET /api/v1/accounts** ✅
    - 全口座一覧取得
    - レスポンス: 口座情報、current_balance（現在残高）
    - ページネーション対応
 
-2. **POST /accounts**
+2. **POST /api/v1/accounts** ✅
    - 新規口座作成
-   - リクエスト: name（口座名）、initial_balance（初期残高）
+   - リクエスト: name（口座名）、account_type、initial_balance（初期残高）
    - レスポンス: 作成された口座情報（IDとcurrent_balance含む）
 
-3. **PUT /accounts/{accountId}**
-   - 口座情報更新（名前変更のみ）
-   - 残高更新は別エンドポイント
+3. **PUT /api/v1/accounts/{accountId}** ✅
+   - 口座情報更新（名前変更等）
+   - 残高更新は別途取引機能で対応
 
-4. **DELETE /accounts/{accountId}**
+4. **DELETE /api/v1/accounts/{accountId}** ✅
    - 口座削除
-   - 関連取引・資産スナップショットの処理
+   - 関連取引データとの整合性を保持
 
-5. **POST /accounts/{accountId}/movements**
-   - 残高更新（変動記録として）
-   - リクエスト: amount（変動額）、note（メモ/任意）
-   - 変更履歴として記録され、current_balanceが更新される
+#### 未実装API ⚠️
+5. **POST /accounts/{accountId}/movements** ❌
+   - 残高手動更新機能（未実装）
+   - **代替案**: 取引として「残高調整」を記録
 
-6. **GET /assets/snapshots**
-   - 資産推移履歴取得（グラフ用）
-   - パラメータ: from（開始日）、to（終了日）、page、limit
-   - レスポンス: 
-     - snapshots: 日付ごとの資産スナップショット配列
-     - total_assets: 総資産額
-     - change_from_previous: 前回からの変動額
-     - accounts_breakdown: 口座別の残高内訳
+6. **GET /assets/snapshots** ❌
+   - 資産推移履歴取得（未実装）
+   - **代替案**: 取引データから残高推移を計算
 
-7. **POST /assets/forecasts**
-   - 1年後の資産予測作成
-   - リクエスト:
-     ```json
-     {
-       "forecast_months": 12,
-       "include_monthly_savings": true,
-       "growth_scenario": "realistic"
-     }
-     ```
-   - レスポンス: 予測ID、予測額、成長率、月別予測データ
+7. **POST /assets/forecasts** ❌
+   - 資産予測作成（未実装）
 
-8. **GET /assets/forecasts/latest**
-   - 最新の予測結果取得
-   - レスポンス: 作成済みの予測データ
+8. **GET /assets/forecasts/latest** ❌
+   - 最新予測取得（未実装）
+
+#### API制限による実装制約
+- **資産推移グラフ**: 基本的な口座残高表示のみ
+- **予測機能**: 将来実装予定
+- **残高変動履歴**: 取引履歴ベースでの代替実装
 
 ### 対応テーブル
 - **accounts**: 口座マスタ（ID, 名前, 種別, 初期残高, 現在残高）
