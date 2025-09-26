@@ -1,0 +1,112 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  NODE_VERSION: '18'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            cdk/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install CDK dependencies
+        working-directory: ./cdk
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build CDK
+        working-directory: ./cdk
+        run: npm run build
+
+      - name: Run CDK tests
+        working-directory: ./cdk
+        run: npm test
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      # - name: Run frontend tests
+      #   working-directory: ./frontend
+      #   run: npm test -- --coverage --watchAll=false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run integration tests
+        working-directory: ./cdk
+        run: |
+          chmod +x scripts/test-integration.sh
+          ./scripts/test-integration.sh
+
+      - name: Run security scan
+        working-directory: ./cdk
+        run: |
+          chmod +x scripts/security-check.sh
+          ./scripts/security-check.sh
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: cdk/package-lock.json
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install CDK dependencies
+        working-directory: ./cdk
+        run: npm ci
+
+      - name: Build CDK
+        working-directory: ./cdk
+        run: npm run build
+
+      - name: Deploy to production
+        working-directory: ./cdk
+        run: |
+          npm install -g aws-cdk
+          cdk deploy --all --context env=prod --require-approval never
+
+      - name: Run post-deployment tests
+        working-directory: ./cdk
+        run: |
+          chmod +x scripts/test-deployment.sh
+          ./scripts/test-deployment.sh prod
