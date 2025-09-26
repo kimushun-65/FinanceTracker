@@ -95,18 +95,23 @@ export class ApiStack extends Stack {
       { name: 'budgets', path: 'budgets' },
       { name: 'reports', path: 'reports' },
       { name: 'auth', path: 'auth' },
+      { name: 'health', path: 'health' },
       { name: 'notifications', path: 'notifications' },
     ];
 
     // Lambda関数作成
     lambdaConfigs.forEach(config => {
+      const isHealthFunction = config.name === 'health';
+      
       const lambdaFunction = new Function(this, `${config.name}Function`, {
         runtime: Runtime.NODEJS_18_X,
         handler: 'index.handler',
         code: Code.fromAsset(`lambda/${config.path}`),
-        vpc: props.vpc,
-        securityGroups: [props.lambdaSecurityGroup],
-        environment: {
+        vpc: isHealthFunction ? undefined : props.vpc,
+        securityGroups: isHealthFunction ? undefined : [props.lambdaSecurityGroup],
+        environment: isHealthFunction ? {
+          ENVIRONMENT: props.config.environment,
+        } : {
           ...commonEnv,
           API_BASE_URL: props.config.apiBaseUrl || 'http://backend:8080',
         },
@@ -115,8 +120,10 @@ export class ApiStack extends Stack {
         tracing: Tracing.ACTIVE,
       });
 
-      // データベースシークレットへの読み取り権限付与
-      props.dbSecret.grantRead(lambdaFunction);
+      // データベースシークレットへの読み取り権限付与（health関数は除外）
+      if (!isHealthFunction) {
+        props.dbSecret.grantRead(lambdaFunction);
+      }
 
       // 関数を保存
       this.lambdaFunctions[config.name] = lambdaFunction;
@@ -218,6 +225,6 @@ export class ApiStack extends Stack {
 
     // Health check endpoint (認証不要)
     const health = v1.addResource('health');
-    health.addMethod('GET', new LambdaIntegration(this.lambdaFunctions.auth));
+    health.addMethod('GET', new LambdaIntegration(this.lambdaFunctions.health));
   }
 }
