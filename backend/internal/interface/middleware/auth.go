@@ -134,8 +134,14 @@ func setUserContext(c *gin.Context, claims *Auth0Claims) {
 	// Note: UserID will be set by the handler after looking up the user
 }
 
-// extractTokenFromHeader extracts the JWT token from the Authorization header
+// extractTokenFromHeader extracts the JWT token from the Authorization header or HttpOnly cookie
 func extractTokenFromHeader(c *gin.Context) (string, error) {
+	// First, try to get token from HttpOnly cookie
+	if token, err := c.Cookie("access_token"); err == nil && token != "" {
+		return token, nil
+	}
+
+	// Fall back to Authorization header for backward compatibility
 	authHeader := c.GetHeader("Authorization")
 	if authHeader == "" {
 		return "", errors.NewUnauthorizedError("Missing authorization header")

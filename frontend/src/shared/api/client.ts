@@ -4,7 +4,6 @@
  */
 
 import { env } from '../config';
-import { AUTH_TOKEN_KEY, getCookie } from '../utils';
 
 export interface ApiError {
   code: string;
@@ -52,15 +51,11 @@ class ApiClient {
 
   /**
    * 認証ヘッダーを取得
+   * HttpOnlyクッキーを使用しているため、Authorizationヘッダーは不要
    */
   private getAuthHeaders(): HeadersInit {
-    if (typeof window !== 'undefined') {
-      // Cookieからトークンを取得
-      const token = getCookie(AUTH_TOKEN_KEY);
-      if (token) {
-        return { Authorization: `Bearer ${token}` };
-      }
-    }
+    // HttpOnlyクッキーで認証するため、Authorizationヘッダーは送信しない
+    // credentials: 'include' で自動的にクッキーが送信される
     return {};
   }
 

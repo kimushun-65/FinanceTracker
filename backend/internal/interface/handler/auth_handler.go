@@ -117,24 +117,32 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Failure 500 {object} map[string]interface{} "内部エラー"
 // @Router /auth/user [get]
 func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
-	claims, exists := h.middleware.GetClaims(c)
+	// middleware.Authが設定したコンテキストからauth0_idを取得
+	auth0ID, exists := c.Get("auth0_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "no authenticated user",
 		})
 		return
 	}
-
-	// ヘッダーからアクセストークンを取得
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" || len(authHeader) < 7 {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"error": "missing authorization header",
+	
+	// auth0_idをstringに変換
+	auth0IDStr, ok := auth0ID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "invalid user id format",
 		})
 		return
 	}
 
-	accessToken := authHeader[7:] // "Bearer "プレフィックスを削除
+	// HttpOnlyクッキーからアクセストークンを取得
+	accessToken, err := c.Cookie("access_token")
+	if err != nil || accessToken == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "missing access token",
+		})
+		return
+	}
 
 	// Auth0からユーザー情報を取得
 	userInfo, err := h.auth0Client.GetUserInfo(c.Request.Context(), accessToken)
@@ -153,9 +161,10 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		EmailVerified: userInfo.EmailVerified,
 	}
 
+	// middleware.Authはロールを設定していないため、空の配列を使用
 	tokenClaimsDTO := &dto.TokenClaims{
-		Subject: claims.Subject,
-		Roles:   claims.Roles,
+		Subject: auth0IDStr,
+		Roles:   []string{}, // TODO: Auth0からロール情報を取得する場合は実装が必要
 	}
 
 	// データベースとユーザーを同期
@@ -233,14 +242,33 @@ func (h *AuthHandler) SetToken(c *gin.Context) {
 	}
 
 	// HttpOnlyクッキーを設定
-	c.SetSameSite(http.SameSiteStrictMode)
+	// 開発環境ではsecureをfalseに設定
+	secure := false
+	if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
+		secure = true
+	}
+	
+	// SameSiteの設定 - 開発環境ではNoneに設定（クロスオリジンでクッキーを送信するため）
+	sameSite := http.SameSiteNoneMode
+	if c.Request.Host == "localhost:8080" || c.Request.Host == "127.0.0.1:8080" {
+		// 開発環境ではSameSite=Noneはセキュアでないため、Laxを使用
+		sameSite = http.SameSiteLaxMode
+		// ただし、クロスオリジンの場合は動作しない可能性があるため、
+		// 開発環境では domain を明示的に設定
+	}
+	c.SetSameSite(sameSite)
+	
+	// domainは空にして、現在のホストのみで有効にする
+	// 異なるポート間でのクッキー共有は複雑なため
+	domain := ""
+	
 	c.SetCookie(
 		"access_token", // name
 		request.Token,  // value
 		60*60*24*7,     // maxAge (7 days)
 		"/",            // path
-		"",             // domain
-		true,           // secure (HTTPS only)
+		domain,         // domain
+		secure,         // secure (HTTPS only in production)
 		true,           // httpOnly
 	)
 
@@ -257,14 +285,29 @@ func (h *AuthHandler) SetToken(c *gin.Context) {
 // @Router /auth/token [delete]
 func (h *AuthHandler) RemoveToken(c *gin.Context) {
 	// クッキーを削除
-	c.SetSameSite(http.SameSiteStrictMode)
+	// 開発環境ではsecureをfalseに設定
+	secure := false
+	if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
+		secure = true
+	}
+	
+	// SameSiteの設定 - SetTokenと同じロジックを使用
+	sameSite := http.SameSiteNoneMode
+	if c.Request.Host == "localhost:8080" || c.Request.Host == "127.0.0.1:8080" {
+		sameSite = http.SameSiteLaxMode
+	}
+	c.SetSameSite(sameSite)
+	
+	// domainは空にして、現在のホストのみで有効にする
+	domain := ""
+	
 	c.SetCookie(
 		"access_token", // name
 		"",             // value
 		-1,             // maxAge (expired)
 		"/",            // path
-		"",             // domain
-		true,           // secure
+		domain,         // domain
+		secure,         // secure
 		true,           // httpOnly
 	)
 
