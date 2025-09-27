@@ -8,7 +8,7 @@ import { useAuthWithCookie, useLogout } from '../../../features/auth';
 export const DashboardContainer: React.FC = () => {
   // Auth0認証とCookieの同期（ダッシュボードでトークン管理）
   useAuthWithCookie();
-  
+
   // ログアウト時のクリーンアップも含む
   useLogout();
 

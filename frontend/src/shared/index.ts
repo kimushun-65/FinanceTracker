@@ -1,3 +1,3 @@
 export { apiClient } from './api/client';
-export { cn } from './lib/utils';
+export { cn } from './utils/cn';
 export * from './ui';

@@ -8,7 +8,10 @@ export const getAuthConfig = (): AuthConfig => {
       return `${window.location.origin}/callback`;
     }
     // サーバーサイドレンダリング中はデフォルト値を使用
-    return process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI || 'http://localhost:3000/callback';
+    return (
+      process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI ||
+      'http://localhost:3000/callback'
+    );
   };
 
   return {

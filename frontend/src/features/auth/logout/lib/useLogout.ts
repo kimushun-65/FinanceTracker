@@ -11,7 +11,7 @@ export const useLogout = () => {
       if (!isAuthenticated && !isLoading) {
         // HttpOnlyクッキーからトークンを削除
         await tokenManager.removeToken();
-        
+
         // ホームページにリダイレクト（Auth0のreturnToが効かない場合のフォールバック）
         if (typeof window !== 'undefined' && window.location.pathname !== '/') {
           window.location.href = '/';
