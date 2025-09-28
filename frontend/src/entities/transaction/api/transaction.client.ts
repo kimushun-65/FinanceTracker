@@ -5,6 +5,8 @@ import type {
   UpdateTransactionPayload,
   TransactionListParams,
   TransactionListResponse,
+  MonthlySummaryParams,
+  MonthlySummary,
 } from '../model';
 import { endpoints } from './transaction.endpoints';
 import { createTransactionFilters } from './transaction.filters';
@@ -47,5 +49,20 @@ export const transactionApi = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(endpoints.delete(id));
+  },
+
+  getMonthlySummary: async (
+    params: MonthlySummaryParams = {},
+  ): Promise<MonthlySummary> => {
+    const queryParams = new URLSearchParams();
+    if (params.year) queryParams.append('year', params.year.toString());
+    if (params.month) queryParams.append('month', params.month.toString());
+    
+    const url = queryParams.toString()
+      ? `${endpoints.monthlySummary}?${queryParams.toString()}`
+      : endpoints.monthlySummary;
+    
+    const response = await apiClient.get<MonthlySummary>(url);
+    return response.data;
   },
 };

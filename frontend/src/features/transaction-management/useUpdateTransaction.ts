@@ -12,11 +12,11 @@ export const useUpdateTransaction = () => {
   return useMutation({
     mutationFn: ({
       id,
-      ...payload
-    }: { id: string } & UpdateTransactionPayload) =>
-      transactionApi.update(id, payload),
+      data,
+    }: { id: string; data: UpdateTransactionPayload }) =>
+      transactionApi.update(id, data),
 
-    onMutate: async ({ id, ...newData }) => {
+    onMutate: async ({ id, data: newData }) => {
       await queryClient.cancelQueries({ queryKey: transactionKeys.detail(id) });
 
       const previousTransaction = queryClient.getQueryData<Transaction>(

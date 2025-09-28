@@ -10,3 +10,22 @@ export {
 } from './card';
 export { Input } from './input';
 export { Label } from './label';
+export {
+  Modal,
+  ModalTrigger,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useModalContext,
+} from './modal';
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from './table';
+export { Pagination } from './pagination';
+export { Select } from './select';

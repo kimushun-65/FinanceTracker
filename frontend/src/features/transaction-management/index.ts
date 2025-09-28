@@ -5,3 +5,4 @@ export { useUpdateTransaction } from './useUpdateTransaction';
 export { useDeleteTransaction } from './useDeleteTransaction';
 export { useTransactionAggregates } from './useTransactionAggregates';
 export { useTransactionFilters } from './useTransactionFilters';
+export { useTransactionMonthlySummary } from './useTransactionMonthlySummary';

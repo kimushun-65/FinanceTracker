@@ -1,6 +1,6 @@
 export const endpoints = {
-  profile: '/api/users/profile',
-  update: '/api/users/profile',
-  create: '/api/users',
-  delete: '/api/users/profile',
+  profile: '/users/me',
+  update: '/users/me',
+  create: '/users',
+  delete: '/users/me',
 } as const;

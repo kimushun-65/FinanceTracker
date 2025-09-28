@@ -1,13 +1,13 @@
 export const endpoints = {
   categories: {
-    list: '/api/categories',
-    get: (id: string) => `/api/categories/${id}`,
-    create: '/api/categories',
-    update: (id: string) => `/api/categories/${id}`,
-    delete: (id: string) => `/api/categories/${id}`,
+    list: '/categories',
+    get: (id: string) => `/categories/${id}`,
+    create: '/categories',
+    update: (id: string) => `/categories/${id}`,
+    delete: (id: string) => `/categories/${id}`,
   },
   categoryMasters: {
-    list: '/api/category-masters',
-    get: (id: string) => `/api/category-masters/${id}`,
+    list: '/categories/master',
+    get: (id: string) => `/categories/master/${id}`,
   },
 } as const;
