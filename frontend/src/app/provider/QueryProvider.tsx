@@ -20,12 +20,10 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
             retry: false,
           },
         },
-      })
+      }),
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
