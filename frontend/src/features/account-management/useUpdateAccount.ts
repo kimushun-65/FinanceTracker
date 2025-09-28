@@ -22,7 +22,7 @@ export const useUpdateAccount = () => {
       return { previousAccount };
     },
     
-    onError: (err, { id }, context) => {
+    onError: (_, { id }, context) => {
       if (context?.previousAccount) {
         queryClient.setQueryData(accountKeys.detail(id), context.previousAccount);
       }
