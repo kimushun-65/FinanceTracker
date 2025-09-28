@@ -3,11 +3,14 @@
 import React from 'react';
 import { AppLayout } from '../../../widgets/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui';
-import { useAuthWithCookie } from '../../../shared/lib/auth';
+import { useAuthWithCookie, useLogout } from '../../../features/auth';
 
 export const DashboardContainer: React.FC = () => {
   // Auth0認証とCookieの同期（ダッシュボードでトークン管理）
   useAuthWithCookie();
+
+  // ログアウト時のクリーンアップも含む
+  useLogout();
 
   return (
     <AppLayout title='Dashboard'>
