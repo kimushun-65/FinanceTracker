@@ -1,5 +1,6 @@
 import type { Transaction, TransactionType } from '../model';
 import type { Money } from '@/shared/value-objects';
+import { formatMoney as formatMoneyVO } from '@/shared/value-objects/money';
 
 export const formatTransactionType = (type: TransactionType): string => {
   const typeMap = {
@@ -15,11 +16,13 @@ export const formatTransactionSummary = (transaction: Transaction): string => {
   return `${typeText}: ${amountText} - ${transaction.description}`;
 };
 
+// Safe money formatting that tolerates undefined or string amounts
 export const formatMoney = (money: Money): string => {
-  if (money.currency === 'JPY') {
-    return `¥${money.amount.toLocaleString('ja-JP')}`;
-  }
-  return `${money.currency} ${money.amount.toLocaleString()}`;
+  const amount = typeof money?.amount === 'number'
+    ? money.amount
+    : Number((money as any)?.amount ?? 0);
+  const currency = (money && (money as any).currency) || 'JPY';
+  return formatMoneyVO({ amount, currency } as Money);
 };
 
 export const formatMoneyWithSign = (

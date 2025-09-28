@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
+    "log"
+    "strings"
 
-	"gorm.io/gorm"
+    "gorm.io/gorm"
 )
 
 // stringPtr returns a pointer to the string value.
@@ -33,4 +34,17 @@ func seedWithDuplicateCheck[T any](db *gorm.DB, items []T, checkQuery func(item 
 		log.Printf("Created %s\n", getLogInfo(items[i]))
 	}
 	return nil
+}
+
+// splitAndTrim splits a comma-separated string and trims spaces from each element.
+func splitAndTrim(s string) []string {
+    parts := strings.Split(s, ",")
+    out := make([]string, 0, len(parts))
+    for _, p := range parts {
+        t := strings.TrimSpace(p)
+        if t != "" {
+            out = append(out, t)
+        }
+    }
+    return out
 }
