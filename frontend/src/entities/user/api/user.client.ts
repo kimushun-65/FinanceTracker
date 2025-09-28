@@ -1,9 +1,9 @@
 import { apiClient } from '@/shared/api/client';
-import type { 
-  User, 
-  UserProfile, 
-  UpdateUserPayload, 
-  CreateUserPayload 
+import type {
+  User,
+  UserProfile,
+  UpdateUserPayload,
+  CreateUserPayload,
 } from '../model';
 import { endpoints } from './user.endpoints';
 

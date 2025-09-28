@@ -125,7 +125,7 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// auth0_idをstringに変換
 	auth0IDStr, ok := auth0ID.(string)
 	if !ok {
@@ -247,7 +247,7 @@ func (h *AuthHandler) SetToken(c *gin.Context) {
 	if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
 		secure = true
 	}
-	
+
 	// SameSiteの設定 - 開発環境ではNoneに設定（クロスオリジンでクッキーを送信するため）
 	sameSite := http.SameSiteNoneMode
 	if c.Request.Host == "localhost:8080" || c.Request.Host == "127.0.0.1:8080" {
@@ -257,11 +257,11 @@ func (h *AuthHandler) SetToken(c *gin.Context) {
 		// 開発環境では domain を明示的に設定
 	}
 	c.SetSameSite(sameSite)
-	
+
 	// domainは空にして、現在のホストのみで有効にする
 	// 異なるポート間でのクッキー共有は複雑なため
 	domain := ""
-	
+
 	c.SetCookie(
 		"access_token", // name
 		request.Token,  // value
@@ -290,17 +290,17 @@ func (h *AuthHandler) RemoveToken(c *gin.Context) {
 	if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
 		secure = true
 	}
-	
+
 	// SameSiteの設定 - SetTokenと同じロジックを使用
 	sameSite := http.SameSiteNoneMode
 	if c.Request.Host == "localhost:8080" || c.Request.Host == "127.0.0.1:8080" {
 		sameSite = http.SameSiteLaxMode
 	}
 	c.SetSameSite(sameSite)
-	
+
 	// domainは空にして、現在のホストのみで有効にする
 	domain := ""
-	
+
 	c.SetCookie(
 		"access_token", // name
 		"",             // value

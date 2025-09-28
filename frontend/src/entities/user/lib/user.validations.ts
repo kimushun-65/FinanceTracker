@@ -13,7 +13,9 @@ export const validateAuth0UserId = (auth0UserId: string): boolean => {
   return auth0UserId.length > 0 && auth0UserId.startsWith('auth0|');
 };
 
-export const validateUpdateUserPayload = (payload: UpdateUserPayload): string[] => {
+export const validateUpdateUserPayload = (
+  payload: UpdateUserPayload,
+): string[] => {
   const errors: string[] = [];
 
   if (payload.name !== undefined && !validateUserName(payload.name)) {
@@ -27,7 +29,9 @@ export const validateUpdateUserPayload = (payload: UpdateUserPayload): string[] 
   return errors;
 };
 
-export const validateCreateUserPayload = (payload: CreateUserPayload): string[] => {
+export const validateCreateUserPayload = (
+  payload: CreateUserPayload,
+): string[] => {
   const errors: string[] = [];
 
   if (!validateAuth0UserId(payload.auth0UserId)) {

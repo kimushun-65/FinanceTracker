@@ -22,7 +22,9 @@ export const transformApiUserResponse = (apiUser: any): User => {
   };
 };
 
-export const transformApiUserProfileResponse = (apiUserProfile: any): UserProfile => {
+export const transformApiUserProfileResponse = (
+  apiUserProfile: any,
+): UserProfile => {
   return {
     id: apiUserProfile.id,
     createdAt: apiUserProfile.createdAt,
@@ -37,11 +39,13 @@ export const transformApiUserProfileResponse = (apiUserProfile: any): UserProfil
   };
 };
 
-export const getUserDisplayName = (user: User | UserProfile | AuthUser): string => {
+export const getUserDisplayName = (
+  user: User | UserProfile | AuthUser,
+): string => {
   if ('name' in user && user.name) {
     return user.name;
   }
-  
+
   if ('email' in user && user.email) {
     // Email型はstring & brandなので、stringとして扱える
     const emailString = String(user.email);
@@ -51,9 +55,11 @@ export const getUserDisplayName = (user: User | UserProfile | AuthUser): string 
   return 'ユーザー';
 };
 
-export const getUserInitials = (user: User | UserProfile | AuthUser): string => {
+export const getUserInitials = (
+  user: User | UserProfile | AuthUser,
+): string => {
   const displayName = getUserDisplayName(user);
-  
+
   if (displayName === 'ユーザー') {
     return 'U';
   }
@@ -62,6 +68,6 @@ export const getUserInitials = (user: User | UserProfile | AuthUser): string => 
   if (names.length >= 2) {
     return (names[0][0] + names[1][0]).toUpperCase();
   }
-  
+
   return displayName.slice(0, 2).toUpperCase();
 };

@@ -17,7 +17,9 @@ export const formatLastLoginAt = (lastLoginAt?: string): string => {
 
   const date = new Date(lastLoginAt);
   const now = new Date();
-  const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const diffInDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   if (diffInDays === 0) {
     return '今日';
@@ -34,17 +36,22 @@ export const formatLastLoginAt = (lastLoginAt?: string): string => {
   }
 };
 
-export const getLoginFrequency = (loginCount: number, createdAt: string): string => {
+export const getLoginFrequency = (
+  loginCount: number,
+  createdAt: string,
+): string => {
   const created = new Date(createdAt);
   const now = new Date();
-  const daysSinceCreation = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const daysSinceCreation = Math.floor(
+    (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   if (daysSinceCreation === 0) {
     return '初回ログイン';
   }
 
   const frequency = loginCount / daysSinceCreation;
-  
+
   if (frequency >= 1) {
     return '毎日';
   } else if (frequency >= 0.5) {
@@ -59,8 +66,10 @@ export const getLoginFrequency = (loginCount: number, createdAt: string): string
 export const isNewUser = (user: UserProfile): boolean => {
   const created = new Date(user.createdAt);
   const now = new Date();
-  const daysSinceCreation = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const daysSinceCreation = Math.floor(
+    (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   return daysSinceCreation <= 7; // 7日以内に作成されたユーザーを新規とみなす
 };
 
