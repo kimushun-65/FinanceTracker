@@ -2,7 +2,7 @@
 
 import { Select } from '@/shared/ui';
 import { useCategories } from '@/features/category-management';
-import type { TransactionListParams, TransactionType } from '@/entities/transaction';
+import type { TransactionListParams } from '@/entities/transaction';
 
 interface TransactionFiltersProps {
   filters: TransactionListParams;
@@ -15,17 +15,11 @@ export function TransactionFilters({
 }: TransactionFiltersProps) {
   const { data: categories } = useCategories();
 
-  const typeOptions = [
-    { value: '', label: 'All Types' },
-    { value: 'income', label: 'Income' },
-    { value: 'expense', label: 'Expense' },
-  ];
-
   const categoryOptions = [
     { value: '', label: 'All Categories' },
-    ...(categories?.map((category) => ({
+    ...(categories?.map((category: any) => ({
       value: category.id,
-      label: category.name,
+      label: category.name || 'Unknown',
     })) || []),
   ];
 
@@ -36,13 +30,6 @@ export function TransactionFilters({
     { value: 'last6', label: 'Last 6 Months' },
     { value: 'year', label: 'This Year' },
   ];
-
-  const handleTypeChange = (value: string) => {
-    onFiltersChange({
-      ...filters,
-      type: value as TransactionType | undefined,
-    });
-  };
 
   const handleCategoryChange = (value: string) => {
     onFiltersChange({
@@ -90,35 +77,24 @@ export function TransactionFilters({
   };
 
   return (
-    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[150px]">
-          <Select
-            value={filters.type || ''}
-            onValueChange={handleTypeChange}
-            options={typeOptions}
-            placeholder="All Types"
-          />
-        </div>
-        
-        <div className="min-w-[200px]">
-          <Select
-            value={filters.categoryId || ''}
-            onValueChange={handleCategoryChange}
-            options={categoryOptions}
-            placeholder="All Categories"
-          />
-        </div>
-        
-        <div className="min-w-[150px]">
-          <Select
-            value="current" // Default to current month
-            onValueChange={handlePeriodChange}
-            options={periodOptions}
-            placeholder="This Month"
-          />
-        </div>
+    <>
+      <div className="min-w-[200px]">
+        <Select
+          value={filters.categoryId || ''}
+          onValueChange={handleCategoryChange}
+          options={categoryOptions}
+          placeholder="All Categories"
+        />
       </div>
-    </div>
+      
+      <div className="min-w-[150px]">
+        <Select
+          value="current" // Default to current month
+          onValueChange={handlePeriodChange}
+          options={periodOptions}
+          placeholder="This Month"
+        />
+      </div>
+    </>
   );
 }

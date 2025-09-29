@@ -64,7 +64,7 @@ export function TransactionListTable({
   };
 
   const getCategoryInfo = (categoryId: string) => {
-    const category = categories?.find((cat) => cat.id === categoryId);
+    const category: any = categories?.find((cat: any) => cat.id === categoryId);
     return {
       name: category?.name || 'Unknown',
       icon: category?.icon || '📦',
@@ -118,9 +118,9 @@ export function TransactionListTable({
           <TableBody>
             {transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                <td colSpan={5} className="text-center py-8 text-gray-500">
                   No transactions found
-                </TableCell>
+                </td>
               </TableRow>
             ) : (
               transactions.map((transaction) => {

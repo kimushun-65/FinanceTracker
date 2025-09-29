@@ -1,4 +1,5 @@
 export { useCategories } from './useCategories';
+export { useCategoriesWithMasters } from './useCategoriesWithMasters';
 export { useCategoryMasters } from './useCategoryMasters';
 export { useCategory } from './useCategory';
 export { useCreateCategory } from './useCreateCategory';
