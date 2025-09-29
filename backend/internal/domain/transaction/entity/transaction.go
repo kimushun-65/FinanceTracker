@@ -166,6 +166,20 @@ func (t *Transaction) UpdateDate(date time.Time) error {
 	return nil
 }
 
+// UpdateCategory カテゴリIDを更新
+func (t *Transaction) UpdateCategory(categoryID uuid.UUID) error {
+	if categoryID == uuid.Nil {
+		return common.NewDomainError(
+			common.DomainErrorTypeInvalidValue,
+			"カテゴリIDが必要です",
+		)
+	}
+
+	t.categoryID = categoryID
+	t.UpdateTimestamp()
+	return nil
+}
+
 // IsIncome 収入かどうかを判定
 func (t Transaction) IsIncome() bool {
 	return t.txType.IsIncome()

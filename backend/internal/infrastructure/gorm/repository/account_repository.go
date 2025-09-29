@@ -297,8 +297,26 @@ func (r *AccountRepository) toDomain(accountModel *model.Account) (*accountDomai
 		return nil, fmt.Errorf("口座名の作成に失敗しました: %w", err)
 	}
 
-	// 口座タイプ
-	accountType, err := accountValue.NewAccountType(string(accountModel.Type))
+	// 口座タイプ（データベースのタイプをドメインタイプにマッピング）
+	var domainAccountType string
+	switch accountModel.Type {
+	case model.AccountTypeCash:
+		domainAccountType = "cash"
+	case model.AccountTypeBank:
+		domainAccountType = "checking"
+	case model.AccountTypeInvestment:
+		domainAccountType = "investment"
+	case model.AccountTypeCreditCard:
+		domainAccountType = "checking" // クレジットカードは当座預金として扱う
+	case model.AccountTypeLoan:
+		domainAccountType = "checking" // ローンは当座預金として扱う
+	case model.AccountTypeOther:
+		domainAccountType = "checking" // その他は当座預金として扱う
+	default:
+		domainAccountType = "checking" // デフォルトは当座預金
+	}
+
+	accountType, err := accountValue.NewAccountType(domainAccountType)
 	if err != nil {
 		return nil, fmt.Errorf("口座タイプの作成に失敗しました: %w", err)
 	}

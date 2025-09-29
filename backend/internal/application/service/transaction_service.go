@@ -274,10 +274,10 @@ func (s *TransactionService) UpdateTransaction(ctx context.Context, userID, tran
 
 	// 更新フィールドの適用
 	if req.CategoryID != nil {
-		// カテゴリー変更の実装が必要な場合は、ドメインエンティティにメソッドを追加
-		s.logger.Warn("カテゴリー変更は現在サポートされていません",
-			zap.String("transactionID", transactionID.String()))
-		return nil, errors.NewValidationError("カテゴリーの変更は現在サポートされていません")
+		if err := transaction.UpdateCategory(*req.CategoryID); err != nil {
+			s.logger.Error("カテゴリー変更エラー", zap.Error(err))
+			return nil, errors.NewValidationError("カテゴリーの変更に失敗しました")
+		}
 	}
 
 	if req.Amount != nil {
