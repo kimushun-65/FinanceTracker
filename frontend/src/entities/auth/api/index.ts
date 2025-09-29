@@ -12,7 +12,7 @@ interface TokenResponse {
 export const tokenManager = {
   setToken: async (token: string): Promise<boolean> => {
     try {
-      const response = await api.post<TokenResponse>('/api/v1/auth/token', {
+      const response = await api.post<TokenResponse>('/auth/token', {
         token,
       });
       return response.data.success;
@@ -28,7 +28,7 @@ export const tokenManager = {
 
   checkAuth: async (): Promise<{ authenticated: boolean; user?: any }> => {
     try {
-      const response = await api.get<AuthCheckResponse>('/api/v1/auth/check');
+      const response = await api.get<AuthCheckResponse>('/auth/check');
       return response.data;
     } catch (error) {
       return { authenticated: false };
@@ -37,7 +37,7 @@ export const tokenManager = {
 
   removeToken: async (): Promise<boolean> => {
     try {
-      const response = await api.delete<TokenResponse>('/api/v1/auth/token');
+      const response = await api.delete<TokenResponse>('/auth/token');
       return response.data.success;
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error) {

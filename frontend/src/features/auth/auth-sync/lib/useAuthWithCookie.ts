@@ -21,7 +21,7 @@ export const useAuthWithCookie = () => {
           if (success) {
             // ユーザー情報をDBに同期
             try {
-              await api.get('/api/v1/auth/user');
+              await api.get('/auth/user');
             } catch (error) {
               if (error && typeof error === 'object' && 'code' in error) {
                 console.error(
