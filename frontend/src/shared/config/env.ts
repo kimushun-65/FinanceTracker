@@ -35,6 +35,7 @@ export const env = {
       getEnvironment() === 'production'
         ? process.env.NEXT_PUBLIC_API_BASE_URL ||
           'https://api.starup-eagleai.com/api/v1'
-        : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080/api/v1',
+        : process.env.NEXT_PUBLIC_API_BASE_URL ||
+          'http://localhost:8080/api/v1',
   },
 } as const; // as constで読み取り専用として扱う

@@ -1,28 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Input,
-  Label,
-  Select,
-  useModalContext,
-} from '@/shared/ui';
+import { Button, Input, Label, Select } from '@/shared/ui';
 import { useUpdateTransaction } from '@/features/transaction-management';
-import { useCategories } from '@/features/category-management';
-import { useAccounts } from '@/features/account-management';
-import type { Transaction, UpdateTransactionPayload, TransactionType } from '@/entities/transaction';
+import type {
+  Transaction,
+  UpdateTransactionPayload,
+  TransactionType,
+} from '@/entities/transaction';
+import {
+  transactionTypeOptions,
+  validateTransactionForm,
+} from '@/entities/transaction';
+import { Category, categoriesToSelectOptions } from '@/entities/category';
+import { Account, accountsToSelectOptions } from '@/entities/account';
 
 interface EditTransactionModalProps {
   transaction: Transaction | null;
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  categories: Category[];
+  accounts: Account[];
 }
 
 export function EditTransactionModal({
@@ -30,10 +29,10 @@ export function EditTransactionModal({
   isOpen,
   onClose,
   onSuccess,
+  categories,
+  accounts,
 }: EditTransactionModalProps) {
   const updateTransactionMutation = useUpdateTransaction();
-  const { data: categories } = useCategories();
-  const { data: accounts } = useAccounts();
 
   const [formData, setFormData] = useState<{
     type: TransactionType;
@@ -68,28 +67,14 @@ export function EditTransactionModal({
   }, [transaction]);
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.amount || formData.amount <= 0) {
-      newErrors.amount = 'Amount must be greater than 0';
-    }
-    if (!formData.categoryId) {
-      newErrors.categoryId = 'Category is required';
-    }
-    if (!formData.accountId) {
-      newErrors.accountId = 'Account is required';
-    }
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
+    const newErrors = validateTransactionForm(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!transaction || !validateForm()) {
       return;
     }
@@ -110,7 +95,7 @@ export function EditTransactionModal({
         id: transaction.id,
         data: payload,
       });
-      
+
       onClose();
       onSuccess?.();
     } catch (error) {
@@ -118,48 +103,37 @@ export function EditTransactionModal({
     }
   };
 
-  const typeOptions = [
-    { value: 'expense', label: 'Expense' },
-    { value: 'income', label: 'Income' },
-  ];
-
-  const categoryOptions = categories?.map((category) => ({
-    value: category.id,
-    label: category.name,
-  })) || [];
-
-  const accountOptions = accounts?.map((account) => ({
-    value: account.id,
-    label: account.name,
-  })) || [];
+  const typeOptions = transactionTypeOptions;
+  const categoryOptions = categoriesToSelectOptions(categories);
+  const accountOptions = accountsToSelectOptions(accounts);
 
   if (!isOpen || !transaction) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className='fixed inset-0 z-50 flex items-center justify-center'>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50"
+        className='fixed inset-0 bg-black bg-opacity-50'
         onClick={onClose}
-        aria-hidden="true"
+        aria-hidden='true'
       />
-      
-      <div className="relative w-full max-w-lg mx-4 bg-white rounded-lg shadow-xl">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-lg font-semibold">Edit Transaction</h2>
+
+      <div className='relative mx-4 w-full max-w-lg rounded-lg bg-white shadow-xl'>
+        <div className='flex items-center justify-between border-b p-6'>
+          <h2 className='text-lg font-semibold'>Edit Transaction</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-            aria-label="Close modal"
+            className='text-xl font-bold text-gray-400 hover:text-gray-600'
+            aria-label='Close modal'
           >
             ×
           </button>
         </div>
-        
-        <div className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+
+        <div className='p-6'>
+          <form onSubmit={handleSubmit} className='space-y-4'>
             {/* Transaction Type - Read only for edit */}
             <div>
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor='type'>Type</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) =>
@@ -172,103 +146,109 @@ export function EditTransactionModal({
 
             {/* Amount */}
             <div>
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor='amount'>Amount</Label>
               <Input
-                id="amount"
-                type="number"
-                min="0"
-                step="1"
+                id='amount'
+                type='number'
+                min='0'
+                step='1'
                 value={formData.amount || ''}
                 onChange={(e) =>
                   setFormData({ ...formData, amount: Number(e.target.value) })
                 }
-                placeholder="Enter amount"
+                placeholder='Enter amount'
                 className={errors.amount ? 'border-red-500' : ''}
               />
               {errors.amount && (
-                <p className="text-sm text-red-600 mt-1">{errors.amount}</p>
+                <p className='mt-1 text-sm text-red-600'>{errors.amount}</p>
               )}
             </div>
 
             {/* Category */}
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor='category'>Category</Label>
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) =>
                   setFormData({ ...formData, categoryId: value })
                 }
                 options={categoryOptions}
-                placeholder="Select Category"
+                placeholder='Select Category'
               />
               {errors.categoryId && (
-                <p className="text-sm text-red-600 mt-1">{errors.categoryId}</p>
+                <p className='mt-1 text-sm text-red-600'>{errors.categoryId}</p>
               )}
             </div>
 
             {/* Account */}
             <div>
-              <Label htmlFor="account">Account</Label>
+              <Label htmlFor='account'>Account</Label>
               <Select
                 value={formData.accountId}
                 onValueChange={(value) =>
                   setFormData({ ...formData, accountId: value })
                 }
                 options={accountOptions}
-                placeholder="Select Account"
+                placeholder='Select Account'
               />
               {errors.accountId && (
-                <p className="text-sm text-red-600 mt-1">{errors.accountId}</p>
+                <p className='mt-1 text-sm text-red-600'>{errors.accountId}</p>
               )}
             </div>
 
             {/* Date */}
             <div>
-              <Label htmlFor="date">Date</Label>
+              <Label htmlFor='date'>Date</Label>
               <Input
-                id="date"
-                type="date"
+                id='date'
+                type='date'
                 value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, date: e.target.value })
+                }
                 className={errors.date ? 'border-red-500' : ''}
               />
               {errors.date && (
-                <p className="text-sm text-red-600 mt-1">{errors.date}</p>
+                <p className='mt-1 text-sm text-red-600'>{errors.date}</p>
               )}
             </div>
 
             {/* Description */}
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor='description'>Description</Label>
               <Input
-                id="description"
-                type="text"
+                id='description'
+                type='text'
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Enter description"
+                placeholder='Enter description'
                 className={errors.description ? 'border-red-500' : ''}
               />
               {errors.description && (
-                <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+                <p className='mt-1 text-sm text-red-600'>
+                  {errors.description}
+                </p>
               )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className='flex justify-end gap-3 border-t pt-4'>
               <Button
-                type="button"
-                variant="outline"
+                type='button'
+                variant='outline'
                 onClick={onClose}
                 disabled={updateTransactionMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
-                type="submit"
+                type='submit'
                 disabled={updateTransactionMutation.isPending}
               >
-                {updateTransactionMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateTransactionMutation.isPending
+                  ? 'Saving...'
+                  : 'Save Changes'}
               </Button>
             </div>
           </form>

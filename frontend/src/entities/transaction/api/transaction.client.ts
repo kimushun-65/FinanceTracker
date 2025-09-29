@@ -17,12 +17,17 @@ export const transactionApi = {
     params: TransactionListParams = {},
   ): Promise<TransactionListResponse> => {
     const queryString = createTransactionFilters(params);
-    const url = queryString ? `${endpoints.list}?${queryString}` : endpoints.list;
+    const url = queryString
+      ? `${endpoints.list}?${queryString}`
+      : endpoints.list;
     const res = await apiClient.get<any>(url);
     const api = res.data;
 
     const perPage = Number(api?.per_page ?? params.limit ?? 20);
-    const page = Number(api?.page ?? (params.offset ? Math.floor(params.offset / perPage) + 1 : 1));
+    const page = Number(
+      api?.page ??
+        (params.offset ? Math.floor(params.offset / perPage) + 1 : 1),
+    );
     const totalCount = Number(api?.total_count ?? 0);
 
     const transactions: Transaction[] = Array.isArray(api?.transactions)
@@ -45,9 +50,26 @@ export const transactionApi = {
   },
 
   create: async (payload: CreateTransactionPayload): Promise<Transaction> => {
+    // 日付をISO文字列に変換（バックエンドが期待するRFC3339形式）
+    const formatDate = (dateString?: string): string | undefined => {
+      if (!dateString) return undefined;
+      const date = new Date(dateString);
+      return date.toISOString();
+    };
+
+    // バックエンドが期待する形式に変換
+    const backendPayload = {
+      account_id: payload.accountId,
+      category_id: payload.categoryId,
+      amount: payload.amount.amount, // Moneyオブジェクトから数値を取り出す
+      transaction_type: payload.type,
+      description: payload.description,
+      transaction_date: formatDate(payload.date),
+    };
+
     const response = await apiClient.post<Transaction>(
       endpoints.create,
-      payload,
+      backendPayload,
     );
     return response.data;
   },
@@ -56,9 +78,35 @@ export const transactionApi = {
     id: string,
     payload: UpdateTransactionPayload,
   ): Promise<Transaction> => {
+    // 日付をISO文字列に変換（バックエンドが期待するRFC3339形式）
+    const formatDate = (dateString?: string): string | undefined => {
+      if (!dateString) return undefined;
+      const date = new Date(dateString);
+      return date.toISOString();
+    };
+
+    // バックエンドが期待する形式に変換
+    const backendPayload: any = {};
+
+    if (payload.accountId !== undefined) {
+      backendPayload.account_id = payload.accountId;
+    }
+    if (payload.categoryId !== undefined) {
+      backendPayload.category_id = payload.categoryId;
+    }
+    if (payload.amount !== undefined) {
+      backendPayload.amount = payload.amount.amount; // Moneyオブジェクトから数値を取り出す
+    }
+    if (payload.description !== undefined) {
+      backendPayload.description = payload.description;
+    }
+    if (payload.date !== undefined) {
+      backendPayload.transaction_date = formatDate(payload.date);
+    }
+
     const response = await apiClient.put<Transaction>(
       endpoints.update(id),
-      payload,
+      backendPayload,
     );
     return response.data;
   },
@@ -73,11 +121,11 @@ export const transactionApi = {
     const queryParams = new URLSearchParams();
     if (params.year) queryParams.append('year', params.year.toString());
     if (params.month) queryParams.append('month', params.month.toString());
-    
+
     const url = queryParams.toString()
       ? `${endpoints.monthlySummary}?${queryParams.toString()}`
       : endpoints.monthlySummary;
-    
+
     const response = await apiClient.get<any>(url);
     const api = response.data;
 
@@ -98,8 +146,8 @@ export const transactionApi = {
       netIncome: { amount: toNumber(api?.net_amount), currency: 'JPY' },
       transactionCount,
       period: {
-        year: api?.year ?? (params.year ?? new Date().getFullYear()),
-        month: api?.month ?? (params.month ?? new Date().getMonth() + 1),
+        year: api?.year ?? params.year ?? new Date().getFullYear(),
+        month: api?.month ?? params.month ?? new Date().getMonth() + 1,
       },
     };
 

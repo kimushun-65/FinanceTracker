@@ -29,3 +29,6 @@ export {
 } from './table';
 export { Pagination } from './pagination';
 export { Select } from './select';
+export { default as Loading } from './loading';
+export { Toaster } from './toaster';
+export { useToast } from '../lib/hooks/use-toast';

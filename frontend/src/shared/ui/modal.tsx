@@ -48,14 +48,14 @@ export function ModalTrigger({ children, asChild }: ModalTriggerProps) {
 
   if (asChild) {
     return (
-      <div onClick={openModal} role="button" tabIndex={0}>
+      <div onClick={openModal} role='button' tabIndex={0}>
         {children}
       </div>
     );
   }
 
   return (
-    <button onClick={openModal} type="button">
+    <button onClick={openModal} type='button'>
       {children}
     </button>
   );
@@ -89,23 +89,23 @@ export function ModalContent({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className='fixed inset-0 z-50 flex items-center justify-center'>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50"
+        className='fixed inset-0 bg-black bg-opacity-50'
         onClick={closeModal}
-        aria-hidden="true"
+        aria-hidden='true'
       />
-      
+
       {/* Modal */}
       <div
         className={cn(
-          'relative w-full mx-4 bg-white rounded-lg shadow-xl',
+          'relative mx-4 w-full rounded-lg bg-white shadow-xl',
           sizeClasses[size],
-          className
+          className,
         )}
-        role="dialog"
-        aria-modal="true"
+        role='dialog'
+        aria-modal='true'
       >
         {children}
       </div>
@@ -127,12 +127,17 @@ export function ModalHeader({ children, className }: ModalHeaderProps) {
   const { closeModal } = context;
 
   return (
-    <div className={cn('flex items-center justify-between p-6 border-b', className)}>
-      <div className="text-lg font-semibold">{children}</div>
+    <div
+      className={cn(
+        'flex items-center justify-between border-b p-6',
+        className,
+      )}
+    >
+      <div className='text-lg font-semibold'>{children}</div>
       <button
         onClick={closeModal}
-        className="text-gray-400 hover:text-gray-600 text-xl font-bold"
-        aria-label="Close modal"
+        className='text-xl font-bold text-gray-400 hover:text-gray-600'
+        aria-label='Close modal'
       >
         ×
       </button>
@@ -146,11 +151,7 @@ interface ModalBodyProps {
 }
 
 export function ModalBody({ children, className }: ModalBodyProps) {
-  return (
-    <div className={cn('p-6', className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('p-6', className)}>{children}</div>;
 }
 
 interface ModalFooterProps {
@@ -160,7 +161,12 @@ interface ModalFooterProps {
 
 export function ModalFooter({ children, className }: ModalFooterProps) {
   return (
-    <div className={cn('flex justify-end gap-3 p-6 border-t bg-gray-50', className)}>
+    <div
+      className={cn(
+        'flex justify-end gap-3 border-t bg-gray-50 p-6',
+        className,
+      )}
+    >
       {children}
     </div>
   );

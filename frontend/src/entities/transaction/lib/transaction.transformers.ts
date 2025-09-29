@@ -21,7 +21,10 @@ export const formatTransactionAmount = (
 ): string => {
   const sign = type === 'income' ? '+' : '-';
   const formattedAmount = formatMoneyVO({
-    amount: typeof amount?.amount === 'number' ? amount.amount : Number((amount as any)?.amount ?? 0),
+    amount:
+      typeof amount?.amount === 'number'
+        ? amount.amount
+        : Number((amount as any)?.amount ?? 0),
     currency: (amount as any)?.currency ?? 'JPY',
   });
 
@@ -53,7 +56,8 @@ export const transformApiTransactionResponse = (
 ): Transaction => {
   // Accepts both camelCase and snake_case from backend
   const amountRaw = apiTransaction.amount;
-  const amountNum = typeof amountRaw === 'number' ? amountRaw : Number(String(amountRaw));
+  const amountNum =
+    typeof amountRaw === 'number' ? amountRaw : Number(String(amountRaw));
   return {
     id: apiTransaction.id,
     createdAt: apiTransaction.created_at ?? apiTransaction.createdAt,

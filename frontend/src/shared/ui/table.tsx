@@ -8,7 +8,7 @@ interface TableProps {
 
 export function Table({ children, className }: TableProps) {
   return (
-    <div className="w-full overflow-auto">
+    <div className='w-full overflow-auto'>
       <table className={cn('w-full caption-bottom text-sm', className)}>
         {children}
       </table>
@@ -22,11 +22,7 @@ interface TableHeaderProps {
 }
 
 export function TableHeader({ children, className }: TableHeaderProps) {
-  return (
-    <thead className={cn('[&_tr]:border-b', className)}>
-      {children}
-    </thead>
-  );
+  return <thead className={cn('[&_tr]:border-b', className)}>{children}</thead>;
 }
 
 interface TableBodyProps {
@@ -54,7 +50,7 @@ export function TableRow({ children, className, onClick }: TableRowProps) {
       className={cn(
         'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
         onClick && 'cursor-pointer',
-        className
+        className,
       )}
       onClick={onClick}
     >
@@ -73,7 +69,7 @@ export function TableHead({ children, className }: TableHeadProps) {
     <th
       className={cn(
         'h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
-        className
+        className,
       )}
     >
       {children}
@@ -88,7 +84,12 @@ interface TableCellProps {
 
 export function TableCell({ children, className }: TableCellProps) {
   return (
-    <td className={cn('p-4 align-middle [&:has([role=checkbox])]:pr-0', className)}>
+    <td
+      className={cn(
+        'p-4 align-middle [&:has([role=checkbox])]:pr-0',
+        className,
+      )}
+    >
       {children}
     </td>
   );

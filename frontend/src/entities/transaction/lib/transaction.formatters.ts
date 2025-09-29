@@ -18,9 +18,10 @@ export const formatTransactionSummary = (transaction: Transaction): string => {
 
 // Safe money formatting that tolerates undefined or string amounts
 export const formatMoney = (money: Money): string => {
-  const amount = typeof money?.amount === 'number'
-    ? money.amount
-    : Number((money as any)?.amount ?? 0);
+  const amount =
+    typeof money?.amount === 'number'
+      ? money.amount
+      : Number((money as any)?.amount ?? 0);
   const currency = (money && (money as any).currency) || 'JPY';
   return formatMoneyVO({ amount, currency } as Money);
 };
@@ -78,3 +79,16 @@ export const formatRelativeDate = (dateString: string): string => {
 
   return `${Math.floor(diffInDays / 365)}年前`;
 };
+
+export type SelectOption = {
+  value: string;
+  label: string;
+};
+
+/**
+ * トランザクションタイプのオプション
+ */
+export const transactionTypeOptions: SelectOption[] = [
+  { value: 'expense', label: 'Expense' },
+  { value: 'income', label: 'Income' },
+];

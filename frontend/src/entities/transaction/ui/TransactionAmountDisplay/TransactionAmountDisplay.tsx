@@ -35,7 +35,10 @@ export const TransactionAmountDisplay: FC<TransactionAmountDisplayProps> = ({
   const formattedAmount = showSign
     ? formatMoneyWithSign(amount, type)
     : formatMoneyVO({
-        amount: typeof amount?.amount === 'number' ? amount.amount : Number((amount as any)?.amount ?? 0),
+        amount:
+          typeof amount?.amount === 'number'
+            ? amount.amount
+            : Number((amount as any)?.amount ?? 0),
         currency: (amount as any)?.currency ?? 'JPY',
       });
 

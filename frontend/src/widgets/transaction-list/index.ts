@@ -1,1 +1,0 @@
-export { TransactionListTable } from './TransactionListTable';
