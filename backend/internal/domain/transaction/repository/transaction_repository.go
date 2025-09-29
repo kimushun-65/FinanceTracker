@@ -35,4 +35,7 @@ type TransactionRepository interface {
 
 	// CountByUserID ユーザーのトランザクション数を取得
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
+
+	// FindByUserIDWithFilters フィルタ付きでユーザーのトランザクションを取得
+	FindByUserIDWithFilters(ctx context.Context, userID uuid.UUID, categoryID *uuid.UUID, startDate *time.Time, endDate *time.Time, limit int, offset int) ([]entity.Transaction, error)
 }

@@ -132,43 +132,17 @@ func (s *TransactionService) GetTransactionsByUser(ctx context.Context, userID u
 	// ユーザーIDを作成
 	domainUserID := userValue.NewUserID(userID)
 
-	// リポジトリから取引一覧を取得
-	var result []transactionDomain.Transaction
-	var err error
-
-	// 日付フィルタが指定されている場合は日付範囲で検索
-	if params.DateFrom != nil || params.DateTo != nil {
-		// デフォルト日付を設定（フィルタが片方だけの場合）
-		startDate := time.Time{}
-		endDate := time.Now()
-
-		if params.DateFrom != nil {
-			startDate = *params.DateFrom
-		}
-		if params.DateTo != nil {
-			endDate = *params.DateTo
-		}
-
-		result, err = s.transactionRepo.FindByUserIDAndDateRange(ctx, domainUserID.Value(), startDate, endDate)
-
-		// 手動でページネーションを適用
-		if err == nil {
-			offset := (params.Page - 1) * params.PerPage
-			if offset >= len(result) {
-				result = []transactionDomain.Transaction{}
-			} else {
-				end := offset + params.PerPage
-				if end > len(result) {
-					end = len(result)
-				}
-				result = result[offset:end]
-			}
-		}
-	} else {
-		// 日付フィルタがない場合は通常の検索
-		offset := (params.Page - 1) * params.PerPage
-		result, err = s.transactionRepo.FindByUserID(ctx, domainUserID.Value(), params.PerPage, offset)
-	}
+	// リポジトリから取引一覧を取得（新しいフィルタ付きメソッドを使用）
+	offset := (params.Page - 1) * params.PerPage
+	result, err := s.transactionRepo.FindByUserIDWithFilters(
+		ctx,
+		domainUserID.Value(),
+		params.CategoryID,
+		params.DateFrom,
+		params.DateTo,
+		params.PerPage,
+		offset,
+	)
 	if err != nil {
 		s.logger.Error("取引一覧取得エラー",
 			zap.Error(err),

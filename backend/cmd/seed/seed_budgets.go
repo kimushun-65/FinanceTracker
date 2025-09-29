@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strings"
-	"time"
+    "log"
+    "os"
+    "time"
 
 	"financetracker/internal/infrastructure/gorm/model"
 
@@ -24,14 +23,7 @@ func seedBudgets(db *gorm.DB) error {
 	}
 
 	// 対象ユーザー一覧を収集（追加で投入）
-	auth0IDs := []string{}
-	if v := os.Getenv("SEED_TARGET_AUTH0_ID"); v != "" {
-		for _, s := range strings.Split(v, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				auth0IDs = append(auth0IDs, trimmed)
-			}
-		}
-	}
+    auth0IDs := splitAndTrim(os.Getenv("SEED_TARGET_AUTH0_ID"))
 	auth0IDs = append(auth0IDs,
 		"google-oauth2|110905699660329788470",
 		"auth0|dev-test-user-123",

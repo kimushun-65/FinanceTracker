@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
-	"os"
-	"strings"
-	"time"
+    "log"
+    "os"
+    "time"
 
 	"financetracker/internal/infrastructure/gorm/model"
 
@@ -22,14 +21,10 @@ func seedTransactions(db *gorm.DB) error {
 	// 対象ユーザー一覧を収集（追加で投入）
 	// 優先: 環境変数(カンマ区切り可) -> Googleアカウント -> dev-test-user
 	auth0IDs := []string{}
-	if v := os.Getenv("SEED_TARGET_AUTH0_ID"); v != "" {
-		// そのまま追加（カンマ区切りにも対応）
-		for _, s := range strings.Split(v, ",") {
-			if trimmed := strings.TrimSpace(s); trimmed != "" {
-				auth0IDs = append(auth0IDs, trimmed)
-			}
-		}
-	}
+    if v := os.Getenv("SEED_TARGET_AUTH0_ID"); v != "" {
+        // そのまま追加（カンマ区切りにも対応）
+        auth0IDs = append(auth0IDs, splitAndTrim(v)...)
+    }
 	auth0IDs = append(auth0IDs,
 		"google-oauth2|110905699660329788470",
 		"auth0|dev-test-user-123",

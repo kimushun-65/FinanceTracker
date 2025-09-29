@@ -273,3 +273,48 @@ func (r *TransactionRepository) toDomain(transactionModel *model.Transaction) (*
 
 	return &transaction, nil
 }
+
+// FindByUserIDWithFilters フィルタ付きでユーザーのトランザクションを取得
+func (r *TransactionRepository) FindByUserIDWithFilters(ctx context.Context, userID uuid.UUID, categoryID *uuid.UUID, startDate *time.Time, endDate *time.Time, limit int, offset int) ([]transactionDomain.Transaction, error) {
+	var transactionModels []model.Transaction
+	query := r.db.WithContext(ctx).Where("user_id = ?", userID)
+
+	// カテゴリーフィルタを追加
+	if categoryID != nil {
+		query = query.Where("category_id = ?", *categoryID)
+	}
+
+	// 日付範囲フィルタを追加
+	if startDate != nil {
+		query = query.Where("date >= ?", *startDate)
+	}
+	if endDate != nil {
+		query = query.Where("date <= ?", *endDate)
+	}
+
+	// ソートとページネーション
+	query = query.Order("date DESC, created_at DESC")
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
+
+	result := query.Find(&transactionModels)
+	if result.Error != nil {
+		return nil, fmt.Errorf("フィルタ付き取引一覧の取得に失敗しました: %w", result.Error)
+	}
+
+	// ドメインモデルに変換
+	transactions := make([]transactionDomain.Transaction, len(transactionModels))
+	for i, transactionModel := range transactionModels {
+		transaction, err := r.toDomain(&transactionModel)
+		if err != nil {
+			return nil, err
+		}
+		transactions[i] = *transaction
+	}
+
+	return transactions, nil
+}
