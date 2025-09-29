@@ -96,6 +96,13 @@ func (s *CategoryService) CreateCategory(ctx context.Context, userID uuid.UUID, 
 		categoryDTO := dto.CategoryFromDomain(existingCategory)
 		if categoryDTO != nil {
 			categoryDTO.Name = categoryMaster.Name().String()
+			categoryDTO.Icon = categoryMaster.Icon()
+			categoryDTO.CategoryType = categoryMaster.Type().String()
+			categoryDTO.DisplayOrder = categoryMaster.DisplayOrder()
+			if categoryMaster.Color() != nil {
+				color := categoryMaster.Color().String()
+				categoryDTO.Color = &color
+			}
 		}
 		return categoryDTO, nil
 	}
@@ -117,6 +124,13 @@ func (s *CategoryService) CreateCategory(ctx context.Context, userID uuid.UUID, 
 	categoryDTO := dto.CategoryFromDomain(&category)
 	if categoryDTO != nil {
 		categoryDTO.Name = categoryMaster.Name().String()
+		categoryDTO.Icon = categoryMaster.Icon()
+		categoryDTO.CategoryType = categoryMaster.Type().String()
+		categoryDTO.DisplayOrder = categoryMaster.DisplayOrder()
+		if categoryMaster.Color() != nil {
+			color := categoryMaster.Color().String()
+			categoryDTO.Color = &color
+		}
 	}
 	return categoryDTO, nil
 }
@@ -157,6 +171,13 @@ func (s *CategoryService) GetCategory(ctx context.Context, userID, categoryID uu
 	categoryDTO := dto.CategoryFromDomain(category)
 	if categoryDTO != nil && categoryMaster != nil {
 		categoryDTO.Name = categoryMaster.Name().String()
+		categoryDTO.Icon = categoryMaster.Icon()
+		categoryDTO.CategoryType = categoryMaster.Type().String()
+		categoryDTO.DisplayOrder = categoryMaster.DisplayOrder()
+		if categoryMaster.Color() != nil {
+			color := categoryMaster.Color().String()
+			categoryDTO.Color = &color
+		}
 	}
 	return categoryDTO, nil
 }
@@ -220,9 +241,16 @@ func (s *CategoryService) GetCategoriesByUser(ctx context.Context, userID uuid.U
 	for i, category := range filteredCategories {
 		categoryDTO := dto.CategoryFromDomain(category)
 		if categoryDTO != nil {
-			// カテゴリマスターの名前を設定
+			// カテゴリマスターの情報を設定
 			if master, ok := categoryMasters[category.CategoryMasterID()]; ok {
 				categoryDTO.Name = master.Name().String()
+				categoryDTO.Icon = master.Icon()
+				categoryDTO.CategoryType = master.Type().String()
+				categoryDTO.DisplayOrder = master.DisplayOrder()
+				if master.Color() != nil {
+					color := master.Color().String()
+					categoryDTO.Color = &color
+				}
 			}
 			categoryResponses[i] = *categoryDTO
 		}
@@ -302,6 +330,13 @@ func (s *CategoryService) UpdateCategory(ctx context.Context, userID, categoryID
 	categoryDTO := dto.CategoryFromDomain(category)
 	if categoryDTO != nil && categoryMaster != nil {
 		categoryDTO.Name = categoryMaster.Name().String()
+		categoryDTO.Icon = categoryMaster.Icon()
+		categoryDTO.CategoryType = categoryMaster.Type().String()
+		categoryDTO.DisplayOrder = categoryMaster.DisplayOrder()
+		if categoryMaster.Color() != nil {
+			color := categoryMaster.Color().String()
+			categoryDTO.Color = &color
+		}
 	}
 	return categoryDTO, nil
 }

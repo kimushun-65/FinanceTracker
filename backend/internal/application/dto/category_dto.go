@@ -16,6 +16,10 @@ type CategoryResponse struct {
 	Name             string    `json:"name"`
 	CustomName       *string   `json:"custom_name,omitempty"`
 	IsActive         bool      `json:"is_active"`
+	Icon             string    `json:"icon"`
+	Color            *string   `json:"color,omitempty"`
+	CategoryType     string    `json:"category_type"`
+	DisplayOrder     int       `json:"display_order"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 }
