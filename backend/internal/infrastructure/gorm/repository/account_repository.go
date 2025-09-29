@@ -271,6 +271,21 @@ func (r *AccountRepository) GetTotalAssetsByUserID(ctx context.Context, userID u
 func (r *AccountRepository) toModel(account *accountDomain.Account) *model.Account {
 	balance := account.CurrentBalance()
 
+	// ドメインタイプからDBタイプに変換
+	var dbAccountType model.AccountType
+	switch account.Type().Value() {
+	case "cash":
+		dbAccountType = model.AccountTypeCash
+	case "checking":
+		dbAccountType = model.AccountTypeBank
+	case "investment":
+		dbAccountType = model.AccountTypeInvestment
+	case "credit_card":
+		dbAccountType = model.AccountTypeCreditCard
+	default:
+		dbAccountType = model.AccountTypeBank // デフォルトは銀行口座
+	}
+
 	return &model.Account{
 		Base: model.Base{
 			ID:        account.ID,
@@ -279,7 +294,7 @@ func (r *AccountRepository) toModel(account *accountDomain.Account) *model.Accou
 		},
 		UserID:   account.UserID().Value(),
 		Name:     account.Name().String(),
-		Type:     model.AccountType(account.Type().Value()),
+		Type:     dbAccountType,
 		Balance:  decimal.NewFromInt(balance.Amount()),
 		Currency: balance.Currency(),
 		IsActive: true,
@@ -307,7 +322,7 @@ func (r *AccountRepository) toDomain(accountModel *model.Account) (*accountDomai
 	case model.AccountTypeInvestment:
 		domainAccountType = "investment"
 	case model.AccountTypeCreditCard:
-		domainAccountType = "checking" // クレジットカードは当座預金として扱う
+		domainAccountType = "credit_card" // クレジットカードは正しくcredit_cardとして扱う
 	case model.AccountTypeLoan:
 		domainAccountType = "checking" // ローンは当座預金として扱う
 	case model.AccountTypeOther:

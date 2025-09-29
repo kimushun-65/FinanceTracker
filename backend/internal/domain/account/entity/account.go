@@ -86,18 +86,23 @@ func (a *Account) UpdateBalance(amount value.Money, isDeposit bool) error {
 	var newBalance *accountValue.Balance
 	var err error
 
+	// クレジットカード口座の場合はマイナス残高を許可
+	allowNegative := a.accType.IsCreditCard()
+
 	if isDeposit {
 		newBalance, err = a.balance.Add(amount)
 	} else {
-		// 出金の場合、残高不足をチェック（資産口座はマイナス不可）
-		canWithdraw, checkErr := a.balance.CanWithdraw(amount, false)
-		if checkErr != nil {
-			return checkErr
-		}
+		// 出金の場合、残高不足をチェック（クレジットカード以外はマイナス不可）
+		if !allowNegative {
+			canWithdraw, checkErr := a.balance.CanWithdraw(amount, false)
+			if checkErr != nil {
+				return checkErr
+			}
 
-		if !canWithdraw {
-			return common.NewBusinessRuleError("insufficient_balance",
-				"insufficient balance for withdrawal")
+			if !canWithdraw {
+				return common.NewBusinessRuleError("insufficient_balance",
+					"insufficient balance for withdrawal")
+			}
 		}
 
 		newBalance, err = a.balance.Subtract(amount)
@@ -107,6 +112,12 @@ func (a *Account) UpdateBalance(amount value.Money, isDeposit bool) error {
 		return err
 	}
 
+	// クレジットカードの場合、結果の残高が正にならないよう確認
+	if a.accType.IsCreditCard() && newBalance.CurrentBalance().IsPositive() {
+		return common.NewBusinessRuleError("invalid_credit_card_balance",
+			"credit card balance cannot be positive")
+	}
+
 	a.balance = *newBalance
 	a.UpdateTimestamp()
 	return nil
@@ -114,6 +125,12 @@ func (a *Account) UpdateBalance(amount value.Money, isDeposit bool) error {
 
 // SetBalance 残高を直接設定
 func (a *Account) SetBalance(newBalance value.Money) error {
+	// クレジットカードの場合は正の残高を許可しない
+	if a.accType.IsCreditCard() && newBalance.IsPositive() {
+		return common.NewBusinessRuleError("invalid_credit_card_balance",
+			"credit card balance cannot be positive")
+	}
+
 	updatedBalance, err := a.balance.SetCurrentBalance(newBalance)
 	if err != nil {
 		return err
@@ -127,6 +144,12 @@ func (a *Account) SetBalance(newBalance value.Money) error {
 // UpdateName 口座名を更新
 func (a *Account) UpdateName(newName accountValue.AccountName) {
 	a.name = newName
+	a.UpdateTimestamp()
+}
+
+// UpdateType 口座タイプを更新
+func (a *Account) UpdateType(newType accountValue.AccountType) {
+	a.accType = newType
 	a.UpdateTimestamp()
 }
 

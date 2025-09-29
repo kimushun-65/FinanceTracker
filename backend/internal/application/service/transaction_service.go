@@ -23,16 +23,19 @@ import (
 // TransactionService 取引管理サービス
 type TransactionService struct {
 	transactionRepo transactionRepo.TransactionRepository
+	accountService  *AccountService
 	logger          *logger.Logger
 }
 
 // NewTransactionService 新しいTransactionServiceを作成
 func NewTransactionService(
 	transactionRepo transactionRepo.TransactionRepository,
+	accountService *AccountService,
 	logger *logger.Logger,
 ) *TransactionService {
 	return &TransactionService{
 		transactionRepo: transactionRepo,
+		accountService:  accountService,
 		logger:          logger,
 	}
 }
@@ -94,6 +97,46 @@ func (s *TransactionService) CreateTransaction(ctx context.Context, userID uuid.
 	if err := s.transactionRepo.Save(ctx, transaction); err != nil {
 		s.logger.Error("取引保存エラー", zap.Error(err))
 		return nil, errors.NewInternalError("取引の保存に失敗しました", err)
+	}
+
+	// 口座情報を取得して口座タイプを確認
+	account, err := s.accountService.GetAccount(ctx, userID, req.AccountID)
+	if err != nil {
+		s.logger.Error("口座取得エラー",
+			zap.Error(err),
+			zap.String("accountID", req.AccountID.String()))
+
+		// 取引の保存は成功したが口座取得が失敗した場合、取引を削除してロールバック
+		if deleteErr := s.transactionRepo.Delete(ctx, transaction.GetID()); deleteErr != nil {
+			s.logger.Error("取引ロールバック失敗", zap.Error(deleteErr))
+		}
+		return nil, errors.NewInternalError("口座情報の取得に失敗しました", err)
+	}
+
+	// 口座残高を更新
+	amount := decimal.NewFromInt(money.Amount())
+	isDeposit := transactionType.IsIncome()
+
+	// クレジットカード口座の場合も通常の論理を使用
+	// クレジットカードの場合:
+	// - 支出(expense): isDeposit = false → 残高減少（債務増加、よりマイナスに）
+	// - 収入(income/payment): isDeposit = true → 残高増加（債務減少、よりプラスに）
+	isCreditCard := account.AccountType == "credit_card"
+
+	_, err = s.accountService.UpdateBalance(ctx, userID, req.AccountID, amount, isDeposit)
+	if err != nil {
+		s.logger.Error("残高更新エラー",
+			zap.Error(err),
+			zap.String("accountID", req.AccountID.String()),
+			zap.String("amount", amount.String()),
+			zap.Bool("isDeposit", isDeposit),
+			zap.Bool("isCreditCard", isCreditCard))
+
+		// 取引の保存は成功したが残高更新が失敗した場合、取引を削除してロールバック
+		if deleteErr := s.transactionRepo.Delete(ctx, transaction.GetID()); deleteErr != nil {
+			s.logger.Error("取引ロールバック失敗", zap.Error(deleteErr))
+		}
+		return nil, errors.NewInternalError("口座残高の更新に失敗しました", err)
 	}
 
 	// DTOに変換して返却
@@ -246,6 +289,12 @@ func (s *TransactionService) UpdateTransaction(ctx context.Context, userID, tran
 		return nil, errors.NewForbiddenError("この取引へのアクセス権限がありません")
 	}
 
+	// 残高更新のため、変更前の情報を保存
+	oldAmount := transaction.Amount()
+	oldAmountDecimal := decimal.NewFromInt(oldAmount.Amount())
+	oldType := transaction.Type()
+	accountID := transaction.AccountID()
+
 	// 更新フィールドの適用
 	if req.CategoryID != nil {
 		if err := transaction.UpdateCategory(*req.CategoryID); err != nil {
@@ -254,6 +303,8 @@ func (s *TransactionService) UpdateTransaction(ctx context.Context, userID, tran
 		}
 	}
 
+	var newAmountDecimal decimal.Decimal
+	amountChanged := false
 	if req.Amount != nil {
 		currentAmount := transaction.Amount()
 		money, err := value.NewMoney(req.Amount.IntPart(), currentAmount.Currency())
@@ -267,6 +318,8 @@ func (s *TransactionService) UpdateTransaction(ctx context.Context, userID, tran
 			s.logger.Error("金額変更エラー", zap.Error(err))
 			return nil, errors.NewValidationError("金額の変更に失敗しました")
 		}
+		newAmountDecimal = decimal.NewFromInt(money.Amount())
+		amountChanged = true
 	}
 
 	if req.Description != nil {
@@ -293,6 +346,51 @@ func (s *TransactionService) UpdateTransaction(ctx context.Context, userID, tran
 			zap.Error(err),
 			zap.String("transactionID", transactionID.String()))
 		return nil, errors.NewInternalError("取引情報の更新に失敗しました", err)
+	}
+
+	// 金額が変更された場合は口座残高を更新
+	if amountChanged {
+		// 口座情報を取得してクレジットカードかどうか確認
+		account, err := s.accountService.GetAccount(ctx, userID, accountID)
+		if err != nil {
+			s.logger.Error("口座取得エラー", zap.Error(err))
+			return nil, errors.NewInternalError("口座情報の取得に失敗しました", err)
+		}
+		isCreditCard := account.AccountType == "credit_card"
+
+		// 古い金額の影響を取り消す（逆操作）
+		oldIsDeposit := oldType.IsIncome()
+		// クレジットカードの場合も通常の論理を使用（逆操作で取り消し）
+		_, err = s.accountService.UpdateBalance(ctx, userID, accountID, oldAmountDecimal, !oldIsDeposit)
+		if err != nil {
+			s.logger.Error("旧残高取り消しエラー",
+				zap.Error(err),
+				zap.String("accountID", accountID.String()),
+				zap.String("oldAmount", oldAmountDecimal.String()),
+				zap.Bool("reverseOperation", !oldIsDeposit),
+				zap.Bool("isCreditCard", isCreditCard))
+			return nil, errors.NewInternalError("口座残高の更新に失敗しました", err)
+		}
+
+		// 新しい金額を適用
+		newIsDeposit := transaction.Type().IsIncome()
+		// クレジットカードの場合も通常の論理を使用
+		_, err = s.accountService.UpdateBalance(ctx, userID, accountID, newAmountDecimal, newIsDeposit)
+		if err != nil {
+			s.logger.Error("新残高適用エラー",
+				zap.Error(err),
+				zap.String("accountID", accountID.String()),
+				zap.String("newAmount", newAmountDecimal.String()),
+				zap.Bool("isDeposit", newIsDeposit),
+				zap.Bool("isCreditCard", isCreditCard))
+
+			// 新しい金額の適用に失敗した場合、古い金額を再適用
+			oldIsDepositForRevert := oldType.IsIncome()
+			if _, revertErr := s.accountService.UpdateBalance(ctx, userID, accountID, oldAmountDecimal, oldIsDepositForRevert); revertErr != nil {
+				s.logger.Error("残高復元エラー", zap.Error(revertErr))
+			}
+			return nil, errors.NewInternalError("口座残高の更新に失敗しました", err)
+		}
 	}
 
 	// DTOに変換して返却
@@ -322,12 +420,40 @@ func (s *TransactionService) DeleteTransaction(ctx context.Context, userID, tran
 		return errors.NewForbiddenError("この取引へのアクセス権限がありません")
 	}
 
+	// 残高更新のため、削除前の情報を保存
+	amount := transaction.Amount()
+	amountDecimal := decimal.NewFromInt(amount.Amount())
+	transactionType := transaction.Type()
+	accountID := transaction.AccountID()
+
 	// リポジトリから削除
 	if err := s.transactionRepo.Delete(ctx, transactionID); err != nil {
 		s.logger.Error("取引削除エラー",
 			zap.Error(err),
 			zap.String("transactionID", transactionID.String()))
 		return errors.NewInternalError("取引の削除に失敗しました", err)
+	}
+
+	// 口座情報を取得してクレジットカードかどうか確認
+	account, err := s.accountService.GetAccount(ctx, userID, accountID)
+	if err != nil {
+		s.logger.Error("口座取得エラー", zap.Error(err))
+		return errors.NewInternalError("口座情報の取得に失敗しました", err)
+	}
+	isCreditCard := account.AccountType == "credit_card"
+
+	// 削除された取引の影響を口座残高から取り消す（逆操作）
+	isDeposit := transactionType.IsIncome()
+	// クレジットカードの場合も通常の論理を使用（逆操作で取り消し）
+	_, err = s.accountService.UpdateBalance(ctx, userID, accountID, amountDecimal, !isDeposit)
+	if err != nil {
+		s.logger.Error("削除時残高更新エラー",
+			zap.Error(err),
+			zap.String("accountID", accountID.String()),
+			zap.String("amount", amountDecimal.String()),
+			zap.Bool("reverseOperation", !isDeposit),
+			zap.Bool("isCreditCard", isCreditCard))
+		return errors.NewInternalError("口座残高の更新に失敗しました", err)
 	}
 
 	return nil

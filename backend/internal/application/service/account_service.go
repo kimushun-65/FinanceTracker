@@ -61,10 +61,21 @@ func (s *AccountService) CreateAccount(ctx context.Context, userID uuid.UUID, re
 	// 初期残高を設定（デフォルトは0）
 	initialBalance := int64(0)
 	if req.InitialBalance != nil {
-		if req.InitialBalance.IsNegative() {
-			return nil, errors.NewValidationError("初期残高は0以上である必要があります")
+		// クレジットカード口座の場合は初期残高を負の値に調整
+		if accountType.IsCreditCard() {
+			// 正の値が入力された場合、負の値に変換（債務として扱う）
+			if req.InitialBalance.IsPositive() {
+				initialBalance = -req.InitialBalance.IntPart()
+			} else {
+				initialBalance = req.InitialBalance.IntPart()
+			}
+		} else {
+			// 通常の口座の場合は負の値を許可しない
+			if req.InitialBalance.IsNegative() {
+				return nil, errors.NewValidationError("初期残高は0以上である必要があります")
+			}
+			initialBalance = req.InitialBalance.IntPart()
 		}
-		initialBalance = req.InitialBalance.IntPart()
 	}
 
 	// 金額を作成
@@ -133,21 +144,41 @@ func (s *AccountService) GetAccountsByUser(ctx context.Context, userID uuid.UUID
 
 	accounts := result.Items
 
-	// 合計残高を計算
+	// 合計残高を計算（クレジットカードは別途計算）
 	totalBalance := decimal.Zero
+	totalDebt := decimal.Zero
 	for _, account := range accounts {
 		balance := account.CurrentBalance()
 		// 通貨が同じ場合のみ合計に加算（簡易実装）
 		if balance.Currency() == "JPY" {
-			totalBalance = totalBalance.Add(decimal.NewFromInt(balance.Amount()))
+			balanceAmount := decimal.NewFromInt(balance.Amount())
+			if account.Type().IsCreditCard() {
+				// クレジットカードの場合、負の値は債務として扱う
+				if balance.IsNegative() {
+					// 負の値を正に変換して債務として加算
+					debtAmount := balanceAmount.Mul(decimal.NewFromInt(-1))
+					totalDebt = totalDebt.Add(debtAmount)
+				} else {
+					// クレジットカードでプラス残高の場合（支払い過多）は資産として扱う
+					totalBalance = totalBalance.Add(balanceAmount)
+				}
+			} else {
+				// 通常の口座の場合
+				totalBalance = totalBalance.Add(balanceAmount)
+			}
 		}
 	}
+
+	// 純資産計算（総資産 - 総債務）
+	netWorth := totalBalance.Sub(totalDebt)
 
 	// DTOに変換
 	return &dto.AccountListResponse{
 		Accounts:     dto.AccountsFromDomain(accounts),
 		TotalCount:   result.TotalCount,
 		TotalBalance: totalBalance,
+		TotalDebt:    totalDebt,
+		NetWorth:     netWorth,
 	}, nil
 }
 
@@ -187,11 +218,19 @@ func (s *AccountService) UpdateAccount(ctx context.Context, userID, accountID uu
 	}
 
 	if req.AccountType != nil {
-		// 口座タイプの変更は通常許可しないが、必要であればドメインエンティティにメソッドを追加
-		s.logger.Warn("口座タイプの変更は現在サポートされていません",
+		// 新しい口座タイプを作成
+		accountType, err := accountValue.NewAccountType(*req.AccountType)
+		if err != nil {
+			s.logger.Error("口座タイプ作成エラー",
+				zap.Error(err),
+				zap.String("type", *req.AccountType))
+			return nil, errors.NewValidationError("無効な口座タイプです")
+		}
+		// 口座タイプを更新
+		account.UpdateType(*accountType)
+		s.logger.Info("口座タイプが更新されました",
 			zap.String("accountID", accountID.String()),
 			zap.String("newType", *req.AccountType))
-		return nil, errors.NewValidationError("口座タイプの変更は現在サポートされていません")
 	}
 
 	// 残高の更新
@@ -298,7 +337,11 @@ func (s *AccountService) UpdateBalance(ctx context.Context, userID, accountID uu
 
 	// 残高を更新
 	if err := account.UpdateBalance(*money, isDeposit); err != nil {
-		s.logger.Error("残高更新エラー", zap.Error(err))
+		s.logger.Error("残高更新エラー",
+			zap.Error(err),
+			zap.Bool("isCreditCard", account.Type().IsCreditCard()),
+			zap.Bool("isDeposit", isDeposit),
+			zap.String("amount", amount.String()))
 		return nil, errors.NewValidationError("残高の更新に失敗しました")
 	}
 

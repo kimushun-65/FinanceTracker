@@ -235,6 +235,7 @@ func (c *Container) initServices() {
 	// 取引サービス
 	c.TransactionService = service.NewTransactionService(
 		c.TransactionRepo,
+		c.AccountService,
 		c.Logger,
 	)
 

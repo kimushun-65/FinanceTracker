@@ -24,7 +24,7 @@ type AccountResponse struct {
 // CreateAccountRequest 口座作成リクエスト
 type CreateAccountRequest struct {
 	Name           string           `json:"name" binding:"required,min=1,max=100"`
-	AccountType    string           `json:"account_type" binding:"required,oneof=checking investment cash"`
+	AccountType    string           `json:"account_type" binding:"required,oneof=checking investment cash credit_card"`
 	InitialBalance *decimal.Decimal `json:"initial_balance" binding:"omitempty"`
 	Currency       string           `json:"currency" binding:"required,len=3"`
 }
@@ -32,7 +32,7 @@ type CreateAccountRequest struct {
 // UpdateAccountRequest 口座更新リクエスト
 type UpdateAccountRequest struct {
 	Name        *string          `json:"name" binding:"omitempty,min=1,max=100"`
-	AccountType *string          `json:"account_type" binding:"omitempty,oneof=checking investment cash"`
+	AccountType *string          `json:"account_type" binding:"omitempty,oneof=checking investment cash credit_card"`
 	Balance     *decimal.Decimal `json:"balance" binding:"omitempty"`
 }
 
@@ -41,6 +41,8 @@ type AccountListResponse struct {
 	Accounts     []AccountResponse `json:"accounts"`
 	TotalCount   int64             `json:"total_count"`
 	TotalBalance decimal.Decimal   `json:"total_balance"`
+	TotalDebt    decimal.Decimal   `json:"total_debt"`
+	NetWorth     decimal.Decimal   `json:"net_worth"`
 }
 
 // AccountMovementRequest 口座残高変動リクエスト
@@ -110,7 +112,7 @@ func AccountMovementFromDomain(movement *accountDomain.AccountMovement) *Account
 // AccountSearchParams 口座検索パラメータ
 type AccountSearchParams struct {
 	UserID      uuid.UUID `form:"-"`
-	AccountType *string   `form:"account_type" binding:"omitempty,oneof=checking investment cash"`
+	AccountType *string   `form:"account_type" binding:"omitempty,oneof=checking investment cash credit_card"`
 	IsActive    *bool     `form:"is_active"`
 	OrderBy     string    `form:"order_by,default=display_order asc"`
 }
