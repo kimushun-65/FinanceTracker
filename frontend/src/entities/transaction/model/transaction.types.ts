@@ -83,3 +83,19 @@ export type TransactionWithDetails = Transaction & {
   displayAmount: string;
   displayDate: string;
 };
+
+export type MonthlySummaryParams = {
+  year?: number;
+  month?: number;
+};
+
+export type MonthlySummary = {
+  totalIncome: Money;
+  totalExpense: Money;
+  netIncome: Money;
+  transactionCount: number;
+  period: {
+    year: number;
+    month: number;
+  };
+};

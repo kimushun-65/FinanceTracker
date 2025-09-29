@@ -65,3 +65,30 @@ export const validateUpdateTransactionPayload = (
 
   return errors;
 };
+
+/**
+ * トランザクションフォームのバリデーション
+ */
+export const validateTransactionForm = (formData: {
+  amount: number;
+  categoryId: string;
+  accountId: string;
+  description: string;
+}): Record<string, string> => {
+  const newErrors: Record<string, string> = {};
+
+  if (!formData.amount || formData.amount <= 0) {
+    newErrors.amount = 'Amount must be greater than 0';
+  }
+  if (!formData.categoryId) {
+    newErrors.categoryId = 'Category is required';
+  }
+  if (!formData.accountId) {
+    newErrors.accountId = 'Account is required';
+  }
+  if (!formData.description.trim()) {
+    newErrors.description = 'Description is required';
+  }
+
+  return newErrors;
+};

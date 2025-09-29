@@ -45,3 +45,22 @@ export const formatAccountSummary = (account: Account): string => {
 
   return `${formatAccountName(account)}: ${formatAccountBalance(account)} (${gainText}${gainFormatted})`;
 };
+
+export type SelectOption = {
+  value: string;
+  label: string;
+};
+
+/**
+ * アカウントをSelectオプションに変換
+ */
+export const accountsToSelectOptions = (
+  accounts: Account[],
+): SelectOption[] => {
+  return (
+    accounts?.map((account) => ({
+      value: account.id,
+      label: account.name,
+    })) || []
+  );
+};

@@ -1,8 +1,9 @@
 export const endpoints = {
-  list: '/api/budgets',
-  get: (id: string) => `/api/budgets/${id}`,
-  create: '/api/budgets',
-  update: (id: string) => `/api/budgets/${id}`,
-  delete: (id: string) => `/api/budgets/${id}`,
-  summary: '/api/budgets/summary',
+  list: '/budgets',
+  get: (id: string) => `/budgets/${id}`,
+  create: '/budgets',
+  update: (id: string) => `/budgets/${id}`,
+  delete: (id: string) => `/budgets/${id}`,
+  current: '/budgets/current',
+  summary: '/budgets/summary',
 } as const;

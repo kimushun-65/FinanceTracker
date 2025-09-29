@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import type { Money } from '@/shared/value-objects';
 import type { TransactionType } from '../../model';
 import { formatMoneyWithSign } from '../../lib';
+import { formatMoney as formatMoneyVO } from '@/shared/value-objects/money';
 
 export type TransactionAmountDisplayProps = {
   amount: Money;
@@ -33,9 +34,13 @@ export const TransactionAmountDisplay: FC<TransactionAmountDisplayProps> = ({
 
   const formattedAmount = showSign
     ? formatMoneyWithSign(amount, type)
-    : amount.currency === 'JPY'
-      ? `¥${amount.amount.toLocaleString('ja-JP')}`
-      : `${amount.currency} ${amount.amount.toLocaleString()}`;
+    : formatMoneyVO({
+        amount:
+          typeof amount?.amount === 'number'
+            ? amount.amount
+            : Number((amount as any)?.amount ?? 0),
+        currency: (amount as any)?.currency ?? 'JPY',
+      });
 
   return (
     <span className={`${getColorClass(type)} ${getSizeClass(size)} font-mono`}>

@@ -5,18 +5,22 @@ import {
   type Transaction,
   type UpdateTransactionPayload,
 } from '@/entities/transaction';
+import { useToast } from '@/shared/ui';
 
 export const useUpdateTransaction = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   return useMutation({
     mutationFn: ({
       id,
-      ...payload
-    }: { id: string } & UpdateTransactionPayload) =>
-      transactionApi.update(id, payload),
+      data,
+    }: {
+      id: string;
+      data: UpdateTransactionPayload;
+    }) => transactionApi.update(id, data),
 
-    onMutate: async ({ id, ...newData }) => {
+    onMutate: async ({ id, data: newData }) => {
       await queryClient.cancelQueries({ queryKey: transactionKeys.detail(id) });
 
       const previousTransaction = queryClient.getQueryData<Transaction>(
@@ -47,6 +51,15 @@ export const useUpdateTransaction = () => {
     onSuccess: (data, { id }) => {
       queryClient.setQueryData(transactionKeys.detail(id), data);
       queryClient.invalidateQueries({ queryKey: transactionKeys.lists() });
+
+      // サマリーを無効化
+      queryClient.invalidateQueries({ queryKey: transactionKeys.summaries() });
+
+      // 成功時のトースト表示
+      toast({
+        title: '取引が更新されました',
+        description: '取引情報が正常に更新されました。',
+      });
     },
   });
 };

@@ -372,3 +372,52 @@ export const monthRangeToDateRange = (monthRange: MonthRange): DateRange => {
     end: getLastDayOfMonth(monthRange.end),
   };
 };
+
+/**
+ * 日付をYYYY-MM-DD形式の文字列に変換
+ */
+export const toDateString = (date: Date): string =>
+  date.toISOString().split('T')[0];
+
+/**
+ * 期間フィルター用の日付範囲を生成
+ */
+export const getPeriodDateRange = (
+  period: string,
+): [string | undefined, string | undefined] => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const periodMap: Record<string, [Date, Date] | [undefined, undefined]> = {
+    current: [
+      new Date(currentYear, currentMonth, 1),
+      new Date(currentYear, currentMonth + 1, 0),
+    ],
+    last: [
+      new Date(currentYear, currentMonth - 1, 1),
+      new Date(currentYear, currentMonth, 0),
+    ],
+    last3: [new Date(currentYear, currentMonth - 3, 1), now],
+    last6: [new Date(currentYear, currentMonth - 6, 1), now],
+    year: [new Date(currentYear, 0, 1), now],
+  };
+
+  const [start, end] = periodMap[period] || [undefined, undefined];
+
+  return [
+    start ? toDateString(start) : undefined,
+    end ? toDateString(end) : undefined,
+  ];
+};
+
+/**
+ * 日付文字列をMM/DD形式でフォーマット
+ */
+export const formatDateShort = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ja-JP', {
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
