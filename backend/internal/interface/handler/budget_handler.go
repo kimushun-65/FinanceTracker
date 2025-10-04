@@ -480,3 +480,58 @@ func (h *BudgetHandler) GetCurrent(c *gin.Context) {
 
 	c.JSON(http.StatusOK, budgets)
 }
+
+// GetSummary 予算サマリーを取得
+// @Summary 予算サマリー取得
+// @Description 今月または今年の予算サマリーを取得します
+// @Tags budgets
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param period query string false "期間" Enums(monthly, yearly) default(monthly)
+// @Success 200 {object} dto.BudgetSummaryResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/budgets/summary [get]
+func (h *BudgetHandler) GetSummary(c *gin.Context) {
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+		} else {
+			h.logger.Error("Failed to get user ID: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "ユーザーが見つかりません",
+			})
+		}
+		return
+	}
+
+	// 期間パラメータを取得（デフォルトは monthly）
+	period := c.DefaultQuery("period", "monthly")
+
+	// 期間の検証
+	if period != "monthly" && period != "yearly" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "期間はmonthlyまたはyearlyを指定してください",
+		})
+		return
+	}
+
+	// サービス層を呼び出し
+	summary, err := h.budgetService.GetBudgetSummary(c.Request.Context(), userUUID, period)
+	if err != nil {
+		h.logger.Error("Failed to get budget summary: " + err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "予算サマリーの取得に失敗しました",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, summary)
+}

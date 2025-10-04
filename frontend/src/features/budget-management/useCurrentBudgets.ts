@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { budgetApi, budgetKeys } from '@/entities/budget';
 
-export const useBudgetSummary = (period: 'monthly' | 'yearly' = 'monthly') => {
+export const useCurrentBudgets = () => {
   return useQuery({
-    queryKey: budgetKeys.summary(period),
-    queryFn: () => budgetApi.getSummary(period),
+    queryKey: budgetKeys.current(),
+    queryFn: () => budgetApi.getCurrent(),
     staleTime: 5 * 60 * 1000, // 5分
   });
 };

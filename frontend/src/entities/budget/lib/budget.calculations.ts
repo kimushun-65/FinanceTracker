@@ -79,8 +79,17 @@ export const calculateTotalUsedAmount = (
     return { amount: 0, currency: 'JPY' };
   }
 
+  // 最初の有効な通貨を見つける
+  const firstValidCurrency =
+    budgetsWithUsage.find((b) => b.used?.currency)?.used?.currency || 'JPY';
+
   return budgetsWithUsage.reduce(
     (total, budget) => {
+      // budget.usedが存在し、currencyが設定されている場合のみ加算
+      if (!budget.used || !budget.used.currency) {
+        return total;
+      }
+
       try {
         return addMoney(total, budget.used);
       } catch {
@@ -88,7 +97,7 @@ export const calculateTotalUsedAmount = (
         return total;
       }
     },
-    { amount: 0, currency: budgetsWithUsage[0].used.currency },
+    { amount: 0, currency: firstValidCurrency },
   );
 };
 
@@ -96,7 +105,8 @@ export const calculateBudgetProgress = (
   budgetAmount: Money,
   usedAmount: Money,
 ): number => {
-  if (budgetAmount.amount === 0) return 0;
+  if (!budgetAmount || budgetAmount.amount === 0) return 0;
+  if (!usedAmount || usedAmount.amount === undefined) return 0;
 
   const progress = Math.min(usedAmount.amount / budgetAmount.amount, 1);
   return Math.round(progress * 100);
