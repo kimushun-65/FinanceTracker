@@ -39,11 +39,7 @@ export const getBalanceStatusColor = (status: BalanceStatus): string => {
 };
 
 export const formatAccountSummary = (account: Account): string => {
-  const gain = account.balance.gain;
-  const gainText = gain.amount >= 0 ? '+' : '';
-  const gainFormatted = formatMoney(gain);
-
-  return `${formatAccountName(account)}: ${formatAccountBalance(account)} (${gainText}${gainFormatted})`;
+  return `${formatAccountName(account)}: ${formatAccountBalance(account)}`;
 };
 
 export type SelectOption = {

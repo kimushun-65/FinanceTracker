@@ -4,12 +4,14 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
   checking: '普通預金',
   investment: '投資',
   cash: '現金',
+  credit_card: 'クレジットカード',
 } as const;
 
 export const ACCOUNT_TYPE_ICONS: Record<AccountType, string> = {
   checking: '🏦',
   investment: '📈',
   cash: '💵',
+  credit_card: '💳',
 } as const;
 
 export const ACCOUNT_LIMITS = {
@@ -23,4 +25,5 @@ export const ACCOUNT_TYPE_OPTIONS = [
   { value: 'checking', label: ACCOUNT_TYPE_LABELS.checking },
   { value: 'investment', label: ACCOUNT_TYPE_LABELS.investment },
   { value: 'cash', label: ACCOUNT_TYPE_LABELS.cash },
+  { value: 'credit_card', label: ACCOUNT_TYPE_LABELS.credit_card },
 ] as const;

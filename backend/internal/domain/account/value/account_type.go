@@ -13,9 +13,10 @@ type AccountType struct {
 
 // 定義済みの口座タイプ
 const (
-	AccountTypeChecking   = "checking"   // 普通預金
-	AccountTypeInvestment = "investment" // 投資
-	AccountTypeCash       = "cash"       // 現金
+	AccountTypeChecking   = "checking"    // 普通預金
+	AccountTypeInvestment = "investment"  // 投資
+	AccountTypeCash       = "cash"        // 現金
+	AccountTypeCreditCard = "credit_card" // クレジットカード
 )
 
 // NewAccountType 新しいAccountTypeインスタンスを作成
@@ -45,6 +46,8 @@ func (a AccountType) GetDisplayName() string {
 		return "現金"
 	case AccountTypeInvestment:
 		return "投資"
+	case AccountTypeCreditCard:
+		return "クレジットカード"
 	default:
 		return a.value
 	}
@@ -60,6 +63,11 @@ func (a AccountType) Equals(other AccountType) bool {
 	return a.value == other.value
 }
 
+// IsCreditCard クレジットカード口座かどうかを判定
+func (a AccountType) IsCreditCard() bool {
+	return a.value == AccountTypeCreditCard
+}
+
 // validateAccountType 口座タイプのバリデーション
 func validateAccountType(accountType string) error {
 	// 空文字チェック
@@ -72,11 +80,12 @@ func validateAccountType(accountType string) error {
 		AccountTypeChecking:   true,
 		AccountTypeInvestment: true,
 		AccountTypeCash:       true,
+		AccountTypeCreditCard: true,
 	}
 
 	if !validTypes[accountType] {
 		return common.NewValidationError("account_type", accountType,
-			"invalid account type. Must be one of: checking, cash, investment")
+			"invalid account type. Must be one of: checking, cash, investment, credit_card")
 	}
 
 	return nil
@@ -87,6 +96,7 @@ var (
 	Checking   = &AccountType{value: AccountTypeChecking}
 	Investment = &AccountType{value: AccountTypeInvestment}
 	Cash       = &AccountType{value: AccountTypeCash}
+	CreditCard = &AccountType{value: AccountTypeCreditCard}
 )
 
 // GetAllAccountTypes 利用可能な全ての口座タイプを取得
@@ -95,5 +105,6 @@ func GetAllAccountTypes() []*AccountType {
 		Checking,
 		Cash,
 		Investment,
+		CreditCard,
 	}
 }
