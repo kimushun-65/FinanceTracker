@@ -249,6 +249,7 @@ func (c *Container) initServices() {
 	// 予算サービス
 	c.BudgetService = service.NewBudgetService(
 		c.BudgetRepo,
+		c.TransactionRepo,
 		c.Logger,
 	)
 }

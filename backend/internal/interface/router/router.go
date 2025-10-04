@@ -57,6 +57,7 @@ type Handlers struct {
 		Update(*gin.Context)
 		Delete(*gin.Context)
 		GetCurrent(*gin.Context)
+		GetSummary(*gin.Context)
 	}
 }
 
@@ -220,8 +221,9 @@ func (r *Router) registerCategoryRoutes(group *gin.RouterGroup) {
 func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
 	budgets := group.Group("/budgets")
 	if r.handlers != nil && r.handlers.BudgetHandler != nil {
-		// Note: /current must come before /:id to avoid route conflicts
+		// Note: /current and /summary must come before /:id to avoid route conflicts
 		budgets.GET("/current", r.handlers.BudgetHandler.GetCurrent)
+		budgets.GET("/summary", r.handlers.BudgetHandler.GetSummary)
 		budgets.GET("", r.handlers.BudgetHandler.List)
 		budgets.POST("", r.handlers.BudgetHandler.Create)
 		budgets.GET("/:id", r.handlers.BudgetHandler.Get)
@@ -229,6 +231,7 @@ func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
 		budgets.DELETE("/:id", r.handlers.BudgetHandler.Delete)
 	} else {
 		budgets.GET("/current", r.notImplemented)
+		budgets.GET("/summary", r.notImplemented)
 		budgets.GET("", r.notImplemented)
 		budgets.POST("", r.notImplemented)
 		budgets.GET("/:id", r.notImplemented)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 
 	"financetracker/internal/application/dto"
@@ -13,6 +14,7 @@ import (
 	budgetRepo "financetracker/internal/domain/budget/repository"
 	budgetValue "financetracker/internal/domain/budget/value"
 	"financetracker/internal/domain/common/value"
+	transactionRepo "financetracker/internal/domain/transaction/repository"
 	userValue "financetracker/internal/domain/user/value"
 	"financetracker/pkg/errors"
 	"financetracker/pkg/logger"
@@ -20,18 +22,21 @@ import (
 
 // BudgetService 予算管理サービス
 type BudgetService struct {
-	budgetRepo budgetRepo.BudgetRepository
-	logger     *logger.Logger
+	budgetRepo      budgetRepo.BudgetRepository
+	transactionRepo transactionRepo.TransactionRepository
+	logger          *logger.Logger
 }
 
 // NewBudgetService 新しいBudgetServiceを作成
 func NewBudgetService(
 	budgetRepo budgetRepo.BudgetRepository,
+	transactionRepo transactionRepo.TransactionRepository,
 	logger *logger.Logger,
 ) *BudgetService {
 	return &BudgetService{
-		budgetRepo: budgetRepo,
-		logger:     logger,
+		budgetRepo:      budgetRepo,
+		transactionRepo: transactionRepo,
+		logger:          logger,
 	}
 }
 
@@ -347,5 +352,95 @@ func (s *BudgetService) GetActiveBudgetsByPeriod(ctx context.Context, userID uui
 	return &dto.BudgetListResponse{
 		Budgets:    dto.BudgetsFromDomain(activeBudgets),
 		TotalCount: int64(len(activeBudgets)),
+	}, nil
+}
+
+// GetBudgetSummary 予算サマリーを取得
+func (s *BudgetService) GetBudgetSummary(ctx context.Context, userID uuid.UUID, period string) (*dto.BudgetSummaryResponse, error) {
+	// 期間の検証
+	if period != "monthly" && period != "yearly" {
+		return nil, errors.NewValidationError("期間はmonthlyまたはyearlyを指定してください")
+	}
+
+	// ユーザーIDを作成
+	domainUserID := userValue.NewUserID(userID)
+
+	// 現在時刻を取得
+	now := time.Now()
+	var startDate, endDate time.Time
+
+	// 期間に応じて開始日と終了日を設定
+	if period == "monthly" {
+		// 今月の開始日と終了日
+		startDate = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		endDate = startDate.AddDate(0, 1, 0).Add(-time.Second)
+	} else {
+		// 今年の開始日と終了日
+		startDate = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+		endDate = time.Date(now.Year(), 12, 31, 23, 59, 59, 0, now.Location())
+	}
+
+	// リポジトリからユーザーの全予算を取得
+	allBudgets, err := s.budgetRepo.FindByUserID(ctx, domainUserID.Value())
+	if err != nil {
+		s.logger.Error("予算取得エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return nil, errors.NewInternalError("予算の取得に失敗しました", err)
+	}
+
+	// 期間内のアクティブな予算をフィルタリング
+	var activeBudgets []budgetDomain.Budget
+	totalBudget := decimal.Zero
+	for _, budget := range allBudgets {
+		if !budget.IsActive() {
+			continue
+		}
+		// 予算の期間が対象期間と重なっているかチェック
+		if budget.IsValidForDate(startDate) || budget.IsValidForDate(endDate) {
+			activeBudgets = append(activeBudgets, budget)
+			totalBudget = totalBudget.Add(decimal.NewFromInt(budget.Amount().Amount()))
+		}
+	}
+
+	// 期間内のトランザクションを取得してカテゴリ別に集計
+	transactions, err := s.transactionRepo.FindByUserIDAndDateRange(ctx, userID, startDate, endDate)
+	if err != nil {
+		s.logger.Error("トランザクション取得エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return nil, errors.NewInternalError("トランザクションの取得に失敗しました", err)
+	}
+
+	// カテゴリごとの支出を計算（expenseのみ）
+	categoryExpenses := make(map[uuid.UUID]decimal.Decimal)
+	for _, tx := range transactions {
+		if tx.Type().IsExpense() {
+			categoryExpenses[tx.CategoryID()] = categoryExpenses[tx.CategoryID()].Add(decimal.NewFromInt(tx.Amount().Amount()))
+		}
+	}
+
+	// 予算のあるカテゴリの支出のみを合計
+	totalUsed := decimal.Zero
+	budgetCategoryIDs := make(map[uuid.UUID]bool)
+	for _, budget := range activeBudgets {
+		budgetCategoryIDs[budget.CategoryID()] = true
+	}
+	for categoryID, expense := range categoryExpenses {
+		if budgetCategoryIDs[categoryID] {
+			totalUsed = totalUsed.Add(expense)
+		}
+	}
+
+	// 残額を計算
+	totalRemaining := totalBudget.Sub(totalUsed)
+
+	return &dto.BudgetSummaryResponse{
+		Period:         period,
+		StartDate:      startDate,
+		EndDate:        endDate,
+		TotalBudget:    totalBudget,
+		TotalUsed:      totalUsed,
+		TotalRemaining: totalRemaining,
 	}, nil
 }

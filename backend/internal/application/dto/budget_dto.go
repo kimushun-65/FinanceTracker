@@ -55,6 +55,16 @@ type BudgetSearchParams struct {
 	OrderBy    string     `form:"order_by,default=start_date desc"`
 }
 
+// BudgetSummaryResponse 予算サマリーレスポンス
+type BudgetSummaryResponse struct {
+	Period         string          `json:"period"`
+	StartDate      time.Time       `json:"start_date"`
+	EndDate        time.Time       `json:"end_date"`
+	TotalBudget    decimal.Decimal `json:"total_budget"`
+	TotalUsed      decimal.Decimal `json:"total_used"`
+	TotalRemaining decimal.Decimal `json:"total_remaining"`
+}
+
 // BudgetFromDomain ドメインエンティティからDTOへの変換
 func BudgetFromDomain(budget *budgetDomain.Budget) *BudgetResponse {
 	if budget == nil {
