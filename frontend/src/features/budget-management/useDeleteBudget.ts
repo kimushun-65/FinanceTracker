@@ -8,7 +8,8 @@ export const useDeleteBudget = () => {
     mutationFn: budgetApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: budgetKeys.summary() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.current() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
     },
   });
 };

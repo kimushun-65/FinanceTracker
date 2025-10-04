@@ -38,7 +38,8 @@ export const useUpdateBudget = () => {
     onSuccess: (data, { id }) => {
       queryClient.setQueryData(budgetKeys.detail(id), data);
       queryClient.invalidateQueries({ queryKey: budgetKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: budgetKeys.summary() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.current() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
     },
   });
 };

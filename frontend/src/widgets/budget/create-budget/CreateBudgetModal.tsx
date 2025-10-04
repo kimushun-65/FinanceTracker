@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Modal,
   ModalTrigger,
@@ -15,7 +15,11 @@ import {
   useModalContext,
 } from '@/shared/ui';
 import { useCreateBudget } from '@/features/budget-management';
-import type { CreateBudgetPayload, PeriodType } from '@/entities/budget';
+import type {
+  CreateBudgetPayload,
+  PeriodType,
+  BudgetWithUsage,
+} from '@/entities/budget';
 import { PERIOD_TYPES } from '@/entities/budget';
 import {
   type CategoryWithMaster,
@@ -26,14 +30,17 @@ interface CreateBudgetModalProps {
   trigger?: React.ReactNode;
   onSuccess?: () => void;
   categories: CategoryWithMaster[];
+  existingBudgets?: BudgetWithUsage[];
 }
 
 function CreateBudgetForm({
   onSuccess,
   categories,
+  existingBudgets = [],
 }: {
   onSuccess?: () => void;
   categories: CategoryWithMaster[];
+  existingBudgets?: BudgetWithUsage[];
 }) {
   const { closeModal } = useModalContext();
   const createBudgetMutation = useCreateBudget();
@@ -105,10 +112,31 @@ function CreateBudgetForm({
     }),
   );
 
-  const categoryOptions = categoriesToSelectOptions(categories);
+  // 既に予算が設定されているカテゴリIDのセット
+  const existingCategoryIds = useMemo(
+    () => new Set(existingBudgets.map((budget) => budget.categoryId)),
+    [existingBudgets],
+  );
+
+  // 既に予算が設定されているカテゴリを除外
+  const availableCategories = useMemo(
+    () => categories.filter((cat) => !existingCategoryIds.has(cat.id)),
+    [categories, existingCategoryIds],
+  );
+
+  const categoryOptions = categoriesToSelectOptions(availableCategories);
 
   return (
     <form onSubmit={handleSubmit} className='space-y-4'>
+      {availableCategories.length === 0 && (
+        <div className='rounded-lg bg-yellow-50 p-4'>
+          <p className='text-sm text-yellow-800'>
+            All categories already have budgets for this month. Please delete an
+            existing budget to create a new one.
+          </p>
+        </div>
+      )}
+
       {/* Category */}
       <div>
         <Label htmlFor='category'>Category</Label>
@@ -119,6 +147,7 @@ function CreateBudgetForm({
           }
           options={categoryOptions}
           placeholder='Select Category'
+          disabled={availableCategories.length === 0}
         />
         {errors.categoryId && (
           <p className='mt-1 text-sm text-red-600'>{errors.categoryId}</p>
@@ -199,7 +228,12 @@ function CreateBudgetForm({
         >
           Cancel
         </Button>
-        <Button type='submit' disabled={createBudgetMutation.isPending}>
+        <Button
+          type='submit'
+          disabled={
+            createBudgetMutation.isPending || availableCategories.length === 0
+          }
+        >
           {createBudgetMutation.isPending ? 'Creating...' : 'Create Budget'}
         </Button>
       </ModalFooter>
@@ -211,6 +245,7 @@ export function CreateBudgetModal({
   trigger,
   onSuccess,
   categories,
+  existingBudgets = [],
 }: CreateBudgetModalProps) {
   return (
     <Modal>
@@ -220,7 +255,11 @@ export function CreateBudgetModal({
       <ModalContent>
         <ModalHeader>Create Budget</ModalHeader>
         <ModalBody>
-          <CreateBudgetForm onSuccess={onSuccess} categories={categories} />
+          <CreateBudgetForm
+            onSuccess={onSuccess}
+            categories={categories}
+            existingBudgets={existingBudgets}
+          />
         </ModalBody>
       </ModalContent>
     </Modal>

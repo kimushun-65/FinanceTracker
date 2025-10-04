@@ -13,8 +13,9 @@ import {
 import { BudgetProgressBar } from '@/entities/budget';
 import type { CategoryWithMaster } from '@/entities/category';
 import type { BudgetWithUsage } from '@/entities/budget';
-import { useUpdateBudget, useDeleteBudget } from '@/features';
+import { useUpdateBudget } from '@/features';
 import { formatMoney, type Currency } from '@/shared/value-objects/money';
+import { DeleteBudgetModal } from '../../delete-budget';
 
 interface BudgetListTableProps {
   budgets: BudgetWithUsage[];
@@ -29,8 +30,12 @@ export function BudgetListTable({
 }: BudgetListTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState<number>(0);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingBudget, setDeletingBudget] = useState<{
+    id: string;
+    categoryName: string;
+  } | null>(null);
   const updateBudgetMutation = useUpdateBudget();
-  const deleteBudgetMutation = useDeleteBudget();
 
   const handleEdit = (budget: BudgetWithUsage) => {
     setEditingId(budget.id);
@@ -54,32 +59,14 @@ export function BudgetListTable({
     setEditAmount(0);
   };
 
-  const handleDelete = async (budgetId: string) => {
-    if (!confirm('Are you sure you want to delete this budget?')) {
-      return;
-    }
-    try {
-      await deleteBudgetMutation.mutateAsync(budgetId);
-    } catch (error) {
-      console.error('Failed to delete budget:', error);
-    }
+  const handleDelete = (budgetId: string, categoryName: string) => {
+    setDeletingBudget({ id: budgetId, categoryName });
+    setDeleteModalOpen(true);
   };
 
-  const handleQuickAdjust = async (
-    budget: BudgetWithUsage,
-    adjustment: number,
-  ) => {
-    const newAmount = budget.amount.amount + adjustment;
-    if (newAmount < 0) return;
-
-    try {
-      await updateBudgetMutation.mutateAsync({
-        id: budget.id,
-        amount: { amount: newAmount, currency: budget.amount.currency },
-      });
-    } catch (error) {
-      console.error('Failed to adjust budget:', error);
-    }
+  const handleCloseDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeletingBudget(null);
   };
 
   const getCategoryInfo = (categoryId: string) => {
@@ -204,11 +191,12 @@ export function BudgetListTable({
                               ✏️
                             </Button>
                             <Button
-                              onClick={() => handleDelete(budget.id)}
+                              onClick={() =>
+                                handleDelete(budget.id, categoryInfo.name)
+                              }
                               size='sm'
                               variant='outline'
                               className='size-8 p-0 hover:border-red-300 hover:bg-red-50'
-                              disabled={deleteBudgetMutation.isPending}
                             >
                               🗑️
                             </Button>
@@ -223,6 +211,15 @@ export function BudgetListTable({
           </TableBody>
         </Table>
       </div>
+
+      {deletingBudget && (
+        <DeleteBudgetModal
+          isOpen={deleteModalOpen}
+          onClose={handleCloseDeleteModal}
+          budgetId={deletingBudget.id}
+          categoryName={deletingBudget.categoryName}
+        />
+      )}
     </div>
   );
 }

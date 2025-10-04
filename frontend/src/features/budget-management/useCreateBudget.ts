@@ -12,7 +12,8 @@ export const useCreateBudget = () => {
     mutationFn: budgetApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: budgetKeys.summary() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.current() });
+      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
     },
   });
 };

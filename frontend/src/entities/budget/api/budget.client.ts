@@ -93,13 +93,68 @@ export const budgetApi = {
   },
 
   create: async (payload: CreateBudgetPayload): Promise<Budget> => {
-    const response = await apiClient.post<Budget>(endpoints.create, payload);
-    return response.data;
+    const backendPayload = {
+      category_id: payload.categoryId,
+      amount: payload.amount.amount,
+      period: payload.periodType,
+      start_date: payload.startDate,
+      end_date: payload.endDate,
+    };
+    const response = await apiClient.post<BackendBudgetResponse>(
+      endpoints.create,
+      backendPayload,
+    );
+    return {
+      id: response.data.id,
+      userId: response.data.user_id,
+      categoryId: response.data.category_id,
+      amount: {
+        amount: response.data.amount,
+        currency: 'JPY',
+      },
+      periodType: response.data.period as PeriodType,
+      startDate: response.data.start_date,
+      endDate: response.data.end_date,
+      isActive: response.data.is_active,
+      createdAt: response.data.created_at,
+      updatedAt: response.data.updated_at,
+    };
   },
 
   update: async (id: string, payload: UpdateBudgetPayload): Promise<Budget> => {
-    const response = await apiClient.put<Budget>(endpoints.update(id), payload);
-    return response.data;
+    const backendPayload: any = {};
+    if (payload.amount !== undefined) {
+      backendPayload.amount = payload.amount.amount;
+    }
+    if (payload.startDate !== undefined) {
+      backendPayload.start_date = payload.startDate;
+    }
+    if (payload.endDate !== undefined) {
+      backendPayload.end_date = payload.endDate;
+    }
+    if (payload.isActive !== undefined) {
+      backendPayload.is_active = payload.isActive;
+    }
+
+    const response = await apiClient.put<BackendBudgetResponse>(
+      endpoints.update(id),
+      backendPayload,
+    );
+    return {
+      id: response.data.id,
+      userId: response.data.user_id,
+      categoryId: response.data.category_id,
+      amount: {
+        amount: response.data.amount,
+        currency: 'JPY',
+      },
+      periodType: response.data.period as PeriodType,
+      startDate: response.data.start_date,
+      endDate: response.data.end_date,
+      isActive: response.data.is_active,
+      createdAt: response.data.created_at,
+      updatedAt: response.data.updated_at,
+    };
   },
 
   delete: async (id: string): Promise<void> => {
