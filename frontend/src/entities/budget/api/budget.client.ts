@@ -30,6 +30,15 @@ type BackendBudgetListResponse = {
   total_count: number;
 };
 
+type BackendBudgetSummaryResponse = {
+  period: 'monthly' | 'yearly';
+  start_date: string;
+  end_date: string;
+  total_budget: number;
+  total_used: number;
+  total_remaining: number;
+};
+
 // Transform backend response to frontend type
 const transformBudgetResponse = (
   backendBudget: BackendBudgetResponse,
@@ -97,8 +106,32 @@ export const budgetApi = {
     await apiClient.delete(endpoints.delete(id));
   },
 
-  getSummary: async (): Promise<BudgetSummary> => {
-    const response = await apiClient.get<BudgetSummary>(endpoints.summary);
-    return response.data;
+  getCurrent: async (): Promise<BudgetListResponse> => {
+    const response = await apiClient.get<BackendBudgetListResponse>(
+      endpoints.current,
+    );
+    const budgets = response.data.budgets.map(transformBudgetResponse);
+    return { budgets, total: response.data.total_count };
+  },
+
+  getSummary: async (
+    period: 'monthly' | 'yearly' = 'monthly',
+  ): Promise<BudgetSummary> => {
+    const params = new URLSearchParams();
+    params.append('period', period);
+
+    const url = `${endpoints.summary}?${params.toString()}`;
+    const response = await apiClient.get<BackendBudgetSummaryResponse>(url);
+
+    return {
+      totalBudget: { amount: response.data.total_budget, currency: 'JPY' },
+      totalUsed: { amount: response.data.total_used, currency: 'JPY' },
+      totalRemaining: {
+        amount: response.data.total_remaining,
+        currency: 'JPY',
+      },
+      overBudgetCount: 0, // TODO: バックエンドから取得
+      activeCount: 0, // TODO: バックエンドから取得
+    };
   },
 };

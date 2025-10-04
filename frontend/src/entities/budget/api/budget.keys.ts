@@ -7,5 +7,7 @@ export const budgetKeys = {
     [...budgetKeys.lists(), { period, categoryId }] as const,
   details: () => [...budgetKeys.all, 'detail'] as const,
   detail: (id: string) => [...budgetKeys.details(), id] as const,
-  summary: () => [...budgetKeys.all, 'summary'] as const,
+  current: () => [...budgetKeys.all, 'current'] as const,
+  summary: (period?: 'monthly' | 'yearly') =>
+    [...budgetKeys.all, 'summary', period || 'monthly'] as const,
 } as const;

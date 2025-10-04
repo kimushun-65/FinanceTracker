@@ -92,9 +92,9 @@ export function BudgetListTable({
 
   return (
     <div className='space-y-4'>
-      <div className='overflow-auto rounded-lg border bg-white'>
+      <div className='max-h-96 overflow-auto rounded-lg border bg-white'>
         <Table>
-          <TableHeader>
+          <TableHeader className='sticky top-0 z-10 bg-white'>
             <TableRow>
               <TableHead>Category</TableHead>
               <TableHead>Budget</TableHead>
@@ -202,24 +202,6 @@ export function BudgetListTable({
                               className='size-8 p-0'
                             >
                               ✏️
-                            </Button>
-                            <Button
-                              onClick={() => handleQuickAdjust(budget, -1000)}
-                              size='sm'
-                              variant='outline'
-                              className='h-8 px-2 text-xs'
-                              disabled={updateBudgetMutation.isPending}
-                            >
-                              -1k
-                            </Button>
-                            <Button
-                              onClick={() => handleQuickAdjust(budget, 1000)}
-                              size='sm'
-                              variant='outline'
-                              className='h-8 px-2 text-xs'
-                              disabled={updateBudgetMutation.isPending}
-                            >
-                              +1k
                             </Button>
                             <Button
                               onClick={() => handleDelete(budget.id)}

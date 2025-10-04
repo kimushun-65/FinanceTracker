@@ -420,16 +420,10 @@ func (s *BudgetService) GetBudgetSummary(ctx context.Context, userID uuid.UUID, 
 		}
 	}
 
-	// 予算のあるカテゴリの支出のみを合計
+	// 全ての支出を合計（予算のないカテゴリも含む）
 	totalUsed := decimal.Zero
-	budgetCategoryIDs := make(map[uuid.UUID]bool)
-	for _, budget := range activeBudgets {
-		budgetCategoryIDs[budget.CategoryID()] = true
-	}
-	for categoryID, expense := range categoryExpenses {
-		if budgetCategoryIDs[categoryID] {
-			totalUsed = totalUsed.Add(expense)
-		}
+	for _, expense := range categoryExpenses {
+		totalUsed = totalUsed.Add(expense)
 	}
 
 	// 残額を計算
