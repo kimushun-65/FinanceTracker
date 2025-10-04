@@ -13,18 +13,12 @@ export const useUpdateAccount = () => {
     mutationFn: ({ id, ...payload }: { id: string } & UpdateAccountPayload) =>
       accountApi.update(id, payload),
 
-    onMutate: async ({ id, ...newData }) => {
+    onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: accountKeys.detail(id) });
 
       const previousAccount = queryClient.getQueryData<Account>(
         accountKeys.detail(id),
       );
-
-      queryClient.setQueryData<Account>(accountKeys.detail(id), (old) => ({
-        ...old!,
-        ...newData,
-        updatedAt: new Date().toISOString(),
-      }));
 
       return { previousAccount };
     },

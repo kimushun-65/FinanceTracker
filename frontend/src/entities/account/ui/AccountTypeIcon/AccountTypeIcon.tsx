@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Wallet, TrendingUp, Banknote } from 'lucide-react';
+import { Wallet, TrendingUp, Banknote, CreditCard } from 'lucide-react';
 import type { AccountType } from '../../model';
 
 export type AccountTypeIconProps = {
@@ -22,6 +22,7 @@ export const AccountTypeIcon: FC<AccountTypeIconProps> = ({
     checking: <Banknote {...iconProps} />,
     investment: <TrendingUp {...iconProps} />,
     cash: <Wallet {...iconProps} />,
+    credit_card: <CreditCard {...iconProps} />,
   };
 
   return icons[type] || null;

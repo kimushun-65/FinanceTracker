@@ -11,7 +11,6 @@ export const TotalAssetsWidget = ({
   totalAssets,
   accountCount,
 }: TotalAssetsWidgetProps) => {
-
   return (
     <Card className='p-6'>
       <div className='space-y-4'>

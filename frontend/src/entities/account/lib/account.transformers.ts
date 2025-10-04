@@ -1,12 +1,19 @@
-import type { Account, AccountWithDisplayName, BackendAccountResponse, BackendAccountType, AccountType } from '../model';
+import type {
+  Account,
+  AccountWithDisplayName,
+  BackendAccountResponse,
+  BackendAccountType,
+  AccountType,
+} from '../model';
 import { ACCOUNT_TYPE_LABELS } from '../model';
-import type { Money } from '@/shared/value-objects';
+import type { Money, Currency } from '@/shared/value-objects';
 
 // Backend account type to frontend type mapping (direct mapping since they're the same)
 const BACKEND_TO_FRONTEND_TYPE_MAP: Record<BackendAccountType, AccountType> = {
-  'checking': 'checking',
-  'investment': 'investment',
-  'cash': 'cash',
+  checking: 'checking',
+  investment: 'investment',
+  cash: 'cash',
+  credit_card: 'credit_card',
 };
 
 // Transform backend API response to frontend Account type
@@ -14,10 +21,10 @@ export const transformBackendAccountToFrontend = (
   backendAccount: BackendAccountResponse,
 ): Account => {
   const balanceAmount = parseFloat(backendAccount.balance);
-  
+
   const currentBalance: Money = {
     amount: balanceAmount,
-    currency: backendAccount.currency,
+    currency: backendAccount.currency as Currency,
   };
 
   return {
@@ -27,7 +34,12 @@ export const transformBackendAccountToFrontend = (
     accountType: BACKEND_TO_FRONTEND_TYPE_MAP[backendAccount.account_type],
     balance: {
       current: currentBalance,
-      status: balanceAmount > 0 ? 'normal' : balanceAmount === 0 ? 'zero' : 'negative',
+      status:
+        balanceAmount > 0
+          ? 'normal'
+          : balanceAmount === 0
+            ? 'zero'
+            : 'negative',
     },
     createdAt: backendAccount.created_at,
     updatedAt: backendAccount.updated_at,
@@ -50,7 +62,7 @@ export const transformAccountListToDisplayList = (
 };
 
 export const sortAccountsByType = (accounts: Account[]): Account[] => {
-  const typeOrder = { checking: 0, investment: 1, cash: 2 };
+  const typeOrder = { checking: 0, investment: 1, cash: 2, credit_card: 3 };
 
   return [...accounts].sort((a, b) => {
     const orderDiff = typeOrder[a.accountType] - typeOrder[b.accountType];

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { AppLayout } from '@/widgets/layout';
 import { AccountContainer } from '@/page-components/account/ui/accountContainer';

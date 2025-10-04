@@ -56,6 +56,7 @@ export const AccountListTable = ({
                 <AccountBalanceDisplay
                   balance={account.balance.current}
                   status={account.balance.status}
+                  accountType={account.accountType}
                 />
               </TableCell>
               <TableCell className='text-right'>
