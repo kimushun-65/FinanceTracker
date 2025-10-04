@@ -389,8 +389,7 @@ func (s *BudgetService) GetBudgetSummary(ctx context.Context, userID uuid.UUID, 
 		return nil, errors.NewInternalError("予算の取得に失敗しました", err)
 	}
 
-	// 期間内のアクティブな予算をフィルタリング
-	var activeBudgets []budgetDomain.Budget
+	// 期間内のアクティブな予算の合計を計算
 	totalBudget := decimal.Zero
 	for _, budget := range allBudgets {
 		if !budget.IsActive() {
@@ -398,7 +397,6 @@ func (s *BudgetService) GetBudgetSummary(ctx context.Context, userID uuid.UUID, 
 		}
 		// 予算の期間が対象期間と重なっているかチェック
 		if budget.IsValidForDate(startDate) || budget.IsValidForDate(endDate) {
-			activeBudgets = append(activeBudgets, budget)
 			totalBudget = totalBudget.Add(decimal.NewFromInt(budget.Amount().Amount()))
 		}
 	}
