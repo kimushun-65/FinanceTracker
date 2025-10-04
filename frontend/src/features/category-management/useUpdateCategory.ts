@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   categoryApi,
   categoryKeys,
-  type Category,
+  type CategoryWithMaster,
   type UpdateCategoryPayload,
 } from '@/entities/category';
 
@@ -16,15 +16,18 @@ export const useUpdateCategory = () => {
     onMutate: async ({ id, ...newData }) => {
       await queryClient.cancelQueries({ queryKey: categoryKeys.detail(id) });
 
-      const previousCategory = queryClient.getQueryData<Category>(
+      const previousCategory = queryClient.getQueryData<CategoryWithMaster>(
         categoryKeys.detail(id),
       );
 
-      queryClient.setQueryData<Category>(categoryKeys.detail(id), (old) => ({
-        ...old!,
-        ...newData,
-        updatedAt: new Date().toISOString(),
-      }));
+      queryClient.setQueryData<CategoryWithMaster>(
+        categoryKeys.detail(id),
+        (old) => ({
+          ...old!,
+          ...newData,
+          updatedAt: new Date().toISOString(),
+        }),
+      );
 
       return { previousCategory };
     },

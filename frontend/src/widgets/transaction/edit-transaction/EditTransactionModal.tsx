@@ -104,7 +104,9 @@ export function EditTransactionModal({
   };
 
   const typeOptions = transactionTypeOptions;
-  const categoryOptions = categoriesToSelectOptions(categories);
+  // Only show active categories
+  const activeCategories = categories.filter((cat) => cat.isActive);
+  const categoryOptions = categoriesToSelectOptions(activeCategories);
   const accountOptions = accountsToSelectOptions(accounts);
 
   if (!isOpen || !transaction) return null;

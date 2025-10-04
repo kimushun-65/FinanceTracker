@@ -118,9 +118,12 @@ function CreateBudgetForm({
     [existingBudgets],
   );
 
-  // 既に予算が設定されているカテゴリを除外
+  // 既に予算が設定されているカテゴリを除外 & アクティブなカテゴリのみ表示
   const availableCategories = useMemo(
-    () => categories.filter((cat) => !existingCategoryIds.has(cat.id)),
+    () =>
+      categories.filter(
+        (cat) => cat.isActive && !existingCategoryIds.has(cat.id),
+      ),
     [categories, existingCategoryIds],
   );
 
