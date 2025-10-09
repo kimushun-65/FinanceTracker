@@ -135,3 +135,26 @@ type DailyTransactionData struct {
 	NetAmount    decimal.Decimal `json:"net_amount"`
 	Count        int             `json:"count"`
 }
+
+// CategorySummaryResponse カテゴリー別サマリーレスポンス
+type CategorySummaryResponse struct {
+	Period      PeriodInfo              `json:"period"`
+	TotalAmount decimal.Decimal         `json:"total_amount"`
+	ByCategory  []CategorySummaryDetail `json:"by_category"`
+}
+
+// PeriodInfo 期間情報
+type PeriodInfo struct {
+	From time.Time `json:"from"`
+	To   time.Time `json:"to"`
+}
+
+// CategorySummaryDetail カテゴリー別詳細
+type CategorySummaryDetail struct {
+	CategoryID       uuid.UUID       `json:"category_id"`
+	CategoryName     string          `json:"category_name"`
+	CategoryIcon     string          `json:"category_icon"`
+	TotalAmount      decimal.Decimal `json:"total_amount"`
+	TransactionCount int             `json:"transaction_count"`
+	Percentage       decimal.Decimal `json:"percentage"`
+}

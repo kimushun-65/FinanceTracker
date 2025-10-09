@@ -134,3 +134,20 @@ func (a AssetSnapshot) CalculateChangeFrom(previous AssetSnapshot) (*commonValue
 
 	return a.totalAssets.Subtract(previous.totalAssets)
 }
+
+// ReconstructAssetSnapshot データベースから取得したデータからAssetSnapshotを再構築
+func ReconstructAssetSnapshot(
+	baseEntity common.BaseEntity,
+	userID uuid.UUID,
+	snapshotDate time.Time,
+	totalAssets commonValue.Money,
+	accountBreakdown value.AccountBreakdown,
+) AssetSnapshot {
+	return AssetSnapshot{
+		BaseEntity:       baseEntity,
+		userID:           userID,
+		snapshotDate:     snapshotDate,
+		totalAssets:      totalAssets,
+		accountBreakdown: accountBreakdown,
+	}
+}

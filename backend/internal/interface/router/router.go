@@ -41,6 +41,7 @@ type Handlers struct {
 		Update(*gin.Context)
 		Delete(*gin.Context)
 		MonthlySummary(*gin.Context)
+		GetCategorySummary(*gin.Context)
 	}
 	CategoryHandler interface {
 		List(*gin.Context)
@@ -58,6 +59,13 @@ type Handlers struct {
 		Delete(*gin.Context)
 		GetCurrent(*gin.Context)
 		GetSummary(*gin.Context)
+	}
+	AssetHandler interface {
+		GetAssetSnapshots(*gin.Context)
+		GetLatestAssetSnapshot(*gin.Context)
+		CalculateCurrentAssetSnapshot(*gin.Context)
+		CreateAssetSnapshot(*gin.Context)
+		HandleNotImplemented(*gin.Context)
 	}
 }
 
@@ -187,6 +195,7 @@ func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
 		transactions.PUT("/:id", r.handlers.TransactionHandler.Update)
 		transactions.DELETE("/:id", r.handlers.TransactionHandler.Delete)
 		transactions.GET("/summary/monthly", r.handlers.TransactionHandler.MonthlySummary)
+		transactions.GET("/summary/by-category", r.handlers.TransactionHandler.GetCategorySummary)
 	} else {
 		transactions.GET("", r.notImplemented)
 		transactions.POST("", r.notImplemented)
@@ -194,6 +203,7 @@ func (r *Router) registerTransactionRoutes(group *gin.RouterGroup) {
 		transactions.PUT("/:id", r.notImplemented)
 		transactions.DELETE("/:id", r.notImplemented)
 		transactions.GET("/summary/monthly", r.notImplemented)
+		transactions.GET("/summary/by-category", r.notImplemented)
 	}
 }
 
@@ -248,7 +258,20 @@ func (r *Router) registerBudgetRoutes(group *gin.RouterGroup) {
 // レポートルート（TODO: 専用ファイルに分離）
 func (r *Router) registerReportRoutes(group *gin.RouterGroup) {
 	reports := group.Group("/reports")
-	reports.GET("/assets/snapshots", r.notImplemented)        // TODO: reportHandler.AssetSnapshots
+
+	// 資産レポートルート
+	if r.handlers != nil && r.handlers.AssetHandler != nil {
+		reports.GET("/assets/snapshots", r.handlers.AssetHandler.GetAssetSnapshots)
+		reports.GET("/assets/snapshots/latest", r.handlers.AssetHandler.GetLatestAssetSnapshot)
+		reports.GET("/assets/snapshots/current", r.handlers.AssetHandler.CalculateCurrentAssetSnapshot)
+		reports.POST("/assets/snapshots", r.handlers.AssetHandler.CreateAssetSnapshot)
+	} else {
+		reports.GET("/assets/snapshots", r.notImplemented)
+		reports.GET("/assets/snapshots/latest", r.notImplemented)
+		reports.GET("/assets/snapshots/current", r.notImplemented)
+		reports.POST("/assets/snapshots", r.notImplemented)
+	}
+
 	reports.GET("/assets/forecasts/latest", r.notImplemented) // TODO: reportHandler.LatestForecast
 
 	// サマリールート

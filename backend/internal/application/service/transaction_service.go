@@ -24,6 +24,7 @@ import (
 type TransactionService struct {
 	transactionRepo transactionRepo.TransactionRepository
 	accountService  *AccountService
+	categoryService *CategoryService
 	logger          *logger.Logger
 }
 
@@ -31,11 +32,13 @@ type TransactionService struct {
 func NewTransactionService(
 	transactionRepo transactionRepo.TransactionRepository,
 	accountService *AccountService,
+	categoryService *CategoryService,
 	logger *logger.Logger,
 ) *TransactionService {
 	return &TransactionService{
 		transactionRepo: transactionRepo,
 		accountService:  accountService,
+		categoryService: categoryService,
 		logger:          logger,
 	}
 }
@@ -547,5 +550,103 @@ func (s *TransactionService) GetMonthlyTransactionSummary(ctx context.Context, u
 		TotalExpense: totalExpense,
 		NetAmount:    totalIncome.Sub(totalExpense),
 		DailyData:    dailyDataSlice,
+	}, nil
+}
+
+// GetCategorySummary カテゴリー別サマリーを取得
+func (s *TransactionService) GetCategorySummary(
+	ctx context.Context,
+	userID uuid.UUID,
+	startDate, endDate time.Time,
+	transactionType string, // "expense", "income", "all"
+) (*dto.CategorySummaryResponse, error) {
+	// ユーザーIDを作成
+	domainUserID := userValue.NewUserID(userID)
+
+	// リポジトリからトランザクションを取得
+	transactions, err := s.transactionRepo.FindByUserIDAndDateRange(
+		ctx, domainUserID.Value(), startDate, endDate,
+	)
+	if err != nil {
+		s.logger.Error("カテゴリー別サマリー取得エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()),
+			zap.Time("startDate", startDate),
+			zap.Time("endDate", endDate))
+		return nil, errors.NewInternalError("カテゴリー別サマリーの取得に失敗しました", err)
+	}
+
+	// タイプでフィルタ
+	var filteredTransactions []transactionDomain.Transaction
+	if transactionType != "all" {
+		for _, tx := range transactions {
+			if transactionType == "expense" && !tx.Type().IsIncome() {
+				filteredTransactions = append(filteredTransactions, tx)
+			} else if transactionType == "income" && tx.Type().IsIncome() {
+				filteredTransactions = append(filteredTransactions, tx)
+			}
+		}
+	} else {
+		filteredTransactions = transactions
+	}
+
+	// カテゴリー別に集計
+	categoryMap := make(map[uuid.UUID]*dto.CategorySummaryDetail)
+	totalAmount := decimal.Zero
+
+	for _, tx := range filteredTransactions {
+		categoryID := tx.CategoryID()
+		amount := decimal.NewFromInt(tx.Amount().Amount())
+
+		if _, exists := categoryMap[categoryID]; !exists {
+			// カテゴリー情報を取得
+			category, err := s.categoryService.GetCategory(ctx, userID, categoryID)
+			if err != nil {
+				s.logger.Warn("カテゴリー情報取得エラー（スキップします）",
+					zap.Error(err),
+					zap.String("categoryID", categoryID.String()))
+				continue
+			}
+
+			categoryMap[categoryID] = &dto.CategorySummaryDetail{
+				CategoryID:       categoryID,
+				CategoryName:     category.Name,
+				CategoryIcon:     category.Icon,
+				TotalAmount:      decimal.Zero,
+				TransactionCount: 0,
+				Percentage:       decimal.Zero,
+			}
+		}
+
+		categoryMap[categoryID].TotalAmount = categoryMap[categoryID].TotalAmount.Add(amount)
+		categoryMap[categoryID].TransactionCount++
+		totalAmount = totalAmount.Add(amount)
+	}
+
+	// パーセンテージを計算
+	for _, detail := range categoryMap {
+		if !totalAmount.IsZero() {
+			detail.Percentage = detail.TotalAmount.Div(totalAmount).Mul(decimal.NewFromInt(100))
+		}
+	}
+
+	// 配列に変換（金額の大きい順にソート）
+	byCategory := make([]dto.CategorySummaryDetail, 0, len(categoryMap))
+	for _, detail := range categoryMap {
+		byCategory = append(byCategory, *detail)
+	}
+
+	// 金額の大きい順にソート
+	sort.Slice(byCategory, func(i, j int) bool {
+		return byCategory[i].TotalAmount.GreaterThan(byCategory[j].TotalAmount)
+	})
+
+	return &dto.CategorySummaryResponse{
+		Period: dto.PeriodInfo{
+			From: startDate,
+			To:   endDate,
+		},
+		TotalAmount: totalAmount,
+		ByCategory:  byCategory,
 	}, nil
 }
