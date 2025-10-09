@@ -529,6 +529,36 @@
               ]
             }
           }
+        },
+        {
+          "name": "Get Category Summary",
+          "description": "指定された期間のカテゴリー別トランザクションサマリーを取得します",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{api_base_url}}/transactions/summary/by-category?from=2024-01-01&to=2024-12-31&type=expense",
+              "host": ["{{api_base_url}}"],
+              "path": ["transactions", "summary", "by-category"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2024-01-01",
+                  "description": "開始日 (YYYY-MM-DD)"
+                },
+                {
+                  "key": "to",
+                  "value": "2024-12-31",
+                  "description": "終了日 (YYYY-MM-DD)"
+                },
+                {
+                  "key": "type",
+                  "value": "expense",
+                  "description": "トランザクションタイプ (income/expense/all)"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -782,6 +812,89 @@
               ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Asset Snapshots",
+          "item": [
+            {
+              "name": "Get Asset Snapshots",
+              "description": "期間を指定して資産スナップショットを取得します",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_base_url}}/reports/assets/snapshots?from=2024-01-01&to=2024-12-31",
+                  "host": ["{{api_base_url}}"],
+                  "path": ["reports", "assets", "snapshots"],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "2024-01-01",
+                      "description": "開始日 (YYYY-MM-DD)"
+                    },
+                    {
+                      "key": "to",
+                      "value": "2024-12-31",
+                      "description": "終了日 (YYYY-MM-DD)"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Latest Asset Snapshot",
+              "description": "最新の資産スナップショットを取得します（存在しない場合は現在の資産状況を計算）",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_base_url}}/reports/assets/snapshots/latest",
+                  "host": ["{{api_base_url}}"],
+                  "path": ["reports", "assets", "snapshots", "latest"]
+                }
+              }
+            },
+            {
+              "name": "Calculate Current Asset Snapshot",
+              "description": "トランザクション履歴から現在の資産状況を計算します",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{api_base_url}}/reports/assets/snapshots/current",
+                  "host": ["{{api_base_url}}"],
+                  "path": ["reports", "assets", "snapshots", "current"]
+                }
+              }
+            },
+            {
+              "name": "Create Asset Snapshot",
+              "description": "新しい資産スナップショットを作成します（現在は未実装）",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"snapshot_date\": \"2024-12-31\",\n  \"accounts\": [\n    {\n      \"account_id\": \"account-uuid-here\",\n      \"balance\": 500000\n    }\n  ]\n}"
+                },
+                "url": {
+                  "raw": "{{api_base_url}}/reports/assets/snapshots",
+                  "host": ["{{api_base_url}}"],
+                  "path": ["reports", "assets", "snapshots"]
+                }
+              }
+            }
+          ]
         }
       ]
     },

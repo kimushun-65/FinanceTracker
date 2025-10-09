@@ -161,3 +161,24 @@ func (r *UserRepository) toDomain(model *UserModel) (*entity.User, error) {
 		model.EmailVerified,
 	), nil
 }
+
+// FindAll 全ユーザーを取得
+func (r *UserRepository) FindAll(ctx context.Context) ([]*entity.User, error) {
+	var models []UserModel
+	result := r.db.WithContext(ctx).Find(&models)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	users := make([]*entity.User, 0, len(models))
+	for _, model := range models {
+		user, err := r.toDomain(&model)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}

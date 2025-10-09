@@ -251,3 +251,107 @@ func (s *AssetService) CreateAssetSnapshot(
 
 	return dto.AssetSnapshotFromDomain(&snapshot), nil
 }
+
+// CreateDailySnapshot 日次資産スナップショットを作成
+// 現在の資産状況を計算してデータベースに保存
+func (s *AssetService) CreateDailySnapshot(ctx context.Context, userID uuid.UUID) error {
+	now := time.Now()
+
+	// 今日の日付で既にスナップショットが存在するかチェック
+	exists, err := s.assetSnapshotRepo.ExistsByUserIDAndDate(ctx, userID, now)
+	if err != nil {
+		s.logger.Error("スナップショット存在確認エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()),
+			zap.Time("date", now))
+		return err
+	}
+
+	if exists {
+		s.logger.Info("今日のスナップショットは既に存在します",
+			zap.String("userID", userID.String()),
+			zap.Time("date", now))
+		return nil
+	}
+
+	// 全口座を取得
+	result, err := s.accountRepo.FindByUserID(ctx, userID, nil)
+	if err != nil {
+		s.logger.Error("口座一覧取得エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return err
+	}
+
+	accounts := result.Items
+
+	// 口座がない場合はスキップ
+	if len(accounts) == 0 {
+		s.logger.Info("口座が存在しないためスナップショット作成をスキップします",
+			zap.String("userID", userID.String()))
+		return nil
+	}
+
+	// 各口座の残高を取得
+	accountBalances := make([]assetValue.AccountBalance, 0, len(accounts))
+	totalAssets := decimal.Zero
+
+	for _, account := range accounts {
+		balance := account.CurrentBalance()
+		balanceDecimal := decimal.NewFromInt(balance.Amount())
+
+		// クレジットカード口座は負債なので資産から除外
+		if !account.Type().IsCreditCard() {
+			totalAssets = totalAssets.Add(balanceDecimal)
+		}
+
+		accountBalances = append(accountBalances, assetValue.AccountBalance{
+			AccountID:   account.ID,
+			AccountName: account.Name().String(),
+			Balance:     balance,
+		})
+	}
+
+	// AccountBreakdownを作成
+	accountBreakdown, err := assetValue.NewAccountBreakdown(accountBalances)
+	if err != nil {
+		s.logger.Error("口座別内訳作成エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return err
+	}
+
+	// 総資産を作成（簡易実装：JPYのみ）
+	totalAssetsMoney, err := commonValue.NewMoney(totalAssets.IntPart(), "JPY")
+	if err != nil {
+		s.logger.Error("総資産作成エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()),
+			zap.String("totalAssets", totalAssets.String()))
+		return err
+	}
+
+	// ドメインエンティティを作成
+	snapshot, err := assetDomain.NewAssetSnapshot(userID, now, *totalAssetsMoney, accountBreakdown)
+	if err != nil {
+		s.logger.Error("スナップショット作成エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return err
+	}
+
+	// リポジトリに保存
+	if err := s.assetSnapshotRepo.Save(ctx, snapshot); err != nil {
+		s.logger.Error("スナップショット保存エラー",
+			zap.Error(err),
+			zap.String("userID", userID.String()))
+		return err
+	}
+
+	s.logger.Info("日次スナップショット作成成功",
+		zap.String("userID", userID.String()),
+		zap.Time("snapshotDate", now),
+		zap.String("totalAssets", totalAssets.String()))
+
+	return nil
+}

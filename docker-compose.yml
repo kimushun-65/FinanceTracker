@@ -77,6 +77,24 @@ services:
     networks:
       - financetracker_network
 
+  # Asset snapshot batch job
+  # Run manually: docker-compose run --rm snapshot
+  # Or scheduled via ECS Scheduled Tasks in production
+  snapshot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.snapshot
+    container_name: financetracker_snapshot
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - financetracker_network
+    profiles:
+      - batch  # Only runs when explicitly specified with --profile batch
+
   # Frontend (Next.js)
   frontend:
     build:
