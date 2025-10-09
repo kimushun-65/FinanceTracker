@@ -17,4 +17,7 @@ type UserRepository interface {
 
 	// ExistsByAuth0UserID Auth0ユーザーIDでユーザーが存在するかチェック
 	ExistsByAuth0UserID(ctx context.Context, auth0UserID userValue.Auth0ID) (bool, error)
+
+	// FindAll 全ユーザーを取得
+	FindAll(ctx context.Context) ([]*entity.User, error)
 }

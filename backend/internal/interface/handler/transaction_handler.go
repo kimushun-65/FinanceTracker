@@ -479,3 +479,96 @@ func (h *TransactionHandler) MonthlySummary(c *gin.Context) {
 
 	c.JSON(http.StatusOK, summary)
 }
+
+// GetCategorySummary カテゴリー別サマリーを取得
+// @Summary カテゴリー別サマリー取得
+// @Description 指定された期間のカテゴリー別トランザクションサマリーを取得します
+// @Tags transactions
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param from query string true "開始日 (YYYY-MM-DD)"
+// @Param to query string true "終了日 (YYYY-MM-DD)"
+// @Param type query string false "トランザクションタイプ (income/expense/all)" default(all)
+// @Success 200 {object} dto.CategorySummaryResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/transactions/summary/by-category [get]
+func (h *TransactionHandler) GetCategorySummary(c *gin.Context) {
+	// ユーザーIDを取得
+	userUUID, err := getUserID(c, h.userService)
+	if err != nil {
+		if err == ErrUnauthorized {
+			h.logger.Error("User ID not found in context")
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "認証情報が見つかりません",
+			})
+			return
+		}
+		h.logger.Error("Failed to get user ID: " + err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "内部サーバーエラー",
+		})
+		return
+	}
+
+	// クエリパラメータから日付範囲を取得
+	fromStr := c.Query("from")
+	toStr := c.Query("to")
+
+	if fromStr == "" || toStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "開始日と終了日を指定してください",
+		})
+		return
+	}
+
+	// 開始日をパース
+	startDate, err := time.Parse("2006-01-02", fromStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "無効な開始日の形式です (YYYY-MM-DD)",
+		})
+		return
+	}
+
+	// 終了日をパース
+	endDate, err := time.Parse("2006-01-02", toStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "無効な終了日の形式です (YYYY-MM-DD)",
+		})
+		return
+	}
+
+	// 終了日を23:59:59に設定
+	endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 999999999, endDate.Location())
+
+	// トランザクションタイプを取得（デフォルトは "all"）
+	transactionType := c.DefaultQuery("type", "all")
+	if transactionType != "income" && transactionType != "expense" && transactionType != "all" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "無効なトランザクションタイプです (income/expense/all)",
+		})
+		return
+	}
+
+	// サービス層を呼び出し
+	summary, err := h.transactionService.GetCategorySummary(
+		c.Request.Context(),
+		userUUID,
+		startDate,
+		endDate,
+		transactionType,
+	)
+	if err != nil {
+		h.logger.Error("Failed to get category summary: " + err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "カテゴリー別サマリーの取得に失敗しました",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, summary)
+}

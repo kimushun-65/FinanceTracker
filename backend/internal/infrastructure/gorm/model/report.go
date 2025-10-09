@@ -17,6 +17,9 @@ type AssetSnapshot struct {
 	TotalLiabilities decimal.Decimal `gorm:"type:decimal(15,2);not null"`
 	NetWorth         decimal.Decimal `gorm:"type:decimal(15,2);not null"`
 
+	// 口座別内訳をJSON形式で保存
+	AccountBreakdown string `gorm:"type:jsonb"`
+
 	// Relations
 	User User `gorm:"foreignKey:UserID"`
 }

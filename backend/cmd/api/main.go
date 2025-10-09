@@ -72,6 +72,7 @@ func main() {
 		TransactionHandler: container.TransactionHandler,
 		CategoryHandler:    container.CategoryHandler,
 		BudgetHandler:      container.BudgetHandler,
+		AssetHandler:       container.AssetHandler,
 	})
 
 	// Start server

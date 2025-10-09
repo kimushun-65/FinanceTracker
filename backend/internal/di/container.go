@@ -60,6 +60,7 @@ type Container struct {
 	TransactionService *service.TransactionService
 	CategoryService    *service.CategoryService
 	BudgetService      *service.BudgetService
+	AssetService       *service.AssetService
 
 	// HTTPハンドラー
 	AuthHandler        *handler.AuthHandler
@@ -68,6 +69,7 @@ type Container struct {
 	TransactionHandler *handler.TransactionHandler
 	CategoryHandler    *handler.CategoryHandler
 	BudgetHandler      *handler.BudgetHandler
+	AssetHandler       *handler.AssetHandler
 
 	// 共有ロジックハンドラー
 	UserLogicHandler *appHandler.UserLogicHandler
@@ -208,6 +210,9 @@ func (c *Container) initRepositories() {
 
 	// 予算リポジトリ
 	c.BudgetRepo = postgresRepo.NewBudgetRepository(c.DB)
+
+	// 資産スナップショットリポジトリ
+	c.AssetSnapshotRepo = postgresRepo.NewAssetSnapshotRepository(c.DB)
 }
 
 // initServices は全てのアプリケーションサービスを初期化する
@@ -232,13 +237,6 @@ func (c *Container) initServices() {
 		c.Logger,
 	)
 
-	// 取引サービス
-	c.TransactionService = service.NewTransactionService(
-		c.TransactionRepo,
-		c.AccountService,
-		c.Logger,
-	)
-
 	// カテゴリサービス
 	c.CategoryService = service.NewCategoryService(
 		c.CategoryRepo,
@@ -246,10 +244,25 @@ func (c *Container) initServices() {
 		c.Logger,
 	)
 
+	// 取引サービス
+	c.TransactionService = service.NewTransactionService(
+		c.TransactionRepo,
+		c.AccountService,
+		c.CategoryService,
+		c.Logger,
+	)
+
 	// 予算サービス
 	c.BudgetService = service.NewBudgetService(
 		c.BudgetRepo,
 		c.TransactionRepo,
+		c.Logger,
+	)
+
+	// 資産サービス
+	c.AssetService = service.NewAssetService(
+		c.AssetSnapshotRepo,
+		c.AccountRepo,
 		c.Logger,
 	)
 }
@@ -301,6 +314,13 @@ func (c *Container) initHandlers() {
 	// 予算ハンドラー
 	c.BudgetHandler = handler.NewBudgetHandler(
 		c.BudgetService,
+		c.UserService,
+		c.Logger,
+	)
+
+	// 資産ハンドラー
+	c.AssetHandler = handler.NewAssetHandler(
+		c.AssetService,
 		c.UserService,
 		c.Logger,
 	)
