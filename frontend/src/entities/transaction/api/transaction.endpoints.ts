@@ -5,4 +5,5 @@ export const endpoints = {
   update: (id: string) => `/transactions/${id}`,
   delete: (id: string) => `/transactions/${id}`,
   monthlySummary: '/transactions/summary/monthly',
+  categorySummary: '/transactions/summary/by-category',
 } as const;
