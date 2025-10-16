@@ -4,7 +4,7 @@ import type { AssetSnapshot, AssetPeriod } from '@/entities/asset';
 
 export const useAssetTrendData = (
   snapshots: AssetSnapshot[] | undefined,
-  period: AssetPeriod
+  period: AssetPeriod,
 ) => {
   return useMemo(() => {
     if (!snapshots) return [];

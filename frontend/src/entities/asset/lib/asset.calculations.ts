@@ -1,9 +1,14 @@
-import type { AssetSnapshot, AssetComparison, AssetTrendData, AssetPeriod } from '../model';
+import type {
+  AssetSnapshot,
+  AssetComparison,
+  AssetTrendData,
+  AssetPeriod,
+} from '../model';
 
 // 前月比計算
 export const calculateAssetComparison = (
   current: AssetSnapshot | undefined | null,
-  previous: AssetSnapshot | undefined | null
+  previous: AssetSnapshot | undefined | null,
 ): AssetComparison => {
   if (!current) {
     return {
@@ -38,24 +43,30 @@ export const calculateAssetComparison = (
 
 // トレンドデータ変換
 export const transformToTrendData = (
-  snapshots: AssetSnapshot[]
+  snapshots: AssetSnapshot[],
 ): AssetTrendData[] => {
   return snapshots
-    .sort((a, b) => new Date(a.snapshotDate).getTime() - new Date(b.snapshotDate).getTime())
+    .sort(
+      (a, b) =>
+        new Date(a.snapshotDate).getTime() - new Date(b.snapshotDate).getTime(),
+    )
     .map((snapshot) => ({
       date: snapshot.snapshotDate,
       totalAssets: snapshot.totalAssets.amount,
-      accounts: snapshot.accounts.reduce((acc, account) => {
-        acc[account.accountId] = account.balance.amount;
-        return acc;
-      }, {} as { [key: string]: number }),
+      accounts: snapshot.accounts.reduce(
+        (acc, account) => {
+          acc[account.accountId] = account.balance.amount;
+          return acc;
+        },
+        {} as { [key: string]: number },
+      ),
     }));
 };
 
 // 期間フィルタリング
 export const filterByPeriod = (
   snapshots: AssetSnapshot[],
-  period: AssetPeriod
+  period: AssetPeriod,
 ): AssetSnapshot[] => {
   if (period === 'all') return snapshots;
 
@@ -77,7 +88,5 @@ export const filterByPeriod = (
       break;
   }
 
-  return snapshots.filter(
-    (s) => new Date(s.snapshotDate) >= cutoff
-  );
+  return snapshots.filter((s) => new Date(s.snapshotDate) >= cutoff);
 };

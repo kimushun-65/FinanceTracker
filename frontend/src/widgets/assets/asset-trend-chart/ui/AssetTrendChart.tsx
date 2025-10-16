@@ -144,7 +144,10 @@ export const AssetTrendChart: React.FC<AssetTrendChartProps> = ({
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width='100%' height={400}>
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray='3 3' stroke='#e0e0e0' />
             <XAxis
               dataKey='date'

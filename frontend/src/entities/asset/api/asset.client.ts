@@ -10,7 +10,7 @@ import { assetEndpoints } from './asset.endpoints';
 export const assetApi = {
   // スナップショット一覧取得
   getSnapshots: async (
-    params: AssetSnapshotListParams
+    params: AssetSnapshotListParams,
   ): Promise<AssetSnapshotListResponse> => {
     const queryParams = new URLSearchParams();
     if (params.from) queryParams.append('from', params.from);
@@ -112,9 +112,13 @@ export const assetApi = {
   },
 
   // スナップショット作成
-  createSnapshot: async (payload: CreateSnapshotPayload): Promise<AssetSnapshot> => {
+  createSnapshot: async (
+    payload: CreateSnapshotPayload,
+  ): Promise<AssetSnapshot> => {
     // まず現在の資産状況を取得
-    const currentStatusResponse = await apiClient.get<any>(assetEndpoints.currentStatus);
+    const currentStatusResponse = await apiClient.get<any>(
+      assetEndpoints.currentStatus,
+    );
     const currentStatus = currentStatusResponse.data;
 
     // 口座データを整形
