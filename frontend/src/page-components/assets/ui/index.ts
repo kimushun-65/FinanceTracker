@@ -1,0 +1,1 @@
+export { AssetsContainer } from './AssetsContainer';
