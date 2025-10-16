@@ -1,4 +1,8 @@
-import type { TransactionListParams, MonthlySummaryParams } from '../model';
+import type {
+  TransactionListParams,
+  MonthlySummaryParams,
+  CategorySummaryParams,
+} from '../model';
 
 export const transactionKeys = {
   all: ['transactions'] as const,
@@ -10,4 +14,6 @@ export const transactionKeys = {
   summaries: () => [...transactionKeys.all, 'summary'] as const,
   monthlySummary: (params: MonthlySummaryParams = {}) =>
     [...transactionKeys.summaries(), 'monthly', params] as const,
+  categorySummary: (params: CategorySummaryParams = {}) =>
+    [...transactionKeys.summaries(), 'by-category', params] as const,
 } as const;

@@ -99,3 +99,18 @@ export type MonthlySummary = {
     month: number;
   };
 };
+
+export type CategorySummaryParams = {
+  type?: TransactionType;
+  from?: string; // YYYY-MM-DD
+  to?: string; // YYYY-MM-DD
+};
+
+export type CategorySummary = {
+  categoryId: string;
+  categoryName: string;
+  totalAmount: Money;
+  transactionCount: number;
+  percentage: number; // 0-100
+  type: TransactionType;
+};

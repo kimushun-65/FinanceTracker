@@ -7,6 +7,8 @@ import type {
   TransactionListResponse,
   MonthlySummaryParams,
   MonthlySummary,
+  CategorySummaryParams,
+  CategorySummary,
 } from '../model';
 import { endpoints } from './transaction.endpoints';
 import { createTransactionFilters } from './transaction.filters';
@@ -152,5 +154,42 @@ export const transactionApi = {
     };
 
     return summary;
+  },
+
+  getCategorySummary: async (
+    params: CategorySummaryParams = {},
+  ): Promise<CategorySummary[]> => {
+    const queryParams = new URLSearchParams();
+    if (params.type) queryParams.append('type', params.type);
+    if (params.from) queryParams.append('from', params.from);
+    if (params.to) queryParams.append('to', params.to);
+
+    const url = queryParams.toString()
+      ? `${endpoints.categorySummary}?${queryParams.toString()}`
+      : endpoints.categorySummary;
+
+    const response = await apiClient.get<any>(url);
+    const api = response.data;
+
+    const toNumber = (v: any): number => {
+      if (typeof v === 'number') return Math.round(v);
+      if (v == null) return 0;
+      const n = Number(String(v));
+      return Number.isFinite(n) ? Math.round(n) : 0;
+    };
+
+    // バックエンドは "by_category" フィールドを返す
+    const summaries: CategorySummary[] = Array.isArray(api?.by_category)
+      ? api.by_category.map((cat: any) => ({
+          categoryId: cat?.category_id ?? '',
+          categoryName: cat?.category_name ?? '',
+          totalAmount: { amount: toNumber(cat?.total_amount), currency: 'JPY' },
+          transactionCount: cat?.transaction_count ?? 0,
+          percentage: toNumber(cat?.percentage),
+          type: params.type || 'expense', // パラメータのtypeを使用
+        }))
+      : [];
+
+    return summaries;
   },
 };
