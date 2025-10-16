@@ -178,14 +178,15 @@ export const transactionApi = {
       return Number.isFinite(n) ? Math.round(n) : 0;
     };
 
-    const summaries: CategorySummary[] = Array.isArray(api?.categories)
-      ? api.categories.map((cat: any) => ({
+    // バックエンドは "by_category" フィールドを返す
+    const summaries: CategorySummary[] = Array.isArray(api?.by_category)
+      ? api.by_category.map((cat: any) => ({
           categoryId: cat?.category_id ?? '',
           categoryName: cat?.category_name ?? '',
           totalAmount: { amount: toNumber(cat?.total_amount), currency: 'JPY' },
           transactionCount: cat?.transaction_count ?? 0,
-          percentage: cat?.percentage ?? 0,
-          type: (cat?.type ?? 'expense') as 'income' | 'expense',
+          percentage: toNumber(cat?.percentage),
+          type: params.type || 'expense', // パラメータのtypeを使用
         }))
       : [];
 
